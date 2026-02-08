@@ -3,6 +3,7 @@
 Este proyecto es el repositorio oficial de **Gestor Educativo 365**, una plataforma SaaS Multi-tenant diseñada para la gestión integral de colegios en Latinoamérica.
 
 ## 🚀 Tecnologías
+- **Estado:** 🟢 Despliegue Activo
 - **Frontend:** Next.js 14 (App Router) + Tailwind CSS
 - **Iconos:** Lucide React
 - **Backend:** Supabase (Auth & Database)
