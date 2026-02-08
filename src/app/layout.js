@@ -6,6 +6,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata = {
     title: "Gestor Educativo 365 - Plataforma Escolar",
     description: "La plataforma líder para la gestión de colegios en Latinoamérica.",
+    icons: {
+        icon: '/logo.png',
+    }
 };
 
 export default function RootLayout({ children }) {
