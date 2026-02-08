@@ -10,7 +10,7 @@ export default function SaaSLanding() {
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <img src="/logo.png" alt="Gestor Educativo 365 Logo" className="w-10 h-10 object-contain rounded-lg" />
-                        <span className="font-black text-xl tracking-tight text-slate-900">Gestor Educativo 365</span>
+                        <span className="font-black text-xl tracking-tight text-white">Gestor Educativo 365</span>
                     </div>
                     <div className="flex gap-4">
                         <a href="/login" className="text-sm font-bold text-slate-300 hover:text-white transition-colors">Iniciar Sesión</a>
