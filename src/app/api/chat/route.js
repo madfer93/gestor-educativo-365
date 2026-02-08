@@ -14,35 +14,43 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-const SYSTEM_PROMPT = `
-Eres el asistente virtual del "Colegio Latinoamericano". Tu objetivo es brindar información sobre admisiones, costos y horarios, y convencer a los padres de inscribir a sus hijos.
-
-Datos Clave:
-- Nombre: Colegio Latinoamericano.
-- Ubicación: Villavicencio, Barrio El Estero.
-- Teléfono: 321 280 8022.
-- Niveles: Preescolar, Primaria, Bachillerato.
-- Filosofía: Formación integral con valores.
+// Selector de Prompt Dinámico
+const getSystemPrompt = (mode) => {
+    if (mode === 'sales') {
+        return `Eres Sofía, la Asistente de Ventas de "Gestor Educativo 365" (un producto de Variedades JyM).
+Tu objetivo es vender el software a Rectores de colegios.
+Datos de Contacto (ENTRÉGALOS SOLO SI PIDEN HABLAR CON UN HUMANO):
+- Email: madfer1993@gmail.com
+- WhatsApp: +573045788873
 
 Instrucciones:
-1. Sé amable, profesional y persuasivo.
-2. Si el usuario pregunta por costos, invítalo a dejar sus datos o visitar la sección de Admisiones.
-3. IMPORTANTE: Intenta sutilmente obtener el NOMBRE y el TELÉFONO del interesado.
-   Ejemplo: "¿Te gustaría que un asesor te contacte por WhatsApp para darte los costos detallados? Por favor indícame tu nombre y número."
-4. Si el usuario te da su nombre y teléfono, CONFIRMA que los has recibido.
-
-Responde siempre en español y de forma concisa.
-`;
+1. Sé persuasiva, profesional y entusiasta.
+2. Destaca: Automatización de matrículas, pensiones online, y app para padres.
+3. Intenta obtener el Nombre del Rector y del Colegio.
+4. Si preguntan precios, invítalos a probar la demo gratis.`;
+    }
+    // Default: Modo Colegio (Soporte a Padres/Alumnos)
+    return `Eres el asistente virtual del "Colegio Latinoamericano". Tu objetivo es brindar información sobre admisiones, costos y horarios.
+Datos Clave:
+- Ubicación: Villavicencio, Barrio El Estero.
+- Teléfono: 321 280 8022.
+Instrucciones:
+1. Sé amable y conciso.
+2. Si preguntan costos, invítalos a admisiones.`;
+};
 
 export async function POST(req) {
     try {
         const body = await req.json();
-        const { messages } = body;
+        const { messages, mode = 'edu' } = body;
 
-        // 1. Llamar a Groq API
+        // 1. Selector de System Prompt
+        const systemPrompt = getSystemPrompt(mode);
+
+        // 2. Llamar a Groq API
         const chatCompletion = await groq.chat.completions.create({
             messages: [
-                { role: 'system', content: SYSTEM_PROMPT },
+                { role: 'system', content: systemPrompt },
                 ...messages
             ],
             model: 'llama3-8b-8192',
@@ -52,13 +60,26 @@ export async function POST(req) {
 
         const aiResponse = chatCompletion.choices[0]?.message?.content || "";
 
-        // 2. Lógica de Captura de Leads (Básica)
-        // Buscamos si el último mensaje del usuario tiene números (posible teléfono) y nombre
-        const lastUserMessage = messages[messages.length - 1].content;
+        // 3. Lógica de Captura de Leads (Solo en modo ventas)
+        if (mode === 'sales') {
+            const lastUserMessage = messages[messages.length - 1].content;
+            const phoneRegex = /\b\d{7,10}\b/; // Detectar números de 7-10 dígitos
 
-        // Regex simple para detectar teléfonos (7 a 10 dígitos)
-        const phoneRegex = /\b\d{7,10}\b/;
-        const hasPhone = phoneRegex.test(lastUserMessage.replace(/\s/g, '')); // Eliminar espacios para check
+            if (phoneRegex.test(lastUserMessage.replace(/\s/g, ''))) {
+                try {
+                    await supabase.from('leads').insert([{
+                        nombre: "Interesado desde Chat", // Podríamos mejorar esto con IA
+                        telefono: lastUserMessage,
+                        mensaje: aiResponse, // Guardamos lo que respondió la IA como contexto
+                        origen: 'sales_chat_bot',
+                        estado: 'nuevo'
+                    }]);
+                    console.log("Lead guardado en Supabase");
+                } catch (err) {
+                    console.error("Error guardando lead:", err);
+                }
+            }
+        }
 
         if (hasPhone) {
             // Intentar guardar en Supabase como Lead

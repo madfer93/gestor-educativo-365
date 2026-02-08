@@ -1,6 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { ArrowRight, Check, Zap, Shield, Globe } from 'lucide-react';
+import SalesChatBubble from '@/components/SalesChatBubble';
 
 export default function SaaSLanding() {
     return (
@@ -82,8 +83,11 @@ export default function SaaSLanding() {
 
             {/* Footer */}
             <footer className="py-12 text-center text-slate-500 text-sm">
-                <p>© 2026 Gestor Educativo 365. Todos los derechos reservados.</p>
+                <p>© 2026 Gestor Educativo 365. Un producto de <a href="https://www.variedadesjym.online/" target="_blank" className="hover:text-white transition-colors">Variedades JyM</a>.</p>
             </footer>
+
+            {/* Chatbot de Ventas */}
+            <SalesChatBubble />
         </div>
     );
 }
