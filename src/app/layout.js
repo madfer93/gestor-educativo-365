@@ -8,6 +8,9 @@ export const metadata = {
     description: "La plataforma líder para la gestión de colegios en Latinoamérica.",
     icons: {
         icon: '/logo.png',
+    },
+    verification: {
+        google: '2s7_GpgixQCwcQ7h_3wjfVn9Ay8KcthSU9QYbgtRlqg',
     }
 };
 
