@@ -25,6 +25,11 @@ export async function middleware(req) {
         }
 
         if (slug) {
+            // Si la ruta ya empieza con el slug, no lo duplicamos
+            if (url.pathname.startsWith(`/${slug}`)) {
+                return NextResponse.next();
+            }
+
             // Reescribe la URL internamente de "/" a "/latinoamericano/"
             // El usuario seguirá viendo "colegiolatinoamericanovillavicencio.com" en su barra de direcciones
             return NextResponse.rewrite(new URL(`/${slug}${url.pathname}${url.search}`, req.url));
