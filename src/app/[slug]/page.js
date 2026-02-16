@@ -104,10 +104,16 @@ export default async function SchoolLanding({ params, searchParams }) {
                                     {school.facebook_url && (
                                         <a href={school.facebook_url} target="_blank" rel="noopener noreferrer" className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-center font-bold text-xs uppercase hover:bg-blue-700 transition-colors">Facebook</a>
                                     )}
+                                    {school.instagram_url && (
+                                        <a href={school.instagram_url} target="_blank" rel="noopener noreferrer" className="flex-1 bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 text-white py-2 rounded-lg text-center font-bold text-xs uppercase hover:brightness-110 transition-all">Instagram</a>
+                                    )}
+                                    {school.tiktok_url && (
+                                        <a href={school.tiktok_url} target="_blank" rel="noopener noreferrer" className="flex-1 bg-black text-white py-2 rounded-lg text-center font-bold text-xs uppercase hover:bg-slate-900 transition-colors">TikTok</a>
+                                    )}
                                     {school.youtube_url && (
                                         <a href={school.youtube_url} target="_blank" rel="noopener noreferrer" className="flex-1 bg-red-600 text-white py-2 rounded-lg text-center font-bold text-xs uppercase hover:bg-red-700 transition-colors">YouTube</a>
                                     )}
-                                    {!school.facebook_url && !school.youtube_url && (
+                                    {!school.facebook_url && !school.instagram_url && !school.tiktok_url && !school.youtube_url && (
                                         <p className="text-[10px] text-gray-400 font-bold uppercase py-2">No configuradas</p>
                                     )}
                                 </div>

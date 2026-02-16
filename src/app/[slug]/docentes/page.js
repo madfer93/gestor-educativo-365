@@ -19,7 +19,7 @@ export default async function TeachersPage({ params }) {
         .from('profiles')
         .select('*')
         .eq('school_id', school.id)
-        .eq('rol', 'teacher');
+        .neq('rol', 'student');
 
     const branding = school.branding_colors || { primary: '#1e3a8a', secondary: '#be185d' };
 

@@ -55,6 +55,12 @@ export default async function SchoolLayout({ children, params }) {
                     logoUrl={school.logo_url}
                     brandingColors={branding}
                     slug={params.slug}
+                    socialLinks={{
+                        facebook: school.facebook_url,
+                        instagram: school.instagram_url,
+                        tiktok: school.tiktok_url,
+                        youtube: school.youtube_url
+                    }}
                 />
             </NavbarWrapper>
             <main className="flex-1">
@@ -64,6 +70,12 @@ export default async function SchoolLayout({ children, params }) {
                 schoolName={school.nombre}
                 logoUrl={school.logo_url}
                 primaryColor={branding.primary}
+                socialLinks={{
+                    facebook: school.facebook_url,
+                    instagram: school.instagram_url,
+                    tiktok: school.tiktok_url,
+                    youtube: school.youtube_url
+                }}
             />
         </div>
     );

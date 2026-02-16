@@ -1,6 +1,12 @@
 "use client";
 import React, { useState } from 'react';
-import { Menu, X, ChevronDown, User, Lock } from 'lucide-react';
+import { Menu, X, ChevronDown, User, Lock, Facebook, Instagram, Youtube } from 'lucide-react';
+
+const TikTokIcon = ({ size = 12 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+    </svg>
+);
 
 const MENU_ITEMS = [
     {
@@ -33,7 +39,7 @@ const MENU_ITEMS = [
     }
 ];
 
-export default function SchoolNavbar({ schoolName, logoUrl, brandingColors, slug }) {
+export default function SchoolNavbar({ schoolName, logoUrl, brandingColors, slug, socialLinks }) {
     const [isOpen, setIsOpen] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState(null);
 
@@ -44,10 +50,19 @@ export default function SchoolNavbar({ schoolName, logoUrl, brandingColors, slug
     return (
         <nav className="border-b border-white/10 sticky top-0 z-50 shadow-2xl transition-colors duration-300" style={{ backgroundColor: primary }}>
             {/* Top Bar - Contacto y Redes */}
-            <div className="text-white/80 py-2 px-6 text-xs flex justify-between items-center border-b border-white/10" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                <div className="flex gap-4">
+            <div className="text-white/80 py-2 px-6 text-[10px] flex justify-between items-center border-b border-white/10" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                <div className="flex gap-4 items-center">
                     <span>📞 313 411 1666</span>
                     <span className="hidden sm:inline">📍 Villavicencio, Meta</span>
+                    {/* Social Links In Top Bar */}
+                    {socialLinks && (
+                        <div className="hidden md:flex items-center gap-3 border-l border-white/10 ml-4 pl-4">
+                            {socialLinks.facebook && <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-white"><Facebook size={12} /></a>}
+                            {socialLinks.instagram && <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-white"><Instagram size={12} /></a>}
+                            {socialLinks.tiktok && <a href={socialLinks.tiktok} target="_blank" rel="noopener noreferrer" className="hover:text-white"><TikTokIcon size={12} /></a>}
+                            {socialLinks.youtube && <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" className="hover:text-white"><Youtube size={12} /></a>}
+                        </div>
+                    )}
                 </div>
                 <div className="flex gap-4 font-bold uppercase tracking-wider">
                     <a href="#contact" className="hover:text-white transition-colors">Contáctenos</a>

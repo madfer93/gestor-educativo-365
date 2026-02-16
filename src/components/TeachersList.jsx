@@ -25,7 +25,13 @@ export default function TeachersList({ teachers, branding }) {
                         </div>
                         <h3 className="font-black text-slate-800 text-xl mb-1">{teacher.nombre}</h3>
                         <p className="text-xs font-black uppercase tracking-widest" style={{ color: branding.secondary }}>
-                            {teacher.specialty || 'Docente'}
+                            {teacher.specialty || (
+                                teacher.rol === 'admin' ? 'Rectoría / Administración' :
+                                    teacher.rol === 'secretary' ? 'Secretaría' :
+                                        teacher.rol === 'treasury' || teacher.rol === 'bursar' ? 'Tesorería' :
+                                            teacher.rol === 'coordinator' ? 'Coordinación' :
+                                                teacher.rol === 'teacher' ? 'Docente' : 'Personal Institucional'
+                            )}
                         </p>
                         {teacher.public_bio && (
                             <p className="text-sm text-slate-500 mt-4 line-clamp-2 font-medium leading-relaxed">
@@ -68,7 +74,13 @@ export default function TeachersList({ teachers, branding }) {
                                     {selectedTeacher.nombre}
                                 </h1>
                                 <p className="text-lg font-bold text-slate-400 mb-8">
-                                    {selectedTeacher.specialty || 'Docente'}
+                                    {selectedTeacher.specialty || (
+                                        selectedTeacher.rol === 'admin' ? 'Rectoría / Administración' :
+                                            selectedTeacher.rol === 'secretary' ? 'Secretaría' :
+                                                selectedTeacher.rol === 'treasury' || selectedTeacher.rol === 'bursar' ? 'Tesorería' :
+                                                    selectedTeacher.rol === 'coordinator' ? 'Coordinación' :
+                                                        selectedTeacher.rol === 'teacher' ? 'Docente' : 'Personal Institucional'
+                                    )}
                                 </p>
 
                                 <div className="space-y-4">
@@ -78,14 +90,6 @@ export default function TeachersList({ teachers, branding }) {
                                     </p>
                                 </div>
 
-                                <div className="mt-12">
-                                    <button
-                                        className="w-full py-4 rounded-2xl text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:scale-[1.02] transition-transform"
-                                        style={{ backgroundColor: branding.primary }}
-                                    >
-                                        Enviar Mensaje
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>

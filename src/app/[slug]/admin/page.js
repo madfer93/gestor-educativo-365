@@ -318,6 +318,8 @@ export default function AdminDashboard({ params }) {
             mision: formData.get('mision'),
             vision: formData.get('vision'),
             facebook_url: formData.get('facebook_url'),
+            instagram_url: formData.get('instagram_url'),
+            tiktok_url: formData.get('tiktok_url'),
             youtube_url: formData.get('youtube_url'),
             wompi_url: formData.get('wompi_url'),
             banner_url: bannerUrl,
@@ -1452,6 +1454,14 @@ export default function AdminDashboard({ params }) {
                                                 <div className="space-y-2">
                                                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 text-blue-600">URL Facebook</label>
                                                     <input name="facebook_url" type="url" defaultValue={schoolConfig.facebook_url} placeholder="https://facebook.com/..." className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 text-pink-600">URL Instagram</label>
+                                                    <input name="instagram_url" type="url" defaultValue={schoolConfig.instagram_url} placeholder="https://instagram.com/..." className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 text-slate-900">URL TikTok</label>
+                                                    <input name="tiktok_url" type="url" defaultValue={schoolConfig.tiktok_url} placeholder="https://tiktok.com/@..." className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 text-red-600">URL YouTube</label>
