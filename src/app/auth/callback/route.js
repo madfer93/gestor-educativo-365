@@ -38,11 +38,30 @@ export async function GET(request) {
 
             if (user) {
                 // 2. Consultar el ROL y el COLEGIO en la tabla profiles
-                const { data: profile } = await supabase
+                let { data: profile } = await supabase
                     .from("profiles")
                     .select("rol, school_id")
                     .eq("id", user.id)
                     .single();
+
+                // 2.1 [AUTO-FIX] Si no se encuentra perfil por ID, buscar por email (para corregir desajustes de ID manuales)
+                if (!profile) {
+                    const { data: profileByEmail } = await supabase
+                        .from("profiles")
+                        .select("rol, school_id, email")
+                        .eq("email", user.email)
+                        .single();
+
+                    if (profileByEmail) {
+                        // Actualizamos el ID del perfil para que coincida con el real de Supabase Auth
+                        await supabase
+                            .from("profiles")
+                            .update({ id: user.id })
+                            .eq("email", user.email);
+
+                        profile = profileByEmail;
+                    }
+                }
 
                 if (profile) {
                     let slug = "";
