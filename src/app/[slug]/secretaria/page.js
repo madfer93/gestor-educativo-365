@@ -1,23 +1,86 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Users, Search, PlusCircle, Filter, FileText, Send, RefreshCw } from 'lucide-react';
+import { Users, Search, PlusCircle, Filter, FileText, Send, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-export default function SecretariaDashboard() {
+export default function SecretariaDashboard({ params }) { // Added params prop
     const [activeTab, setActiveTab] = useState('matriculas');
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [schoolId, setSchoolId] = useState(null); // Added schoolId state
 
     // Cargar LEADS (Aspirantes)
     const fetchLeads = async () => {
         setLoading(true);
-        const { data, error } = await supabase
-            .from('leads')
-            .select('*')
-            .order('created_at', { ascending: false });
 
-        if (data) setLeads(data);
+        // 1. Obtener ID del colegio por slug
+        const { data: school, error: schoolError } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
+
+        if (schoolError) {
+            console.error("Error fetching school ID:", schoolError);
+            setLoading(false);
+            return;
+        }
+
+        if (school) {
+            setSchoolId(school.id);
+            // 2. Filtrar leads por colegio
+            const { data, error } = await supabase
+                .from('leads')
+                .select('*')
+                .eq('school_id', school.id)
+                .order('created_at', { ascending: false });
+
+            if (data) setLeads(data);
+            if (error) console.error("Error fetching leads:", error);
+        } else {
+            console.warn("School not found for slug:", params.slug);
+            setLeads([]); // Clear leads if school not found
+        }
         setLoading(false);
+    };
+
+    const handleFormalizeStudent = async (lead) => {
+        if (!confirm(`¿Deseas formalizar la matrícula de ${lead.nombre}? Se creará un acceso oficial para el estudiante.`)) return;
+
+        if (!schoolId) return alert("Error: ID de colegio no encontrado. Por favor, recarga la página.");
+
+        setLoading(true);
+        try {
+            // Generamos una contraseña temporal basada en el nombre o aleatoria
+            const tempPassword = lead.telefono || "Estudiante2026*";
+            const studentEmail = lead.email || `${lead.nombre.toLowerCase().replace(/\s/g, '.')}@colegio.com`;
+
+            const response = await fetch('/api/auth/manage-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: studentEmail,
+                    password: tempPassword,
+                    name: lead.nombre,
+                    school_id: schoolId, // Changed to use schoolId state
+                    rol: 'student',
+                    metadata: {
+                        grado: lead.grado,
+                        acudiente: lead.acudiente,
+                        telefono: lead.telefono
+                    }
+                })
+            });
+
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Error al crear estudiante');
+
+            // Actualizar estado del lead
+            await supabase.from('leads').update({ estado: 'Matriculado' }).eq('id', lead.id);
+
+            alert(`¡Matrícula exitosa! Estudiante: ${studentEmail} / Clave: ${tempPassword}`);
+            fetchLeads();
+        } catch (err) {
+            alert("Error: " + err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -106,13 +169,21 @@ export default function SecretariaDashboard() {
                                             <button className="p-2 text-institutional-blue hover:bg-blue-50 rounded-lg" title="Ver Detalles">
                                                 <FileText size={18} />
                                             </button>
-                                            <button
-                                                className="p-2 text-institutional-magenta hover:bg-magenta-50 rounded-lg"
-                                                title="Contactar / Aprobar"
-                                                onClick={() => alert(`Contactar a ${lead.telefono}`)}
-                                            >
-                                                <Send size={18} />
-                                            </button>
+                                            {lead.estado !== 'Matriculado' ? (
+                                                <button
+                                                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg flex items-center gap-1 group"
+                                                    title="Matricular Oficialmente"
+                                                    onClick={() => handleFormalizeStudent(lead)}
+                                                >
+                                                    <PlusCircle size={18} className="group-hover:scale-110 transition-transform" />
+                                                    <span className="text-[10px] font-black uppercase">Matricular</span>
+                                                </button>
+                                            ) : (
+                                                <div className="p-2 text-gray-300 flex items-center gap-1">
+                                                    <CheckCircle2 size={18} />
+                                                    <span className="text-[10px] font-black uppercase">Finalizado</span>
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

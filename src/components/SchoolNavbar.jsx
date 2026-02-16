@@ -87,8 +87,11 @@ export default function SchoolNavbar({ schoolName, logoUrl, brandingColors, slug
                     <a href={`/${slug}/noticias`} className="text-white/80 hover:text-white font-bold text-xs uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
                         📰 Noticias
                     </a>
-                    <a href={`/${slug}/pagos`} className="text-white/80 hover:text-white font-bold text-xs uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
-                        💰 Costos
+                    <a href={`/${slug}/costos`} className="text-white/80 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
+                        📊 Costos
+                    </a>
+                    <a href={`/${slug}/pagos`} className="text-white/80 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
+                        💳 Pagos
                     </a>
                 </div>
 

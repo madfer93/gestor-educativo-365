@@ -22,6 +22,13 @@ export default function AdminDashboard({ params }) {
     const [editingCost, setEditingCost] = useState(null);
     const [grados, setGrados] = useState([]);
     const [newGrado, setNewGrado] = useState("");
+    const [bannerPreview, setBannerPreview] = useState(null);
+    const [bannerFile, setBannerFile] = useState(null);
+    const [bannerGalleryPreview, setBannerGalleryPreview] = useState(null);
+    const [bannerGalleryFile, setBannerGalleryFile] = useState(null);
+    const [bannerOfferPreview, setBannerOfferPreview] = useState(null);
+    const [bannerOfferFile, setBannerOfferFile] = useState(null);
+    const [bankAccounts, setBankAccounts] = useState([]);
 
     // Estados para Galería, Noticias y Costos
     const [gallery, setGallery] = useState([]);
@@ -86,6 +93,7 @@ export default function AdminDashboard({ params }) {
         if (data) {
             setSchoolConfig(data);
             setGrados(data.grados || []);
+            setBankAccounts(data.bank_accounts || (data.bank_info ? [data.bank_info.bank1, data.bank_info.bank2].filter(b => b?.nombre) : []));
         }
     };
 
@@ -156,11 +164,35 @@ export default function AdminDashboard({ params }) {
             const { error: resError } = await supabase.from('profiles').update(teacherData).eq('id', editingTeacher.id);
             error = resError;
         } else {
-            const { error: resError } = await supabase.from('profiles').insert([{ ...teacherData, school_id: school.id }]);
-            error = resError;
+            // USAMOS EL API PARA CREAR USUARIO OFICIAL EN AUTH + PROFILE
+            try {
+                const response = await fetch('/api/auth/manage-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: teacherData.email,
+                        password: teacherData.password,
+                        name: teacherData.nombre,
+                        school_id: school.id,
+                        rol: teacherData.rol,
+                        metadata: {
+                            specialty: teacherData.specialty,
+                            public_bio: teacherData.public_bio,
+                            public_photo_url: teacherData.public_photo_url
+                        }
+                    })
+                });
+
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Error al crear usuario');
+
+                error = null; // Éxito
+            } catch (err) {
+                error = err;
+            }
         }
 
-        if (error) alert("Error: " + error.message);
+        if (error) alert("Error: " + (error.message || error));
         else {
             setIsTeacherModalOpen(false);
             setEditingTeacher(null);
@@ -260,15 +292,39 @@ export default function AdminDashboard({ params }) {
         e.preventDefault();
         setLoading(true);
         const formData = new FormData(e.target);
+
+        let bannerUrl = schoolConfig?.banner_url;
+        if (bannerFile) {
+            try { bannerUrl = await uploadImage(bannerFile); }
+            catch (error) { alert("Error al subir el banner: " + error.message); setLoading(false); return; }
+        }
+
+        let bannerGalleryUrl = schoolConfig?.banner_gallery_url;
+        if (bannerGalleryFile) {
+            try { bannerGalleryUrl = await uploadImage(bannerGalleryFile); }
+            catch (error) { alert("Error al subir el banner de galería: " + error.message); setLoading(false); return; }
+        }
+
+        let bannerOfferUrl = schoolConfig?.banner_offer_url;
+        if (bannerOfferFile) {
+            try { bannerOfferUrl = await uploadImage(bannerOfferFile); }
+            catch (error) { alert("Error al subir el banner de oferta: " + error.message); setLoading(false); return; }
+        }
+
         const updatedConfig = {
             grados: grados,
-            eslogan: formData.get('eslogan'),
+            slogan: formData.get('slogan'),
             telefono: formData.get('telefono'),
             mision: formData.get('mision'),
             vision: formData.get('vision'),
             facebook_url: formData.get('facebook_url'),
             youtube_url: formData.get('youtube_url'),
             wompi_url: formData.get('wompi_url'),
+            banner_url: bannerUrl,
+            banner_gallery_url: bannerGalleryUrl,
+            banner_offer_url: bannerOfferUrl,
+            bank_accounts: bankAccounts,
+            bank_info: null, // Limpiamos el formato viejo si existe
             bank_info: {
                 bank1: {
                     nombre: formData.get('bank1_name'),
@@ -289,7 +345,10 @@ export default function AdminDashboard({ params }) {
             .eq('slug', params.slug);
 
         if (error) alert('Error al guardar: ' + error.message);
-        else alert('Configuración guardada correctamente');
+        else {
+            alert('Configuración guardada correctamente');
+            setBannerFile(null);
+        }
 
         setLoading(false);
         fetchSchoolConfig();
@@ -1297,13 +1356,83 @@ export default function AdminDashboard({ params }) {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <div className="space-y-2">
                                                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Eslogan Principal</label>
-                                                    <input name="eslogan" type="text" defaultValue={schoolConfig.eslogan} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
+                                                    <input name="slogan" type="text" defaultValue={schoolConfig.slogan} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Teléfono de Contacto</label>
                                                     <input name="telefono" type="text" defaultValue={schoolConfig.telefono} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
                                                 </div>
                                             </div>
+
+                                            {/* Banner Principal Upload */}
+                                            <div className="space-y-4 pt-4 border-t border-gray-100">
+                                                <div className="flex justify-between items-center">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Banner Principal (Hero)</label>
+                                                    {bannerPreview && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { setBannerPreview(null); setBannerFile(null); }}
+                                                            className="text-red-500 text-[10px] font-black uppercase hover:underline"
+                                                        >
+                                                            Cancelar Cambio
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <div
+                                                    onClick={() => document.getElementById('banner_upload').click()}
+                                                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-institutional-blue'); }}
+                                                    onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-institutional-blue'); }}
+                                                    onDrop={(e) => {
+                                                        e.preventDefault();
+                                                        e.currentTarget.classList.remove('border-institutional-blue');
+                                                        const file = e.dataTransfer.files[0];
+                                                        if (file) {
+                                                            setBannerFile(file);
+                                                            setBannerPreview(URL.createObjectURL(file));
+                                                        }
+                                                    }}
+                                                    className="relative aspect-[21/9] bg-gray-50 rounded-[32px] border-4 border-dashed border-gray-100 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-all overflow-hidden group"
+                                                >
+                                                    <input
+                                                        id="banner_upload"
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files[0];
+                                                            if (file) {
+                                                                setBannerFile(file);
+                                                                setBannerPreview(URL.createObjectURL(file));
+                                                            }
+                                                        }}
+                                                    />
+
+                                                    {bannerPreview || schoolConfig.banner_url ? (
+                                                        <>
+                                                            <img
+                                                                src={bannerPreview || schoolConfig.banner_url || "/latinoamericano/colegio2.jpg"}
+                                                                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
+                                                                alt="Banner Preview"
+                                                            />
+                                                            <div className="relative z-10 flex flex-col items-center gap-2">
+                                                                <div className="bg-white/90 p-3 rounded-full shadow-lg text-institutional-blue animate-bounce">
+                                                                    <Camera size={24} />
+                                                                </div>
+                                                                <span className="bg-white/90 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-institutional-blue shadow-sm">
+                                                                    Haga clic para cambiar imagen
+                                                                </span>
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <div className="flex flex-col items-center gap-3 text-gray-400">
+                                                            <Camera size={48} className="opacity-20" />
+                                                            <p className="text-sm font-bold uppercase tracking-tighter">Arrastra el nuevo banner aquí</p>
+                                                            <p className="text-[10px] font-medium opacity-60">Recomendado: 1920x800px</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Misión</label>
                                                 <textarea name="mision" rows="3" defaultValue={schoolConfig.mision} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-medium text-gray-700 leading-relaxed"></textarea>
@@ -1335,32 +1464,78 @@ export default function AdminDashboard({ params }) {
                                             </div>
                                         </div>
 
-                                        {/* Cuentas Bancarias */}
+                                        {/* Cuentas Bancarias Dinámicas */}
                                         <div className="bg-white rounded-[40px] shadow-sm border border-gray-100 p-10 space-y-8">
-                                            <h3 className="text-xl font-black text-gray-800 flex items-center gap-2">
-                                                <DollarSign className="text-institutional-blue" size={20} /> Cuentas para Transferencia
-                                            </h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                                <div className="space-y-4 p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cuenta Principal (Ahorros/Corriente)</p>
-                                                    <div className="space-y-3">
-                                                        <input name="bank1_name" type="text" defaultValue={schoolConfig.bank_info?.bank1?.nombre} placeholder="Banco (Ej: Bancolombia)" className="w-full bg-white border-none rounded-xl p-3 text-sm font-bold shadow-sm" />
-                                                        <input name="bank1_number" type="text" defaultValue={schoolConfig.bank_info?.bank1?.numero} placeholder="Número de Cuenta" className="w-full bg-white border-none rounded-xl p-3 text-sm font-bold shadow-sm" />
-                                                        <select name="bank1_type" defaultValue={schoolConfig.bank_info?.bank1?.tipo || 'Ahorros'} className="w-full bg-white border-none rounded-xl p-3 text-sm font-bold shadow-sm">
-                                                            <option>Ahorros</option>
-                                                            <option>Corriente</option>
-                                                        </select>
+                                            <div className="flex justify-between items-center">
+                                                <h3 className="text-xl font-black text-gray-800 flex items-center gap-2">
+                                                    <DollarSign className="text-institutional-blue" size={20} /> Cuentas para Transferencia
+                                                </h3>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setBankAccounts([...bankAccounts, { nombre: '', numero: '', tipo: 'Ahorros' }])}
+                                                    className="bg-institutional-blue text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-all"
+                                                >
+                                                    + Agregar Cuenta
+                                                </button>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                {bankAccounts.map((account, index) => (
+                                                    <div key={index} className="space-y-4 p-6 bg-slate-50 rounded-3xl border border-slate-100 relative group">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setBankAccounts(bankAccounts.filter((_, i) => i !== index))}
+                                                            className="absolute top-4 right-4 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cuenta #{index + 1}</p>
+                                                        <div className="space-y-3">
+                                                            <input
+                                                                type="text"
+                                                                value={account.nombre}
+                                                                onChange={(e) => {
+                                                                    const newAccounts = [...bankAccounts];
+                                                                    newAccounts[index].nombre = e.target.value;
+                                                                    setBankAccounts(newAccounts);
+                                                                }}
+                                                                placeholder="Banco (Ej: Bancolombia)"
+                                                                className="w-full bg-white border-none rounded-xl p-3 text-sm font-bold shadow-sm"
+                                                            />
+                                                            <input
+                                                                type="text"
+                                                                value={account.numero}
+                                                                onChange={(e) => {
+                                                                    const newAccounts = [...bankAccounts];
+                                                                    newAccounts[index].numero = e.target.value;
+                                                                    setBankAccounts(newAccounts);
+                                                                }}
+                                                                placeholder="Número de Cuenta"
+                                                                className="w-full bg-white border-none rounded-xl p-3 text-sm font-bold shadow-sm"
+                                                            />
+                                                            <select
+                                                                value={account.tipo}
+                                                                onChange={(e) => {
+                                                                    const newAccounts = [...bankAccounts];
+                                                                    newAccounts[index].tipo = e.target.value;
+                                                                    setBankAccounts(newAccounts);
+                                                                }}
+                                                                className="w-full bg-white border-none rounded-xl p-3 text-sm font-bold shadow-sm"
+                                                            >
+                                                                <option>Ahorros</option>
+                                                                <option>Corriente</option>
+                                                                <option>Nequi</option>
+                                                                <option>Daviplata</option>
+                                                                <option>Digital</option>
+                                                            </select>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className="space-y-4 p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cuenta Secundaria (Nequi/Daviplata)</p>
-                                                    <div className="space-y-3">
-                                                        <input name="bank2_name" type="text" defaultValue={schoolConfig.bank_info?.bank2?.nombre} placeholder="Entidad (Ej: Nequi)" className="w-full bg-white border-none rounded-xl p-3 text-sm font-bold shadow-sm" />
-                                                        <input name="bank2_number" type="text" defaultValue={schoolConfig.bank_info?.bank2?.numero} placeholder="Número de Celular/Cuenta" className="w-full bg-white border-none rounded-xl p-3 text-sm font-bold shadow-sm" />
-                                                        <input name="bank2_type" type="hidden" value="Digital" />
-                                                        <div className="p-3 bg-white rounded-xl text-xs font-bold text-slate-400 shadow-sm">Billetera Digital</div>
+                                                ))}
+                                                {bankAccounts.length === 0 && (
+                                                    <div className="col-span-full py-10 text-center border-2 border-dashed border-gray-100 rounded-[40px] text-gray-400 font-bold italic text-sm">
+                                                        No hay cuentas configuradas. El Rector debe agregar al menos una para recibir transferencias.
                                                     </div>
-                                                </div>
+                                                )}
                                             </div>
                                         </div>
 
@@ -1374,12 +1549,24 @@ export default function AdminDashboard({ params }) {
                                                 <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100 space-y-4">
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-xs font-black uppercase tracking-widest text-gray-400">Banner Galería Institucional</span>
-                                                        <button type="button" className="text-institutional-magenta text-[10px] font-black uppercase tracking-tighter hover:underline">Cambiar Imagen</button>
+                                                        {bannerGalleryPreview && <button type="button" onClick={() => { setBannerGalleryPreview(null); setBannerGalleryFile(null); }} className="text-red-500 text-[10px] font-black uppercase hover:underline">Cancelar</button>}
                                                     </div>
-                                                    <div className="aspect-video bg-gray-200 rounded-2xl overflow-hidden relative group">
-                                                        <img src={schoolConfig.banner_gallery_url || "https://images.unsplash.com/photo-1523050335392-938511794244?q=80&w=2070"} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="Galería Preview" />
-                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                            <Link className="text-white drop-shadow-md" size={32} />
+                                                    <div
+                                                        onClick={() => document.getElementById('banner_gallery_upload').click()}
+                                                        onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('ring-2', 'ring-institutional-blue'); }}
+                                                        onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('ring-2', 'ring-institutional-blue'); }}
+                                                        onDrop={(e) => {
+                                                            e.preventDefault();
+                                                            e.currentTarget.classList.remove('ring-2', 'ring-institutional-blue');
+                                                            const file = e.dataTransfer.files[0];
+                                                            if (file) { setBannerGalleryFile(file); setBannerGalleryPreview(URL.createObjectURL(file)); }
+                                                        }}
+                                                        className="aspect-video bg-gray-200 rounded-2xl overflow-hidden relative group cursor-pointer"
+                                                    >
+                                                        <input id="banner_gallery_upload" type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files[0]; if (file) { setBannerGalleryFile(file); setBannerGalleryPreview(URL.createObjectURL(file)); } }} />
+                                                        <img src={bannerGalleryPreview || schoolConfig.banner_gallery_url || "https://images.unsplash.com/photo-1523050335392-938511794244"} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="Galería Preview" />
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Camera className="text-white" size={32} />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1388,12 +1575,24 @@ export default function AdminDashboard({ params }) {
                                                 <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100 space-y-4">
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-xs font-black uppercase tracking-widest text-gray-400">Banner Oferta Académica</span>
-                                                        <button type="button" className="text-institutional-magenta text-[10px] font-black uppercase tracking-tighter hover:underline">Cambiar Imagen</button>
+                                                        {bannerOfferPreview && <button type="button" onClick={() => { setBannerOfferPreview(null); setBannerOfferFile(null); }} className="text-red-500 text-[10px] font-black uppercase hover:underline">Cancelar</button>}
                                                     </div>
-                                                    <div className="aspect-video bg-gray-200 rounded-2xl overflow-hidden relative group">
-                                                        <img src={schoolConfig.banner_offer_url || "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=2104"} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="Oferta Preview" />
-                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                            <Link className="text-white drop-shadow-md" size={32} />
+                                                    <div
+                                                        onClick={() => document.getElementById('banner_offer_upload').click()}
+                                                        onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('ring-2', 'ring-institutional-blue'); }}
+                                                        onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('ring-2', 'ring-institutional-blue'); }}
+                                                        onDrop={(e) => {
+                                                            e.preventDefault();
+                                                            e.currentTarget.classList.remove('ring-2', 'ring-institutional-blue');
+                                                            const file = e.dataTransfer.files[0];
+                                                            if (file) { setBannerOfferFile(file); setBannerOfferPreview(URL.createObjectURL(file)); }
+                                                        }}
+                                                        className="aspect-video bg-gray-200 rounded-2xl overflow-hidden relative group cursor-pointer"
+                                                    >
+                                                        <input id="banner_offer_upload" type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files[0]; if (file) { setBannerOfferFile(file); setBannerOfferPreview(URL.createObjectURL(file)); } }} />
+                                                        <img src={bannerOfferPreview || schoolConfig.banner_offer_url || "https://images.unsplash.com/photo-1509062522246-3755977927d7"} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="Oferta Preview" />
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Camera className="text-white" size={32} />
                                                         </div>
                                                     </div>
                                                 </div>

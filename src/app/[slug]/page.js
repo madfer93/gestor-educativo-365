@@ -37,7 +37,7 @@ export default async function SchoolLanding({ params, searchParams }) {
                 {/* Imagen del Colegio como Banner */}
                 <div className="w-full">
                     <img
-                        src="/latinoamericano/colegio2.jpg"
+                        src={school.banner_url || "/latinoamericano/colegio2.jpg"}
                         alt="Banner Institucional"
                         className="w-full h-auto object-cover shadow-inner"
                     />
@@ -65,7 +65,7 @@ export default async function SchoolLanding({ params, searchParams }) {
                     <div className="lg:col-span-2 space-y-12">
                         <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
                             <span className="text-blue-600 font-bold text-xs uppercase tracking-widest mb-2 block">Información General</span>
-                            <h2 className="text-3xl font-black text-slate-800 mb-4">PLATAFORMA 2026</h2>
+                            <h2 className="text-3xl font-black text-slate-800 mb-4">{school.slogan || 'PLATAFORMA 2026'}</h2>
                             <p className="text-slate-600 leading-relaxed mb-6">
                                 Este sitio ha sido diseñado para los Estudiantes de Básica Primaria, Básica Secundaria y Media del <strong>{school.nombre}</strong> como estrategia virtual de apoyo Académico.
                                 Aquí encontrarán horarios, guías y acceso a las aulas virtuales.
@@ -87,8 +87,11 @@ export default async function SchoolLanding({ params, searchParams }) {
                                 <a href={`/${params.slug}/login`} className="block w-full bg-slate-900 text-white text-center py-4 rounded-xl font-bold hover:bg-blue-600 transition-all shadow-lg shadow-slate-900/20">
                                     PORTAL ACADÉMICO
                                 </a>
-                                <a href={`/${params.slug}/pagos`} className="block w-full bg-white border border-slate-200 text-slate-700 text-center py-3 rounded-xl font-bold hover:bg-slate-50 transition-all">
+                                <a href={`/${params.slug}/pagos`} className="block w-full bg-institutional-magenta text-white text-center py-3 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg shadow-magenta-500/20">
                                     Pagos en Línea (Wompi)
+                                </a>
+                                <a href={`/${params.slug}/costos`} className="block w-full bg-white border border-slate-200 text-slate-700 text-center py-3 rounded-xl font-bold hover:bg-slate-50 transition-all">
+                                    Costos Académicos
                                 </a>
                                 <a href={`/${params.slug}/docentes`} className="block w-full bg-white border border-slate-200 text-slate-700 text-center py-3 rounded-xl font-bold hover:bg-slate-50 transition-all">
                                     Directorio Docente

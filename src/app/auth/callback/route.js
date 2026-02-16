@@ -6,104 +6,110 @@ export async function GET(request) {
     const requestUrl = new URL(request.url);
     const code = requestUrl.searchParams.get("code");
     const next = requestUrl.searchParams.get("next") || "/";
+    const requestedSlug = requestUrl.searchParams.get("slug"); // Capturamos el slug de la página de login
+    const cookieStore = cookies();
+
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        {
+            cookies: {
+                get(name) {
+                    return cookieStore.get(name)?.value;
+                },
+                set(name, value, options) {
+                    cookieStore.set({ name, value, ...options });
+                },
+                remove(name, options) {
+                    cookieStore.set({ name, value: "", ...options });
+                },
+            },
+        }
+    );
 
     if (code) {
-        const cookieStore = cookies();
+        await supabase.auth.exchangeCodeForSession(code);
+    }
 
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            {
-                cookies: {
-                    get(name) {
-                        return cookieStore.get(name)?.value;
-                    },
-                    set(name, value, options) {
-                        cookieStore.set({ name, value, ...options });
-                    },
-                    remove(name, options) {
-                        cookieStore.set({ name, value: "", ...options });
-                    },
-                },
-            }
-        );
+    // 1. Obtener el usuario autenticado (ya sea por código intercambiado o sesión existente)
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
 
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (user) {
+        // 2. Consultar el ROL y el COLEGIO en la tabla profiles
+        let { data: profile } = await supabase
+            .from("profiles")
+            .select("rol, school_id")
+            .eq("id", user.id)
+            .single();
 
-        if (!error) {
-            // 1. Obtener el usuario autenticado
-            const {
-                data: { user },
-            } = await supabase.auth.getUser();
+        // 2.1 [AUTO-FIX] Si no se encuentra perfil por ID, buscar por email (para corregir desajustes de ID manuales)
+        if (!profile) {
+            const { data: profileByEmail } = await supabase
+                .from("profiles")
+                .select("rol, school_id, email")
+                .eq("email", user.email)
+                .single();
 
-            if (user) {
-                // 2. Consultar el ROL y el COLEGIO en la tabla profiles
-                let { data: profile } = await supabase
+            if (profileByEmail) {
+                // Actualizamos el ID del perfil para que coincida con el real de Supabase Auth
+                await supabase
                     .from("profiles")
-                    .select("rol, school_id")
-                    .eq("id", user.id)
-                    .single();
+                    .update({ id: user.id })
+                    .eq("email", user.email);
 
-                // 2.1 [AUTO-FIX] Si no se encuentra perfil por ID, buscar por email (para corregir desajustes de ID manuales)
-                if (!profile) {
-                    const { data: profileByEmail } = await supabase
-                        .from("profiles")
-                        .select("rol, school_id, email")
-                        .eq("email", user.email)
-                        .single();
-
-                    if (profileByEmail) {
-                        // Actualizamos el ID del perfil para que coincida con el real de Supabase Auth
-                        await supabase
-                            .from("profiles")
-                            .update({ id: user.id })
-                            .eq("email", user.email);
-
-                        profile = profileByEmail;
-                    }
-                }
-
-                if (profile) {
-                    let slug = "";
-
-                    // Si el perfil tiene colegio, buscar el slug
-                    if (profile.school_id) {
-                        const { data: school } = await supabase
-                            .from("schools")
-                            .select("slug")
-                            .eq("id", profile.school_id)
-                            .single();
-                        if (school) slug = school.slug;
-                    }
-
-                    // 3. Redirigir según el ROL (incluyendo el slug si existe)
-                    const dashboardPath = slug ? `/${slug}` : "";
-
-                    switch (profile.rol) {
-                        case "superadmin":
-                            return NextResponse.redirect(`${requestUrl.origin}/superadmin`);
-                        case "admin":
-                            return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/admin`);
-                        case "secretary":
-                            return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/secretaria`);
-                        case "treasury":
-                        case "bursar":
-                            return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/tesoreria`);
-                        case "coordinator":
-                            return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/coordinacion`);
-                        case "teacher":
-                            return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/profesores`);
-                        case "student":
-                            return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/estudiante`);
-                        default:
-                            return NextResponse.redirect(`${requestUrl.origin}/`); // Fallback
-                    }
-                }
+                profile = profileByEmail;
             }
-            return NextResponse.redirect(`${requestUrl.origin}${next}`);
+        }
+
+        if (profile) {
+            let slug = "";
+
+            // Si el perfil tiene colegio, buscar el slug
+            if (profile.school_id) {
+                const { data: school } = await supabase
+                    .from("schools")
+                    .select("slug")
+                    .eq("id", profile.school_id)
+                    .single();
+                if (school) slug = school.slug;
+            }
+
+            // [NUEVO] Si no se encontró slug por school_id, usar el solicitado en la URL (respaldo)
+            if (!slug && requestedSlug) {
+                slug = requestedSlug;
+            }
+
+            // 3. Redirigir según el ROL (incluyendo el slug si existe)
+            const dashboardPath = slug ? `/${slug}` : "";
+
+            switch (profile.rol) {
+                case "superadmin":
+                    return NextResponse.redirect(`${requestUrl.origin}/superadmin`);
+                case "admin":
+                    return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/admin`);
+                case "secretary":
+                    return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/secretaria`);
+                case "treasury":
+                case "bursar":
+                    return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/tesoreria`);
+                case "coordinator":
+                    return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/coordinacion`);
+                case "teacher":
+                    return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/profesores`);
+                case "student":
+                    return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/estudiante`);
+                default:
+                    return NextResponse.redirect(`${requestUrl.origin}/`); // Fallback
+            }
         }
     }
 
-    // Si hubo error o no hay código, volver al login
+    // Si hubo error o no hay usuario, volver al login
+    if (!user && !code) {
+        return NextResponse.redirect(`${requestUrl.origin}/auth`);
+    }
+
     return NextResponse.redirect(`${requestUrl.origin}/auth?error=auth`);
 }

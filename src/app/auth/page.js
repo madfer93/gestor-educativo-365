@@ -1,11 +1,13 @@
 "use client";
 import React, { useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
-import { ShieldCheck, Mail, ArrowRight, Loader2 } from 'lucide-react';
+import { ShieldCheck, Mail, ArrowRight, Loader2, KeyRound, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AuthPage() {
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loginMethod, setLoginMethod] = useState('magic-link'); // 'magic-link' | 'password'
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
 
@@ -19,17 +21,31 @@ export default function AuthPage() {
         setLoading(true);
         setMessage('');
 
-        const { error } = await supabase.auth.signInWithOtp({
-            email,
-            options: {
-                emailRedirectTo: `${window.location.origin}/auth/callback`,
-            },
-        });
+        if (loginMethod === 'magic-link') {
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
+                options: {
+                    emailRedirectTo: `${window.location.origin}/auth/callback`,
+                },
+            });
 
-        if (error) {
-            setMessage(`Error: ${error.message}`);
+            if (error) {
+                setMessage(`Error: ${error.message}`);
+            } else {
+                setMessage('¡Enlace enviado! Revisa tu correo para ingresar.');
+            }
         } else {
-            setMessage('¡Enlace enviado! Revisa tu correo para ingresar.');
+            const { error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error) {
+                setMessage(`Error: ${error.message}`);
+            } else {
+                // El middleware o el callback manejarán la redirección
+                window.location.href = '/auth/callback';
+            }
         }
         setLoading(false);
     };
@@ -46,24 +62,85 @@ export default function AuthPage() {
 
             <div className="w-full max-w-md bg-slate-900/50 border border-slate-800 p-8 md:p-10 rounded-[40px] shadow-2xl backdrop-blur-xl">
                 <div className="text-center mb-10">
-                    <h1 className="text-3xl font-black mb-3">Bienvenido</h1>
-                    <p className="text-slate-400 font-medium">Ingresa tu correo para iniciar sesión de forma segura.</p>
+                    <h1 className="text-3xl font-black mb-3 text-white">Bienvenido</h1>
+                    <p className="text-slate-400 font-medium">Accede a tu plataforma de gestión educativa.</p>
+                </div>
+
+                {/* Switch Method */}
+                <div className="flex bg-slate-950 p-1 rounded-2xl mb-8 border border-slate-800">
+                    <button
+                        onClick={() => setLoginMethod('magic-link')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${loginMethod === 'magic-link' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                        <LinkIcon size={14} /> Link Mágico
+                    </button>
+                    <button
+                        onClick={() => setLoginMethod('password')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${loginMethod === 'password' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                        <KeyRound size={14} /> Contraseña
+                    </button>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Mail size={20} className="text-slate-500" />
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">Correo Electrónico</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <Mail size={20} className="text-slate-500" />
+                            </div>
+                            <input
+                                type="email"
+                                required
+                                placeholder="tu@correo.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all font-medium"
+                            />
                         </div>
-                        <input
-                            type="email"
-                            required
-                            placeholder="tu@correo.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all font-medium"
-                        />
                     </div>
+
+                    {loginMethod === 'password' && (
+                        <>
+                            <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">Contraseña</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <KeyRound size={20} className="text-slate-500" />
+                                    </div>
+                                    <input
+                                        type="password"
+                                        required
+                                        placeholder="••••••••"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all font-medium"
+                                    />
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        if (!email) {
+                                            setMessage('Error: Por favor ingresa tu correo primero.');
+                                            return;
+                                        }
+                                        setLoading(true);
+                                        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                                            redirectTo: `${window.location.origin}/auth/update-password`,
+                                        });
+                                        if (error) setMessage(`Error: ${error.message}`);
+                                        else setMessage('¡Enlace de recuperación enviado! Revisa tu correo.');
+                                        setLoading(false);
+                                    }}
+                                    className="text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors"
+                                >
+                                    ¿Olvidaste tu contraseña?
+                                </button>
+                            </div>
+                        </>
+                    )}
 
                     <button
                         type="submit"
@@ -74,7 +151,8 @@ export default function AuthPage() {
                             <Loader2 className="animate-spin" size={24} />
                         ) : (
                             <>
-                                Enviar Enlace Mágico <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                                {loginMethod === 'magic-link' ? 'Enviar Enlace Mágico' : 'Entrar a la Plataforma'}
+                                <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                             </>
                         )}
                     </button>

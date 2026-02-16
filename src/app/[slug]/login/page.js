@@ -1,13 +1,15 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
-import { ShieldCheck, Mail, ArrowRight, Loader2, Lock, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, Mail, ArrowRight, Loader2, Lock, ArrowLeft, KeyRound, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SchoolLoginPage({ params }) {
     const { slug } = params;
     const [school, setSchool] = useState(null);
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loginMethod, setLoginMethod] = useState('password');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [fetchingSchool, setFetchingSchool] = useState(true);
@@ -35,17 +37,31 @@ export default function SchoolLoginPage({ params }) {
         setLoading(true);
         setMessage('');
 
-        const { error } = await supabase.auth.signInWithOtp({
-            email,
-            options: {
-                emailRedirectTo: `${window.location.origin}/auth/callback`,
-            },
-        });
+        if (loginMethod === 'magic-link') {
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
+                options: {
+                    emailRedirectTo: `${window.location.origin}/auth/callback`,
+                },
+            });
 
-        if (error) {
-            setMessage(`Error: ${error.message}`);
+            if (error) {
+                setMessage(`Error: ${error.message}`);
+            } else {
+                setMessage('¡Enlace enviado! Revisa tu correo para ingresar a la plataforma.');
+            }
         } else {
-            setMessage('¡Enlace enviado! Revisa tu correo para ingresar a la plataforma.');
+            const { error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error) {
+                setMessage(`Error: ${error.message}`);
+            } else {
+                // Redirigir al callback para procesar el rol y destino
+                window.location.href = `/auth/callback?slug=${slug}`;
+            }
         }
         setLoading(false);
     };
@@ -124,6 +140,24 @@ export default function SchoolLoginPage({ params }) {
                         <p className="text-slate-500 font-medium">Ingresa para acceder a tu portal institucional.</p>
                     </div>
 
+                    {/* Switch Method */}
+                    <div className="flex bg-slate-50 p-1 rounded-2xl mb-8 border border-slate-100">
+                        <button
+                            onClick={() => setLoginMethod('magic-link')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${loginMethod === 'magic-link' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                            style={loginMethod === 'magic-link' ? { color: branding.primary } : {}}
+                        >
+                            <LinkIcon size={14} /> Link Mágico
+                        </button>
+                        <button
+                            onClick={() => setLoginMethod('password')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${loginMethod === 'password' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                            style={loginMethod === 'password' ? { color: branding.primary } : {}}
+                        >
+                            <KeyRound size={14} /> Contraseña
+                        </button>
+                    </div>
+
                     <form onSubmit={handleLogin} className="space-y-6">
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Correo Electrónico</label>
@@ -143,6 +177,49 @@ export default function SchoolLoginPage({ params }) {
                             </div>
                         </div>
 
+                        {loginMethod === 'password' && (
+                            <>
+                                <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Tu Contraseña</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                                            <KeyRound size={20} className="text-slate-300" />
+                                        </div>
+                                        <input
+                                            type="password"
+                                            required
+                                            placeholder="••••••••"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="w-full bg-slate-50 border-2 border-transparent rounded-[24px] py-5 pl-14 pr-6 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-institutional-blue transition-all font-bold text-lg"
+                                            style={{ focusBorderColor: branding.primary }}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="text-right px-4">
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            if (!email) {
+                                                setMessage('Error: Ingresa tu correo electrónico.');
+                                                return;
+                                            }
+                                            setLoading(true);
+                                            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                                                redirectTo: `${window.location.origin}/auth/update-password`,
+                                            });
+                                            if (error) setMessage(`Error: ${error.message}`);
+                                            else setMessage('¡Enlace de recuperación enviado! Revisa tu bandeja de entrada.');
+                                            setLoading(false);
+                                        }}
+                                        className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-800 transition-colors"
+                                    >
+                                        ¿Olvidaste tu contraseña?
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
                         <button
                             type="submit"
                             disabled={loading}
@@ -153,7 +230,8 @@ export default function SchoolLoginPage({ params }) {
                                 <Loader2 className="animate-spin" size={24} />
                             ) : (
                                 <>
-                                    Ingresar a la Plataforma <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                                    {loginMethod === 'magic-link' ? 'Enviar Enlace Mágico' : 'Ingresar a la Plataforma'}
+                                    <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
                         </button>

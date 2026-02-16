@@ -75,14 +75,22 @@ export default function SchoolManager({ params }) {
         setRectorMessage(null);
 
         try {
-            const { data, error } = await supabase.rpc('create_rector_user', {
-                target_email: rectorEmail,
-                target_password: rectorPass,
-                target_name: rectorName,
-                target_school_id: id
+            const response = await fetch('/api/auth/manage-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: rectorEmail,
+                    password: rectorPass,
+                    name: rectorName,
+                    school_id: id,
+                    rol: 'admin'
+                })
             });
 
-            if (error) throw error;
+            const result = await response.json();
+
+            if (!response.ok) throw new Error(result.error || 'Error desconocido');
+
             setRectorMessage("¡Rector Creado Exitosamente!");
             setRectorEmail('');
             setRectorName('');
