@@ -1,11 +1,19 @@
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Zap, Shield, Globe } from 'lucide-react';
 import SalesChatBubble from '@/components/SalesChatBubble';
 import SaaSNavbar from '@/components/SaaSNavbar';
 
 export default function SaaSLanding() {
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        if (code) {
+            window.location.href = `/auth/callback${window.location.search}`;
+        }
+    }, []);
+
     return (
         <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-purple-500/30 overflow-x-hidden">
 

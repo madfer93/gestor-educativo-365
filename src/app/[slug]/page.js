@@ -3,10 +3,12 @@ import { ArrowRight, MapPin, Phone, Calendar, Clock, Lock, Menu, UserPlus } from
 import ChatIA from "@/components/ChatIA";
 import SchoolNavbar from "@/components/SchoolNavbar";
 import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-
-
-export default async function SchoolLanding({ params }) {
+export default async function SchoolLanding({ params, searchParams }) {
+    if (searchParams?.code) {
+        redirect(`/auth/callback?code=${searchParams.code}`);
+    }
     const supabase = createClient();
     const { data: school, error } = await supabase
         .from('schools')
