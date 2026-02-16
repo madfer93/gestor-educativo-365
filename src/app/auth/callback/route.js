@@ -37,28 +37,45 @@ export async function GET(request) {
             } = await supabase.auth.getUser();
 
             if (user) {
-                // 2. Consultar el ROL en la tabla profiles
+                // 2. Consultar el ROL y el COLEGIO en la tabla profiles
                 const { data: profile } = await supabase
                     .from("profiles")
-                    .select("rol")
+                    .select("rol, school_id")
                     .eq("id", user.id)
                     .single();
 
-                // 3. Redirigir según el ROL
                 if (profile) {
+                    let slug = "";
+
+                    // Si el perfil tiene colegio, buscar el slug
+                    if (profile.school_id) {
+                        const { data: school } = await supabase
+                            .from("schools")
+                            .select("slug")
+                            .eq("id", profile.school_id)
+                            .single();
+                        if (school) slug = school.slug;
+                    }
+
+                    // 3. Redirigir según el ROL (incluyendo el slug si existe)
+                    const dashboardPath = slug ? `/${slug}` : "";
+
                     switch (profile.rol) {
                         case "superadmin":
                             return NextResponse.redirect(`${requestUrl.origin}/superadmin`);
                         case "admin":
-                            return NextResponse.redirect(`${requestUrl.origin}/admin`);
+                            return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/admin`);
                         case "secretary":
-                            return NextResponse.redirect(`${requestUrl.origin}/secretaria`);
+                            return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/secretaria`);
+                        case "treasury":
                         case "bursar":
-                            return NextResponse.redirect(`${requestUrl.origin}/tesoreria`);
+                            return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/tesoreria`);
+                        case "coordinator":
+                            return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/coordinacion`);
                         case "teacher":
-                            return NextResponse.redirect(`${requestUrl.origin}/profesores`);
+                            return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/profesores`);
                         case "student":
-                            return NextResponse.redirect(`${requestUrl.origin}/estudiante`);
+                            return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/estudiante`);
                         default:
                             return NextResponse.redirect(`${requestUrl.origin}/`); // Fallback
                     }
@@ -69,5 +86,5 @@ export async function GET(request) {
     }
 
     // Si hubo error o no hay código, volver al login
-    return NextResponse.redirect(`${requestUrl.origin}/login?error=auth`);
+    return NextResponse.redirect(`${requestUrl.origin}/auth?error=auth`);
 }

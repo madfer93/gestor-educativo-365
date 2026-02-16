@@ -13,26 +13,7 @@ export default function OfertaAcademica() {
     ];
 
     return (
-        <div className="min-h-screen bg-white">
-            <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-                <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-                    <a href="/" className="flex items-center gap-2 group">
-                        <img src={colegio.logoSolo} alt="Logo" className="w-8 h-8 object-contain" />
-                        <span className="font-black text-institutional-blue text-[10px] tracking-tighter group-hover:text-institutional-magenta transition-colors">
-                            LATINOAMERICANO
-                        </span>
-                    </a>
-                    <div className="flex gap-2 items-center">
-                        <a href="/institucion" className="text-[10px] font-black text-institutional-magenta px-4 py-2 uppercase tracking-widest border-b-2 border-institutional-magenta">Institución</a>
-                        <a href="/blog" className="text-[10px] font-black text-institutional-blue hover:text-institutional-magenta transition-colors px-4 py-2 uppercase tracking-widest">Blog</a>
-                        <a href="/admin" className="text-[10px] font-black text-gray-400 hover:text-institutional-blue transition-colors px-4 py-2 uppercase tracking-widest">Rectoría</a>
-                        <a href="/estudiante" className="bg-institutional-magenta text-white px-6 py-2 rounded-full font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-magenta-500/30 hover:scale-105 transition-transform">
-                            Admisiones
-                        </a>
-                    </div>
-                </div>
-            </nav>
-
+        <div className="bg-white">
             <main className="container mx-auto px-6 py-20">
                 <div className="text-center mb-20">
                     <span className="bg-magenta-50 text-institutional-magenta text-[10px] font-black uppercase tracking-[0.3em] px-4 py-2 rounded-full mb-6 inline-block">

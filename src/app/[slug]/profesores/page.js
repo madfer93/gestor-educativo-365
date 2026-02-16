@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
-import { BookOpen, Calendar, CheckSquare, PlusCircle, Users, Clock, FileText, BarChart2 } from 'lucide-react';
+import { BookOpen, Calendar, CheckSquare, PlusCircle, Users, Clock, FileText, BarChart2, Heart } from 'lucide-react';
+import WellbeingModule from "@/components/WellbeingModule";
 
 export default function ProfesoresDashboard() {
     return (
@@ -85,18 +86,22 @@ export default function ProfesoresDashboard() {
                     </h3>
                     <div className="space-y-4">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between">
+                            <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between font-sans">
                                 <div className="flex items-center gap-4">
                                     <div className="w-2 h-2 rounded-full bg-institutional-magenta"></div>
                                     <div>
                                         <p className="font-bold text-gray-800 text-sm">Juan Pérez entregó "Taller Vectores"</p>
-                                        <p className="text-xs text-gray-400">Hace 10 minutos • Grado 11°</p>
+                                        <p className="text-xs text-gray-400">Hace {i * 5} minutos • Grado 11°</p>
                                     </div>
                                 </div>
-                                <button className="text-institutional-blue font-black text-xs hover:underline">Calificar</button>
+                                <button className="text-institutional-blue font-black text-xs hover:underline uppercase tracking-widest">Calificar</button>
                             </div>
                         ))}
                     </div>
+                </div>
+
+                <div className="mt-12">
+                    <WellbeingModule />
                 </div>
             </main>
         </div>

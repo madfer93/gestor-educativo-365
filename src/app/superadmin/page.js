@@ -27,7 +27,7 @@ export default function SuperAdminDashboard() {
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
-        window.location.href = '/login';
+        window.location.href = '/';
     };
 
     return (
@@ -65,7 +65,7 @@ export default function SuperAdminDashboard() {
                     <p className="text-slate-400 font-medium">Gestión centralizada de instituciones educativas.</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                     <div className="bg-slate-900/50 p-8 rounded-3xl border border-slate-800 hover:border-purple-500/50 transition-colors group">
                         <div className="flex justify-between items-start mb-4">
                             <div className="p-3 bg-purple-500/10 rounded-2xl text-purple-400 group-hover:text-purple-300 group-hover:bg-purple-500/20 transition-colors">
@@ -95,6 +95,42 @@ export default function SuperAdminDashboard() {
                         <h3 className="text-slate-400 font-bold text-sm uppercase tracking-widest mb-1">Estado del Sistema</h3>
                         <p className="text-xl font-black text-white">Operativo</p>
                     </div>
+
+                    {/* Nueva Card para Configuración Web */}
+                    <a href="/superadmin/configuracion" className="bg-slate-900/50 p-8 rounded-3xl border border-slate-800 hover:border-yellow-500/50 transition-all group hover:-translate-y-1 block cursor-pointer">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="p-3 bg-yellow-500/10 rounded-2xl text-yellow-400 group-hover:text-yellow-300 group-hover:bg-yellow-500/20 transition-colors">
+                                <Activity size={32} />
+                            </div>
+                            <span className="bg-yellow-500/10 text-yellow-500 text-[10px] font-black uppercase px-3 py-1 rounded-full">Edit</span>
+                        </div>
+                        <h3 className="text-slate-400 font-bold text-sm uppercase tracking-widest mb-1">Web Pública</h3>
+                        <p className="text-xl font-black text-white group-hover:text-yellow-400 transition-colors">Editar Precios</p>
+                    </a>
+
+                    {/* Card Leads */}
+                    <a href="/superadmin/leads" className="bg-slate-900/50 p-8 rounded-3xl border border-slate-800 hover:border-blue-500/50 transition-all group hover:-translate-y-1 block cursor-pointer">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400 group-hover:text-blue-300 group-hover:bg-blue-500/20 transition-colors">
+                                <Users size={32} />
+                            </div>
+                            <span className="bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase px-3 py-1 rounded-full">CRM</span>
+                        </div>
+                        <h3 className="text-slate-400 font-bold text-sm uppercase tracking-widest mb-1">Leads & Ventas</h3>
+                        <p className="text-xl font-black text-white group-hover:text-blue-400 transition-colors">Ver Interesados</p>
+                    </a>
+
+                    {/* Card Legal */}
+                    <a href="/superadmin/legal" className="bg-slate-900/50 p-8 rounded-3xl border border-slate-800 hover:border-slate-500/50 transition-all group hover:-translate-y-1 block cursor-pointer">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="p-3 bg-slate-500/10 rounded-2xl text-slate-400 group-hover:text-slate-300 group-hover:bg-slate-500/20 transition-colors">
+                                <ShieldCheck size={32} />
+                            </div>
+                            <span className="bg-slate-500/10 text-slate-500 text-[10px] font-black uppercase px-3 py-1 rounded-full">Legal</span>
+                        </div>
+                        <h3 className="text-slate-400 font-bold text-sm uppercase tracking-widest mb-1">Textos Legales</h3>
+                        <p className="text-xl font-black text-white group-hover:text-slate-400 transition-colors">Editar Términos</p>
+                    </a>
                 </div>
 
                 <div className="bg-slate-900 rounded-[32px] border border-slate-800 p-8 overflow-hidden">
@@ -134,8 +170,7 @@ export default function SuperAdminDashboard() {
                                             </td>
                                             <td className="py-6 font-medium text-slate-400">/{school.slug}</td>
                                             <td className="py-6">
-                                                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wide ${school.is_active ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                                    }`}>
+                                                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wide ${school.is_active ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
                                                     {school.is_active ? 'Activo' : 'Inactivo'}
                                                 </span>
                                             </td>

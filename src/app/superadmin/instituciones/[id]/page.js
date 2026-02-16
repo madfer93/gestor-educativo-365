@@ -14,6 +14,7 @@ export default function SchoolManager({ params }) {
     // Form States - School
     const [slogan, setSlogan] = useState('');
     const [logoUrl, setLogoUrl] = useState('');
+    const [schoolUrl, setSchoolUrl] = useState(''); // Estado para Link del Colegio
 
     // Form States - Rector
     const [rectorEmail, setRectorEmail] = useState('');
@@ -43,6 +44,7 @@ export default function SchoolManager({ params }) {
             setSchool(data);
             setSlogan(data.slogan || '');
             setLogoUrl(data.logo_url || '');
+            setSchoolUrl(data.school_url || ''); // Cargar URL
         }
         setLoading(false);
     };
@@ -53,12 +55,18 @@ export default function SchoolManager({ params }) {
             .from('schools')
             .update({
                 slogan: slogan,
-                logo_url: logoUrl
+                logo_url: logoUrl,
+                school_url: schoolUrl
             })
             .eq('id', id);
 
         setSaving(false);
-        if (!error) alert("¡Cambios guardados!");
+        if (error) {
+            alert("Error al guardar: " + error.message);
+            console.error(error);
+        } else {
+            alert("¡Cambios guardados!");
+        }
     };
 
     const handleCreateRector = async (e) => {
@@ -67,7 +75,6 @@ export default function SchoolManager({ params }) {
         setRectorMessage(null);
 
         try {
-            // Llamamos a la función RPC que creamos en el script SQL Update
             const { data, error } = await supabase.rpc('create_rector_user', {
                 target_email: rectorEmail,
                 target_password: rectorPass,
@@ -85,6 +92,8 @@ export default function SchoolManager({ params }) {
             setCreatingRector(false);
         }
     };
+
+    // ... (rest of the code remains the same until UI)
 
     if (loading) return <div className="min-h-screen bg-[#0f172a] text-white flex items-center justify-center">Cargando...</div>;
 
@@ -131,6 +140,16 @@ export default function SchoolManager({ params }) {
                                     onChange={(e) => setLogoUrl(e.target.value)}
                                     className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white font-medium focus:border-purple-500 transition-colors outline-none"
                                     placeholder="https://..."
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-500">Link del Colegio (Software)</label>
+                                <input
+                                    type="text"
+                                    value={schoolUrl}
+                                    onChange={(e) => setSchoolUrl(e.target.value)}
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white font-medium focus:border-purple-500 transition-colors outline-none"
+                                    placeholder="https://colegio.gestoreducativo.com"
                                 />
                             </div>
 
