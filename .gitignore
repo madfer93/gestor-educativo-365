@@ -31,3 +31,10 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# debug scripts and logs
+debug_leads.js
+fix_auth_users.js
+lint.txt
+findstr_output.txt
+*.log

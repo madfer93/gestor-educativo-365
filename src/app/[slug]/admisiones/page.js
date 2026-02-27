@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from 'react';
 import { ArrowRight, CheckCircle, Upload, User, Phone, MapPin, Calendar } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
+const supabase = createClient();
 
 export default function AdmisionesPage() {
     const [step, setStep] = useState(1);

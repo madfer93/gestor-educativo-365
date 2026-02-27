@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { Calendar, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
 export async function generateMetadata({ params }) {
     const supabase = createClient();
@@ -53,9 +54,9 @@ export default async function NewsPage({ params }) {
                                     <p className="text-slate-500 text-sm leading-relaxed mb-4 flex-1 line-clamp-3">
                                         {item.summary || item.content?.substring(0, 150) + '...'}
                                     </p>
-                                    <a href="#" className="inline-flex items-center gap-2 text-blue-600 font-bold text-sm hover:underline mt-auto">
+                                    <Link href={`/${params.slug}/noticias/${item.id}`} className="inline-flex items-center gap-2 text-blue-600 font-bold text-sm hover:underline mt-auto">
                                         Leer más <ArrowRight size={16} />
-                                    </a>
+                                    </Link>
                                 </div>
                             </div>
                         ))}

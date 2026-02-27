@@ -66,9 +66,8 @@ export default async function SchoolLanding({ params, searchParams }) {
                         <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
                             <span className="text-blue-600 font-bold text-xs uppercase tracking-widest mb-2 block">Información General</span>
                             <h2 className="text-3xl font-black text-slate-800 mb-4">{school.slogan || 'PLATAFORMA 2026'}</h2>
-                            <p className="text-slate-600 leading-relaxed mb-6">
-                                Este sitio ha sido diseñado para los Estudiantes de Básica Primaria, Básica Secundaria y Media del <strong>{school.nombre}</strong> como estrategia virtual de apoyo Académico.
-                                Aquí encontrarán horarios, guías y acceso a las aulas virtuales.
+                            <p className="text-slate-600 leading-relaxed mb-6 whitespace-pre-wrap">
+                                {school.mision || `Este sitio ha sido diseñado para los Estudiantes de Básica Primaria, Básica Secundaria y Media del ${school.nombre} como estrategia virtual de apoyo Académico.\nAquí encontrarán horarios, guías y acceso a las aulas virtuales.`}
                             </p>
                             <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
                                 <h3 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
@@ -131,7 +130,7 @@ export default async function SchoolLanding({ params, searchParams }) {
                             <span className="text-institutional-magenta font-extrabold text-xs uppercase tracking-[0.3em] mb-2 block">Comunicación Oficial</span>
                             <h2 className="text-4xl font-black text-slate-800">Boletines y Circulares</h2>
                         </div>
-                        <a href="#" className="text-institutional-blue font-black text-sm hover:underline flex items-center gap-2">
+                        <a href={`/${params.slug}/noticias`} className="text-institutional-blue font-black text-sm hover:underline flex items-center gap-2">
                             Ver Histórico <ArrowRight size={16} />
                         </a>
                     </div>

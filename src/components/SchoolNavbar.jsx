@@ -77,22 +77,22 @@ export default function SchoolNavbar({ schoolName, logoUrl, brandingColors, slug
                 {/* Logo Area */}
                 <a href={`/${slug}`} className="flex items-center gap-4 group">
                     {logoUrl ? (
-                        <img src={logoUrl} alt="Logo" className="w-12 h-12 object-contain bg-white rounded-lg p-1" />
+                        <img src={logoUrl} alt="Logo" className="w-24 h-24 object-contain drop-shadow-xl transition-transform group-hover:scale-105" />
                     ) : (
-                        <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center font-black text-white text-xl">L</div>
+                        <div className="w-24 h-24 bg-white/10 rounded-2xl flex items-center justify-center font-black text-white text-4xl shadow-lg">L</div>
                     )}
                     <div className="leading-tight">
-                        <h1 className="text-white font-black text-lg md:text-xl uppercase tracking-tighter transition-opacity opacity-90 group-hover:opacity-100">
+                        <h1 className="text-white font-black text-xl md:text-3xl uppercase tracking-tighter transition-opacity opacity-90 group-hover:opacity-100 drop-shadow-md">
                             {schoolName || "Colegio Latinoamericano"}
                         </h1>
-                        <p className="text-white/60 text-[10px] md:text-xs font-bold uppercase tracking-widest">
-                            Plataforma 2026
-                        </p>
                     </div>
                 </a>
 
                 {/* Desktop Quick Nav (Centered) - MOVED HERE */}
                 <div className="hidden xl:flex items-center gap-6">
+                    <a href={`/${slug}/institucion`} className="text-white/80 hover:text-white font-bold text-xs uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
+                        🏛️ Institución
+                    </a>
                     <a href={`/${slug}/docentes`} className="text-white/80 hover:text-white font-bold text-xs uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
                         👨‍🏫 Docentes
                     </a>

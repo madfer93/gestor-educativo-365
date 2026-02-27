@@ -1,16 +1,61 @@
 "use client";
 import React, { useState } from 'react';
-import { Heart, Send, AlertTriangle, FileText, X } from 'lucide-react';
+import { Heart, Send, AlertTriangle, FileText, X, Loader2, Paperclip } from 'lucide-react';
+import { createClient } from '@/utils/supabase/client';
 
-export default function WellbeingModule() {
+export default function WellbeingModule({ studentId, schoolId }) {
+    const supabase = createClient();
     const [isOpen, setIsOpen] = useState(false);
     const [reportType, setReportType] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [description, setDescription] = useState("");
+    const [file, setFile] = useState(null);
 
-    const handleSend = (e) => {
+    const handleSend = async (e) => {
         e.preventDefault();
-        alert("Reporte enviado exitosamente. Rectoría y Coordinación han sido notificadas.");
-        setIsOpen(false);
-        setReportType(null);
+        setLoading(true);
+
+        try {
+            let evidenceUrl = null;
+
+            if (file) {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${studentId}-${Date.now()}.${fileExt}`;
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('wellbeing-evidence')
+                    .upload(fileName, file);
+
+                if (uploadError) throw new Error("Error al subir evidencia: " + uploadError.message);
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('wellbeing-evidence')
+                    .getPublicUrl(fileName);
+
+                evidenceUrl = publicUrl;
+            }
+
+            const { error: insertError } = await supabase.from('wellbeing_alerts').insert([{
+                student_id: studentId,
+                school_id: schoolId,
+                type: reportType === 'ausencia' ? 'Ausencia' : 'Urgencia',
+                description: description,
+                evidence_url: evidenceUrl,
+                status: 'Pendiente',
+                read: false
+            }]);
+
+            if (insertError) throw insertError;
+
+            alert("Reporte enviado exitosamente. Rectoría y Coordinación han sido notificadas.");
+            setIsOpen(false);
+            setReportType(null);
+            setDescription("");
+            setFile(null);
+        } catch (error) {
+            alert("Error: " + error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -34,7 +79,7 @@ export default function WellbeingModule() {
                         <FileText size={20} />
                     </div>
                     <div>
-                        <p className="font-black text-gray-800 text-sm">Reportar Ausencia</p>
+                        <p className="font-black text-gray-800 text-sm">Reportar Ausencia / Excusa</p>
                         <p className="text-[10px] text-gray-400 font-bold uppercase opacity-60 tracking-wider text-wrap">Envía excusas médicas o permisos</p>
                     </div>
                 </button>
@@ -70,21 +115,39 @@ export default function WellbeingModule() {
                                 <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 px-1">Detalles de la situación</label>
                                 <textarea
                                     required
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
                                     placeholder="Explica brevemente lo ocurrido..."
                                     className="w-full p-5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-800 font-medium h-32 focus:ring-4 focus:ring-blue-100 transition-all outline-none"
                                 />
                             </div>
 
                             {reportType === 'ausencia' && (
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 px-1">Adjuntar Excusa/Documento</label>
-                                    <input type="file" className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-institutional-blue file:text-white hover:file:bg-blue-600" />
+                                <div className="space-y-2">
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 px-1">Adjuntar Excusa/Evidencia (Imagen)</label>
+                                    <div className="relative group">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => setFile(e.target.files[0])}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        />
+                                        <div className="p-4 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center gap-2 text-gray-400 group-hover:border-institutional-blue group-hover:text-institutional-blue transition-all bg-gray-50">
+                                            <Paperclip size={18} />
+                                            <span className="text-xs font-bold uppercase truncate max-w-[200px]">
+                                                {file ? file.name : "Subir Imagen de Evidencia"}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
-                            <button className={`w-full py-4 rounded-2xl font-black text-white shadow-xl flex items-center justify-center gap-2 transition-transform hover:scale-105 ${reportType === 'ausencia' ? 'bg-institutional-blue' : 'bg-red-500 shadow-red-200'
-                                }`}>
-                                <Send size={18} /> Enviar Reporte Seguro
+                            <button
+                                disabled={loading}
+                                className={`w-full py-4 rounded-2xl font-black text-white shadow-xl flex items-center justify-center gap-2 transition-transform hover:scale-105 ${loading ? 'bg-gray-400' : (reportType === 'ausencia' ? 'bg-institutional-blue' : 'bg-red-500 shadow-red-200')
+                                    }`}>
+                                {loading ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
+                                {loading ? 'Enviando...' : 'Enviar Reporte Seguro'}
                             </button>
                         </form>
                     </div>
