@@ -72,8 +72,9 @@ export async function POST(req) {
         const aiResponse = chatCompletion.choices[0]?.message?.content || "";
         console.log("✅ [API/CHAT] Respuesta IA recibida.");
 
-        // 3. Lógica de Captura de Leads (Solo en modo ventas)
-        if (mode === 'sales') {
+        // 3. Lógica de Captura de Leads (Modo Ventas o Educación)
+        if (mode === 'sales' || mode === 'edu') {
+            const { school_id } = body;
             const lastUserMessage = messages[messages.length - 1].content;
             console.log(`🕵️ [API/CHAT] Analizando: "${lastUserMessage}"`);
 
@@ -84,10 +85,11 @@ export async function POST(req) {
                 console.log("📞 [API/CHAT] Teléfono encontrado. Guardando lead...");
                 try {
                     const { data, error } = await supabase.from('leads').insert([{
+                        school_id: school_id,
                         nombre: "Interesado desde Chat",
                         telefono: lastUserMessage,
-                        mensaje: aiResponse,
-                        origen: 'sales_chat_bot',
+                        interes: aiResponse,
+                        origen: mode === 'sales' ? 'sales_chat_bot' : 'edu_chat_bot',
                         estado: 'nuevo'
                     }]).select();
 
@@ -95,7 +97,6 @@ export async function POST(req) {
                         console.error("❌ [API/CHAT] Error Supabase:", error);
                     } else {
                         console.log("💾 [API/CHAT] Lead guardado ID:", data[0]?.id);
-                        // Opcional: Podrías forzar a la IA a confirmar que guardó el dato aquí si quisieras
                     }
                 } catch (err) {
                     console.error("💥 [API/CHAT] Excepción al guardar lead:", err);

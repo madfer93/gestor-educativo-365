@@ -76,11 +76,13 @@ export default function SchoolNavbar({ schoolName, logoUrl, brandingColors, slug
             <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                 {/* Logo Area */}
                 <a href={`/${slug}`} className="flex items-center gap-4 group">
-                    {logoUrl ? (
-                        <img src={logoUrl} alt="Logo" className="w-24 h-24 object-contain drop-shadow-xl transition-transform group-hover:scale-105" />
-                    ) : (
-                        <div className="w-24 h-24 bg-white/10 rounded-2xl flex items-center justify-center font-black text-white text-4xl shadow-lg">L</div>
-                    )}
+                    <div className="w-20 h-20 bg-white rounded-full p-1.5 shadow-2xl flex items-center justify-center overflow-hidden border-2 border-white/20">
+                        {logoUrl ? (
+                            <img src={logoUrl} alt="Logo" className="w-full h-full object-contain transition-transform group-hover:scale-110" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center font-black text-blue-900 text-3xl">L</div>
+                        )}
+                    </div>
                     <div className="leading-tight">
                         <h1 className="text-white font-black text-xl md:text-3xl uppercase tracking-tighter transition-opacity opacity-90 group-hover:opacity-100 drop-shadow-md">
                             {schoolName || "Colegio Latinoamericano"}
@@ -156,12 +158,12 @@ export default function SchoolNavbar({ schoolName, logoUrl, brandingColors, slug
 
                                 {/* Dropdown */}
                                 <div className={`
-                                    lg:absolute lg:left-0 lg:top-full lg:w-56 shadow-xl lg:rounded-b-xl overflow-hidden transition-all duration-200 z-50
-                                    ${activeDropdown === idx ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 lg:hidden'}
+                                    lg:absolute lg:left-0 lg:top-full lg:w-56 shadow-2xl lg:rounded-b-2xl overflow-hidden transition-all duration-300 z-50
+                                    ${activeDropdown === idx ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0 lg:hidden'}
                                 `}
                                     style={{ backgroundColor: primary }}
                                 >
-                                    <ul className="py-2">
+                                    <ul className="py-3">
                                         {item.items.map((subItem, sIdx) => (
                                             <li key={sIdx}>
                                                 <a href="#" className="block px-6 py-2.5 text-xs uppercase text-white/70 hover:text-white hover:bg-white/10 transition-colors border-l-2 border-transparent"

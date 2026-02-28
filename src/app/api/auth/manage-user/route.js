@@ -9,16 +9,23 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Faltan campos obligatorios (email, password, rol, school_id)' }, { status: 400 });
         }
 
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (!supabaseUrl || !supabaseKey) {
+            console.error('Configuración faltante:', { url: !!supabaseUrl, key: !!supabaseKey });
+            return NextResponse.json({
+                error: 'Configuración de Supabase incompleta en el servidor. Por favor, reinicie el servidor de desarrollo.'
+            }, { status: 500 });
+        }
+
         // Cliente con Service Role para bypass de RLS y creación de Auth
-        const supabaseAdmin = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL,
-            process.env.SUPABASE_SERVICE_ROLE_KEY,
-            {
-                auth: {
-                    autoRefreshToken: false,
-                    persistSession: false
-                }
+        const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
             }
+        }
         );
 
         // 1. Crear usuario en Auth
@@ -38,7 +45,7 @@ export async function POST(req) {
 
         // 2. Crear/Actualizar Perfil en public.profiles
         // Solo permitir campos válidos de la tabla profiles en metadata
-        const allowedProfileFields = ['grado', 'public_bio', 'public_photo_url', 'specialty', 'is_public', 'fecha_nacimiento', 'tipo_documento', 'numero_documento', 'direccion', 'acudiente_nombre', 'acudiente_telefono', 'acudiente_email', 'acudiente_parentesco', 'es_menor_edad', 'documentos_entregados', 'grupo_sanguineo', 'alergias', 'condiciones_medicas', 'eps_salud'];
+        const allowedProfileFields = ['grado', 'modalidad', 'public_bio', 'public_photo_url', 'specialty', 'is_public', 'fecha_nacimiento', 'tipo_documento', 'numero_documento', 'direccion', 'acudiente_nombre', 'acudiente_telefono', 'acudiente_email', 'acudiente_parentesco', 'es_menor_edad', 'documentos_entregados', 'grupo_sanguineo', 'alergias', 'condiciones_medicas', 'eps_salud', 'observaciones'];
         const dateFields = ['fecha_nacimiento'];
         const safeMetadata = {};
         for (const key of allowedProfileFields) {
@@ -86,15 +93,19 @@ export async function PUT(req) {
             return NextResponse.json({ error: 'Falta el ID del usuario a actualizar' }, { status: 400 });
         }
 
-        const supabaseAdmin = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL,
-            process.env.SUPABASE_SERVICE_ROLE_KEY,
-            {
-                auth: {
-                    autoRefreshToken: false,
-                    persistSession: false
-                }
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (!supabaseUrl || !supabaseKey) {
+            return NextResponse.json({ error: 'Configuración de Supabase incompleta' }, { status: 500 });
+        }
+
+        const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
             }
+        }
         );
 
         // Si se proporciona una nueva contraseña, actualizarla en Auth
@@ -104,7 +115,7 @@ export async function PUT(req) {
         }
 
         // Solo permitir campos válidos de la tabla profiles
-        const allowedFields = ['nombre', 'email', 'rol', 'specialty', 'public_bio', 'public_photo_url', 'grado', 'is_public', 'school_id', 'fecha_nacimiento', 'tipo_documento', 'numero_documento', 'direccion', 'acudiente_nombre', 'acudiente_telefono', 'acudiente_email', 'acudiente_parentesco', 'es_menor_edad', 'documentos_entregados', 'grupo_sanguineo', 'alergias', 'condiciones_medicas', 'eps_salud'];
+        const allowedFields = ['nombre', 'email', 'rol', 'modalidad', 'specialty', 'public_bio', 'public_photo_url', 'grado', 'is_public', 'school_id', 'fecha_nacimiento', 'tipo_documento', 'numero_documento', 'direccion', 'acudiente_nombre', 'acudiente_telefono', 'acudiente_email', 'acudiente_parentesco', 'es_menor_edad', 'documentos_entregados', 'grupo_sanguineo', 'alergias', 'condiciones_medicas', 'eps_salud', 'observaciones'];
         const dateFields = ['fecha_nacimiento'];
         const safeData = {};
         for (const key of allowedFields) {

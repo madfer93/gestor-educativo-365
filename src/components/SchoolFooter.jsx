@@ -19,9 +19,9 @@ export default function SchoolFooter({ schoolName, logoUrl, primaryColor, social
     return (
         <footer className="py-16 text-center border-t border-white/10" style={{ backgroundColor: primaryColor || '#1e3a8a' }}>
             <div className="container mx-auto px-6">
-                {/* Logo in Square */}
-                <div className="bg-white w-20 h-20 rounded-2xl p-3 mx-auto mb-8 flex items-center justify-center shadow-2xl">
-                    <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                {/* Logo in Circle */}
+                <div className="bg-white w-24 h-24 rounded-full p-2 mx-auto mb-10 flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-4 border-white/10 overflow-hidden group">
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-contain transition-transform group-hover:scale-110" />
                 </div>
 
                 {/* Social Networks */}

@@ -1,16 +1,47 @@
 "use client";
 import { useState } from "react";
-import { CreditCard, Loader2, CheckCircle2 } from "lucide-react";
+import { CreditCard, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { createClient } from '@/utils/supabase/client';
+const supabase = createClient();
 
 export default function WompiWidget({ monto, onnSuccess }) {
     const [status, setStatus] = useState("idle"); // idle, loading, success
+    const [error, setError] = useState(null);
 
-    const handlePay = () => {
+    const handlePay = async () => {
         setStatus("loading");
-        setTimeout(() => {
+        setError(null);
+        try {
+            // Simulación de proceso de pago
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Registro real en base de datos al tener éxito
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("No hay sesión activa");
+
+            // Obtener el school_id desde la URL o perfil (aquí simplificado o pasado por prop si fuera necesario)
+            // Por ahora asumimos que el padre ya tiene schoolContext o lo buscamos
+            const { data: profile } = await supabase.from('profiles').select('school_id').eq('id', user.id).single();
+
+            const { error: dbError } = await supabase.from('pagos_estudiantes').insert([{
+                student_id: user.id,
+                school_id: profile.school_id,
+                amount: monto,
+                concept: 'Pago Global de Servicios Educativos',
+                method: 'Wompi (Simulado)',
+                status: 'Completado',
+                transaction_id: `WMP-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+            }]);
+
+            if (dbError) throw dbError;
+
             setStatus("success");
-            onnSuccess();
-        }, 2500);
+            if (onnSuccess) onnSuccess();
+        } catch (err) {
+            console.error("Error en pago:", err);
+            setError(err.message);
+            setStatus("idle");
+        }
     };
 
     return (

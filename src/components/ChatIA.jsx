@@ -2,9 +2,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MessageCircle, Send, X, Bot, Loader2 } from "lucide-react";
 import { mockData } from "@/data/mockData";
+import { useParams } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
+
+const supabase = createClient();
 
 export default function ChatIA() {
     const { colegio } = mockData;
+    const params = useParams();
+    const [schoolId, setSchoolId] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [showOptions, setShowOptions] = useState(false);
     const [messages, setMessages] = useState([
@@ -13,6 +19,16 @@ export default function ChatIA() {
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
+
+    useEffect(() => {
+        async function getSchool() {
+            if (params?.slug) {
+                const { data } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
+                if (data) setSchoolId(data.id);
+            }
+        }
+        getSchool();
+    }, [params?.slug]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -36,7 +52,10 @@ export default function ChatIA() {
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: newMessages })
+                body: JSON.stringify({
+                    messages: newMessages,
+                    school_id: schoolId
+                })
             });
 
             if (!response.ok) throw new Error('Error en la respuesta');

@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server';
 import SchoolNavbar from '@/components/SchoolNavbar';
 import SchoolFooter from '@/components/SchoolFooter';
 import NavbarWrapper from '@/components/NavbarWrapper';
+import Script from 'next/script';
 
 export async function generateMetadata({ params }) {
     const supabase = createClient();
@@ -16,7 +17,34 @@ export async function generateMetadata({ params }) {
             default: school.nombre,
             template: `%s | ${school.nombre}`
         },
-        description: school.slogan,
+        description: school.slogan || `Portal educativo oficial de ${school.nombre}. Gestión académica, pagos y bienestar estudiantil.`,
+        verification: {
+            google: 'WyyIrDpikaKNBr2m6znQmQxzhfUoqB-r7m8pwP4-glE',
+        },
+        keywords: [school.nombre, 'colegio', 'educación', 'portal estudiantil', 'gestión escolar', 'latinoamericano', params.slug],
+        authors: [{ name: school.nombre }],
+        openGraph: {
+            title: school.nombre,
+            description: school.slogan,
+            url: `https://colegiolatinoamericano.edu.co/${params.slug}`,
+            siteName: school.nombre,
+            images: [
+                {
+                    url: school.logo_url,
+                    width: 800,
+                    height: 600,
+                    alt: `Logo ${school.nombre}`,
+                },
+            ],
+            locale: 'es_CO',
+            type: 'website',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: school.nombre,
+            description: school.slogan,
+            images: [school.logo_url],
+        },
         icons: {
             icon: [
                 { url: `${iconPath}favicon-32x32.png`, sizes: '32x32', type: 'image/png' },
@@ -49,6 +77,24 @@ export default async function SchoolLayout({ children, params }) {
 
     return (
         <div className="min-h-screen flex flex-col">
+            {/* Google Tag Manager */}
+            <Script id="gtm-script" strategy="afterInteractive">
+                {`
+                    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+                    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                    })(window,document,'script','dataLayer','GTM-KH29ZNF4');
+                `}
+            </Script>
+            <noscript>
+                <iframe
+                    src="https://www.googletagmanager.com/ns.html?id=GTM-KH29ZNF4"
+                    height="0"
+                    width="0"
+                    style={{ display: 'none', visibility: 'hidden' }}
+                ></iframe>
+            </noscript>
             <NavbarWrapper slug={params.slug}>
                 <SchoolNavbar
                     schoolName={school.nombre}

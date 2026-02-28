@@ -28,7 +28,7 @@ export default async function SchoolLanding({ params, searchParams }) {
     }
 
     // fallback de estilos si no hay custom branding
-    const branding = school.branding_colors || { primary: '#1e3a8a', secondary: '#be185d' };
+    const branding = school.branding_colors || { primary: '#1e3a8a', secondary: '#1e3a8a' };
 
     return (
         <div className="bg-white font-sans selection:bg-blue-100">
@@ -44,15 +44,17 @@ export default async function SchoolLanding({ params, searchParams }) {
                 </div>
 
                 <div className="container mx-auto px-6 py-12 relative z-10 text-center">
-                    <div className="flex flex-col sm:flex-row justify-center gap-4">
+                    <div className="flex flex-col sm:flex-row justify-center gap-6">
                         <a href={`/${params.slug}/login`}
-                            className="text-white px-8 py-4 rounded-xl font-bold uppercase tracking-wider shadow-xl transition-all hover:scale-105 flex items-center justify-center gap-2 hover:brightness-110"
-                            style={{ backgroundColor: branding.secondary, boxShadow: `0 10px 25px -5px ${branding.secondary}80` }}
+                            className="text-white px-10 py-5 rounded-[20px] font-black uppercase tracking-widest shadow-2xl transition-all hover:scale-105 flex items-center justify-center gap-3 hover:brightness-110 active:scale-95"
+                            style={{ backgroundColor: branding.primary, boxShadow: `0 20px 40px -10px ${branding.primary}60` }}
                         >
-                            <Lock size={20} /> Ingresar a Plataforma
+                            <Lock size={22} /> Ingresar a Plataforma
                         </a>
-                        <a href={`/${params.slug}/admisiones`} className="bg-slate-800 hover:bg-slate-900 text-white px-8 py-4 rounded-xl font-bold uppercase tracking-wider shadow-lg transition-all flex items-center justify-center gap-2">
-                            <UserPlus size={20} /> Iniciar Admisión
+                        <a href={`/${params.slug}/admisiones`}
+                            className="bg-white text-blue-900 border-2 border-blue-900 px-10 py-5 rounded-[20px] font-black uppercase tracking-widest shadow-xl transition-all hover:bg-blue-50 flex items-center justify-center gap-3 active:scale-95"
+                        >
+                            <UserPlus size={22} /> Iniciar Admisión
                         </a>
                     </div>
                 </div>
@@ -63,37 +65,40 @@ export default async function SchoolLanding({ params, searchParams }) {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                     {/* Main Content Column */}
                     <div className="lg:col-span-2 space-y-12">
-                        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                            <span className="text-blue-600 font-bold text-xs uppercase tracking-widest mb-2 block">Información General</span>
-                            <h2 className="text-3xl font-black text-slate-800 mb-4">{school.slogan || 'PLATAFORMA 2026'}</h2>
-                            <p className="text-slate-600 leading-relaxed mb-6 whitespace-pre-wrap">
+                        <div className="bg-white p-10 rounded-[40px] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border border-blue-50 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                            <span className="text-blue-600 font-black text-xs uppercase tracking-[0.3em] mb-4 block">Información General</span>
+                            <h2 className="text-4xl font-black text-blue-900 mb-6 leading-tight">{school.slogan || 'EXCELENCIA EN FORMACIÓN INTEGRAL'}</h2>
+                            <p className="text-blue-900/70 text-lg leading-relaxed mb-8 whitespace-pre-wrap font-medium">
                                 {school.mision || `Este sitio ha sido diseñado para los Estudiantes de Básica Primaria, Básica Secundaria y Media del ${school.nombre} como estrategia virtual de apoyo Académico.\nAquí encontrarán horarios, guías y acceso a las aulas virtuales.`}
                             </p>
-                            <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
-                                <h3 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
-                                    <Clock size={18} /> Horarios de Atención
-                                </h3>
-                                <p className="text-sm text-blue-700">Lunes a Viernes: 7:00 AM - 3:00 PM</p>
+                            <div className="bg-gradient-to-r from-blue-50 to-white p-6 rounded-3xl border border-blue-100 flex items-center gap-6">
+                                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-blue-900 shadow-sm border border-blue-100">
+                                    <Clock size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-blue-900 uppercase tracking-widest text-sm mb-1">Horarios de Atención</h3>
+                                    <p className="text-sm text-blue-600 font-bold italic">Lunes a Viernes: 7:00 AM - 3:00 PM</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Sidebar */}
                     <div className="space-y-8">
-                        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 sticky top-24">
-                            <h3 className="font-black text-slate-800 uppercase tracking-widest mb-6 border-b border-slate-100 pb-2">Accesos Rápidos</h3>
-                            <div className="space-y-3">
-                                <a href={`/${params.slug}/login`} className="block w-full bg-slate-900 text-white text-center py-4 rounded-xl font-bold hover:bg-blue-600 transition-all shadow-lg shadow-slate-900/20">
+                        <div className="bg-white p-8 rounded-[40px] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border border-blue-50 sticky top-24">
+                            <h3 className="font-black text-blue-900 uppercase tracking-widest text-sm mb-8 border-b-2 border-blue-50 pb-4 flex items-center gap-3">
+                                <span className="w-2 h-2 bg-blue-900 rounded-full"></span> Accesos Rápidos
+                            </h3>
+                            <div className="space-y-4">
+                                <a href={`/${params.slug}/login`} className="block w-full bg-blue-900 text-white text-center py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-105 transition-all shadow-xl shadow-blue-900/20 active:scale-95">
                                     PORTAL ACADÉMICO
                                 </a>
-                                <a href={`/${params.slug}/pagos`} className="block w-full bg-institutional-magenta text-white text-center py-3 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg shadow-magenta-500/20">
-                                    Pagos en Línea (Wompi)
+                                <a href={`/${params.slug}/pagos`} className="block w-full bg-white border-2 border-blue-900 text-blue-900 text-center py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-50 transition-all active:scale-95">
+                                    Pagos en Línea
                                 </a>
-                                <a href={`/${params.slug}/costos`} className="block w-full bg-white border border-slate-200 text-slate-700 text-center py-3 rounded-xl font-bold hover:bg-slate-50 transition-all">
+                                <a href={`/${params.slug}/costos`} className="block w-full bg-blue-50 text-blue-800 text-center py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:brightness-95 transition-all">
                                     Costos Académicos
-                                </a>
-                                <a href={`/${params.slug}/docentes`} className="block w-full bg-white border border-slate-200 text-slate-700 text-center py-3 rounded-xl font-bold hover:bg-slate-50 transition-all">
-                                    Directorio Docente
                                 </a>
                             </div>
 

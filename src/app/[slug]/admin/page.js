@@ -41,6 +41,10 @@ export default function AdminDashboard({ params }) {
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
     const [activities, setActivities] = useState([]);
     const [wellbeingReports, setWellbeingReports] = useState([]);
+    const [grades, setGrades] = useState([]);
+    const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
+    const [editingGrade, setEditingGrade] = useState(null);
+    const [selectedStudentForGrades, setSelectedStudentForGrades] = useState(null);
 
     // Estados para Estudiantes y Modalidad
     const [students, setStudents] = useState([]);
@@ -51,6 +55,7 @@ export default function AdminDashboard({ params }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterGrado, setFilterGrado] = useState('');
     const [formModalidad, setFormModalidad] = useState('');
+    const [filterModalidad, setFilterModalidad] = useState('');
 
     const documentosRequeridos = [
         'Carpeta amarilla colgante oficio', 'Certificados años anteriores', 'Tres fotos 3x4 fondo azul',
@@ -64,6 +69,19 @@ export default function AdminDashboard({ params }) {
     const [news, setNews] = useState([]);
     const [costs, setCosts] = useState([]);
     const [schoolConfig, setSchoolConfig] = useState(null);
+    const [school, setSchool] = React.useState(null);
+
+    React.useEffect(() => {
+        const fetchSchool = async () => {
+            if (params.slug) {
+                const { data } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
+                setSchool(data);
+            }
+        };
+        fetchSchool();
+    }, [params.slug]);
+
+    const [userRole, setUserRole] = useState(null);
     const [leads, setLeads] = useState([]);
     const [stats, setStats] = useState({
         leads: 0,
@@ -201,6 +219,14 @@ export default function AdminDashboard({ params }) {
     };
 
     useEffect(() => {
+        const checkUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: profile } = await supabase.from('profiles').select('rol').eq('id', user.id).single();
+                if (profile) setUserRole(profile.rol);
+            }
+        };
+        checkUser();
         fetchTeachers();
         fetchSchoolConfig();
         fetchStats();
@@ -233,7 +259,9 @@ export default function AdminDashboard({ params }) {
             condiciones_medicas: v('condiciones_medicas'), eps_salud: v('eps_salud'),
             es_menor_edad: esMenor, acudiente_nombre: v('acudiente_nombre'),
             acudiente_telefono: v('acudiente_telefono'), acudiente_email: v('acudiente_email'),
-            acudiente_parentesco: v('acudiente_parentesco'), documentos_entregados: docs
+            acudiente_parentesco: v('acudiente_parentesco'),
+            documentos_entregados: docs,
+            observaciones: fd.get('observaciones')
         };
     };
 
@@ -651,6 +679,7 @@ export default function AdminDashboard({ params }) {
             school_id: school.id,
             title: formData.get('title'),
             content: formData.get('content'),
+            target_area: formData.get('target_area') || 'Todos',
             file_url: fileUrl,
             published_at: new Date().toISOString()
         }]);
@@ -697,7 +726,7 @@ export default function AdminDashboard({ params }) {
     // Funcionalidad de SIMAT reemplazada por Reporte de Alertas / Emergencias
 
     const menuItems = [
-        { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { id: "dashboard", label: "Panel de Control", icon: LayoutDashboard },
         { id: "leads", label: "Interesados", icon: UserPlus },
         { id: "students", label: "Gestión Estudiantil", icon: Users },
         { id: "staff", label: "Personal", icon: GraduationCap },
@@ -713,20 +742,23 @@ export default function AdminDashboard({ params }) {
     return (
         <div className="min-h-screen bg-gray-50 flex overflow-hidden">
             {/* Sidebar Navigation */}
-            <aside className="hidden lg:flex flex-col w-72 bg-white border-r border-gray-100 shadow-sm relative z-50">
-                <div className="p-8 border-b border-gray-100 flex flex-col items-center gap-4">
-                    <div className="bg-white p-4 rounded-full shadow- institutional-blue/10 border border-gray-50 shrink-0">
-                        {schoolConfig?.logo_url ? (
-                            <img src={schoolConfig.logo_url} className="w-16 h-16 object-contain" alt="Logo" />
-                        ) : (
-                            <div className="w-16 h-16 flex items-center justify-center text-institutional-blue font-black text-2xl">
-                                {params.slug.substring(0, 2).toUpperCase()}
-                            </div>
-                        )}
+            <aside className="hidden lg:flex flex-col w-72 bg-white border-r border-blue-100 shadow-xl relative z-50">
+                <div className="p-10 flex flex-col items-center gap-6">
+                    <div className="relative group shrink-0">
+                        <div className="absolute -inset-1 bg-gradient-to-tr from-blue-600 to-blue-400 rounded-full blur opacity-10 group-hover:opacity-20 transition duration-1000 group-hover:duration-200"></div>
+                        <div className="relative bg-white p-2 rounded-full border border-blue-50 shadow-sm">
+                            {schoolConfig?.logo_url ? (
+                                <img src={schoolConfig.logo_url} className="w-16 h-16 object-contain" alt="Logo" />
+                            ) : (
+                                <div className="w-16 h-16 flex items-center justify-center text-blue-900 font-black text-2xl">
+                                    {params.slug.substring(0, 2).toUpperCase()}
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="text-center">
-                        <h1 className="text-sm font-black text-gray-800 uppercase tracking-tighter line-clamp-1">{schoolConfig?.nombre || params.slug}</h1>
-                        <p className="text-[9px] font-black text-institutional-magenta uppercase tracking-widest">Admin Panel</p>
+                        <h1 className="text-sm font-black text-blue-900 uppercase tracking-tighter line-clamp-1">{schoolConfig?.nombre || params.slug}</h1>
+                        <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mt-1">Panel de Control</p>
                     </div>
                 </div>
 
@@ -735,23 +767,23 @@ export default function AdminDashboard({ params }) {
                         <button
                             key={item.id}
                             onClick={() => setActiveTab(item.id)}
-                            className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold transition-all ${activeTab === item.id
-                                ? "bg-institutional-blue text-white shadow-xl shadow-blue-500/20"
-                                : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                            className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold transition-all duration-300 ${activeTab === item.id
+                                ? "bg-blue-900 text-white shadow-lg shadow-blue-900/20"
+                                : "text-blue-400 hover:bg-blue-50 hover:text-blue-900"
                                 }`}
                         >
-                            <item.icon size={20} className={activeTab === item.id ? "text-white" : "text-gray-400"} />
+                            <item.icon size={20} className={activeTab === item.id ? "text-white" : "text-blue-300"} />
                             {item.label}
                         </button>
                     ))}
                 </nav>
 
-                <div className="p-6 border-t border-gray-50 mt-auto">
-                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl">
-                        <div className="w-10 h-10 bg-institutional-magenta rounded-xl flex items-center justify-center text-white font-black shadow-inner">R</div>
-                        <div className="overflow-hidden">
-                            <p className="text-xs font-black text-gray-800 line-clamp-1">Administrador</p>
-                            <p className="text-[9px] text-gray-400 font-bold uppercase">Rectoría</p>
+                <div className="p-6 border-t border-blue-50 mt-auto bg-blue-50/30 backdrop-blur-sm">
+                    <div className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-blue-50 shadow-sm">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-800 to-blue-900 rounded-xl flex items-center justify-center text-white font-black shadow-lg">R</div>
+                        <div className="overflow-hidden text-left">
+                            <p className="text-xs font-black text-blue-900 line-clamp-1">Administrador</p>
+                            <p className="text-[9px] text-blue-400 font-bold uppercase">Rectoría</p>
                         </div>
                     </div>
                 </div>
@@ -792,25 +824,20 @@ export default function AdminDashboard({ params }) {
                 {/* Main Content Scroll Area */}
                 <main className="flex-1 overflow-y-auto p-6 md:p-12 custom-scrollbar">
                     {/* Top Stats Bar / Title */}
-                    <div className="mb-10 bg-institutional-blue rounded-[35px] p-10 shadow-2xl shadow-blue-900/20 relative overflow-hidden group">
+                    <div className="mb-10 bg-blue-900 rounded-[40px] p-12 shadow-[0_20px_50px_-12px_rgba(30,58,138,0.25)] relative overflow-hidden group border border-blue-800">
                         {/* Decoración de fondo */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-white/10 transition-all duration-700"></div>
-                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-institutional-magenta/10 rounded-full -ml-16 -mb-16 blur-2xl"></div>
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl group-hover:bg-white/10 transition-all duration-700"></div>
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full -ml-32 -mb-32 blur-3xl"></div>
 
-                        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.3em] font-mono">Panel de Control</span>
-                                    <span className="w-6 h-[2px] bg-institutional-magenta rounded-full"></span>
-                                    <span className="text-[10px] font-black text-white uppercase tracking-widest">{schoolConfig?.nombre || params.slug}</span>
-                                </div>
-                                <h2 className="text-6xl font-black text-white tracking-tighter drop-shadow-sm">
+                        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-8">
+                            <div className="space-y-2">
+                                <h2 className="text-7xl font-black text-white tracking-tighter drop-shadow-sm">
                                     {menuItems.find(i => i.id === activeTab)?.label}
                                 </h2>
-                                <p className="text-blue-100 font-medium text-lg mt-2 italic flex items-center gap-2">
-                                    <LayoutDashboard size={18} className="text-institutional-magenta" />
-                                    Módulo Administrativo Institucional
-                                </p>
+                                <div className="text-blue-200 font-bold text-xl mt-4 flex items-center gap-3">
+                                    <div className="w-8 h-1 bg-blue-400 rounded-full"></div>
+                                    Gestión Académica e Institucional
+                                </div>
                             </div>
 
                             <div className="flex items-center gap-4 shrink-0">
@@ -873,7 +900,12 @@ export default function AdminDashboard({ params }) {
                                 <div className="lg:col-span-2 bg-white rounded-[40px] shadow-sm border border-gray-100 p-10">
                                     <div className="flex justify-between items-center mb-10">
                                         <h3 className="text-2xl font-black text-gray-800">Nuevos Interesados capturados por IA</h3>
-                                        <button className="text-institutional-blue font-bold text-sm hover:underline">Ver reporte completo</button>
+                                        <button
+                                            onClick={() => setActiveTab('leads')}
+                                            className="text-blue-600 font-bold text-sm hover:underline"
+                                        >
+                                            Ver reporte completo
+                                        </button>
                                     </div>
                                     <div className="space-y-4">
                                         {leads.map(lead => (
@@ -1297,6 +1329,88 @@ export default function AdminDashboard({ params }) {
                     }
 
                     {
+                        activeTab === "gallery" && (
+                            <div className="space-y-10">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h2 className="text-4xl font-black text-gray-800 tracking-tight">Galería Institucional</h2>
+                                        <p className="text-gray-500 font-medium">Gestiona las fotos que se muestran en la sección pública.</p>
+                                    </div>
+                                    <button onClick={() => setIsGalleryModalOpen(true)} className="bg-institutional-blue text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+                                        <PlusCircle size={20} /> Añadir Foto
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {gallery.map((photo) => (
+                                        <div key={photo.id} className="bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden group">
+                                            <div className="aspect-video relative overflow-hidden">
+                                                <img src={photo.image_url} alt={photo.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                                                    <button onClick={() => handleDeleteGallery(photo.id)} className="p-3 bg-red-500 text-white rounded-2xl hover:bg-red-600 transition-colors">
+                                                        <Trash2 size={20} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="p-6">
+                                                <h4 className="font-black text-gray-800 text-lg line-clamp-1">{photo.title}</h4>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">{new Date(photo.created_at).toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {gallery.length === 0 && (
+                                        <div className="col-span-full py-20 text-center text-gray-400 font-medium">No hay fotos en la galería aún.</div>
+                                    )}
+                                </div>
+                            </div>
+                        )
+                    }
+
+                    {
+                        activeTab === "news" && (
+                            <div className="space-y-10">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h2 className="text-4xl font-black text-gray-800 tracking-tight">Noticias y Eventos</h2>
+                                        <p className="text-gray-500 font-medium">Mantén informada a la comunidad sobre los últimos sucesos.</p>
+                                    </div>
+                                    <button onClick={() => { setEditingNews(null); setIsNewsModalOpen(true); }} className="bg-institutional-magenta text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+                                        <PlusCircle size={20} /> Nueva Noticia
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-1 gap-8">
+                                    {news.map((item) => (
+                                        <div key={item.id} className="bg-white rounded-[40px] shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row gap-8 hover:shadow-md transition-shadow">
+                                            {item.image_url && (
+                                                <div className="w-full md:w-64 h-48 rounded-3xl overflow-hidden flex-shrink-0">
+                                                    <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                                                </div>
+                                            )}
+                                            <div className="flex-1 space-y-4">
+                                                <div>
+                                                    <h4 className="text-2xl font-black text-gray-800">{item.title}</h4>
+                                                    <p className="text-[10px] text-institutional-magenta font-black uppercase tracking-widest mt-1">Publicado el {new Date(item.published_at).toLocaleDateString()}</p>
+                                                </div>
+                                                <p className="text-gray-600 font-medium line-clamp-3 leading-relaxed">{item.content}</p>
+                                                <div className="flex gap-4 pt-2">
+                                                    <button onClick={() => { setEditingNews(item); setIsNewsModalOpen(true); }} className="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-colors flex items-center gap-2">
+                                                        <Edit size={14} /> Editar
+                                                    </button>
+                                                    <button onClick={() => handleDeleteNews(item.id)} className="px-6 py-2.5 bg-red-50 text-red-500 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-100 transition-colors flex items-center gap-2">
+                                                        <Trash2 size={14} /> Eliminar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {news.length === 0 && (
+                                        <div className="py-20 text-center text-gray-400 font-medium">No hay noticias publicadas aún.</div>
+                                    )}
+                                </div>
+                            </div>
+                        )
+                    }
+
+                    {
                         activeTab === "academic" && (
                             <div className="space-y-10">
                                 <div className="flex justify-between items-center">
@@ -1394,12 +1508,14 @@ export default function AdminDashboard({ params }) {
                                                     <td className="py-6 px-8 text-xs font-bold text-gray-400 uppercase">{new Date(lead.created_at).toLocaleDateString()}</td>
                                                     <td className="py-6 px-8 text-right flex gap-2 justify-end items-center">
                                                         {lead.estado !== 'Matriculado' ? (
-                                                            <button
-                                                                className="bg-institutional-blue text-white px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-blue-500/20 hover:scale-105 transition-all flex items-center gap-1"
-                                                                onClick={() => handleFormalizeStudent(lead)}
-                                                            >
-                                                                <PlusCircle size={14} /> Matricular
-                                                            </button>
+                                                            ['admin', 'secretary', 'coordinator'].includes(userRole) && (
+                                                                <button
+                                                                    className="bg-institutional-blue text-white px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-blue-500/20 hover:scale-105 transition-all flex items-center gap-1"
+                                                                    onClick={() => handleFormalizeStudent(lead)}
+                                                                >
+                                                                    <PlusCircle size={14} /> Matricular
+                                                                </button>
+                                                            )
                                                         ) : (
                                                             <span className="text-[10px] bg-gray-100 text-gray-500 font-black px-3 py-1 rounded-full uppercase">Completado</span>
                                                         )}
@@ -1822,31 +1938,80 @@ export default function AdminDashboard({ params }) {
                                         <h2 className="text-4xl font-black text-gray-800 tracking-tight">Gestión Estudiantil</h2>
                                         <p className="text-gray-500 font-medium">{students.length} estudiantes registrados</p>
                                     </div>
-                                    <button onClick={() => { setEditingStudent(null); setIsStudentModalOpen(true); }} className="bg-institutional-blue text-white px-6 py-3 rounded-2xl font-black shadow-lg hover:scale-105 transition-all flex items-center gap-2">
-                                        <PlusCircle size={20} /> Nuevo Estudiante
-                                    </button>
+                                    <div></div>
                                 </div>
                                 <div className="bg-white rounded-[40px] shadow-sm border border-gray-100 p-8">
+                                    <div className="flex flex-col md:flex-row gap-6 mb-10">
+                                        <div className="flex-1">
+                                            <input
+                                                type="text"
+                                                placeholder="Buscar por nombre o documento..."
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all font-sans"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                            />
+                                        </div>
+                                        <select
+                                            className="bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                            value={filterGrado}
+                                            onChange={(e) => setFilterGrado(e.target.value)}
+                                        >
+                                            <option value="">Todos los Grados</option>
+                                            {grados.map(g => <option key={g.id} value={g.nombre}>{g.nombre}</option>)}
+                                        </select>
+                                        <select
+                                            className="bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                            value={filterModalidad}
+                                            onChange={(e) => setFilterModalidad(e.target.value)}
+                                        >
+                                            <option value="">Todas las Modalidades</option>
+                                            <option value="Presencial">Presencial</option>
+                                            <option value="A Distancia">A Distancia</option>
+                                            <option value="Sabatina">Sabatina</option>
+                                        </select>
+                                    </div>
+
                                     <table className="w-full text-left">
                                         <thead>
                                             <tr className="text-xs font-black uppercase tracking-widest text-gray-400 border-b border-gray-50">
                                                 <th className="pb-6 px-4">Estudiante</th>
                                                 <th className="pb-6 px-4">Email</th>
+                                                <th className="pb-6 px-4">Modalidad</th>
                                                 <th className="pb-6 px-4">Grado</th>
                                                 <th className="pb-6 px-4">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {students.map(student => (
-                                                <tr key={student.id} className="border-b border-gray-50">
-                                                    <td className="py-4 px-4 font-bold">{student.nombre}</td>
-                                                    <td className="py-4 px-4 text-gray-500 text-sm">{student.email}</td>
-                                                    <td className="py-4 px-4 text-sm font-bold text-gray-600">{student.grado}</td>
-                                                    <td className="py-4 px-4">
-                                                        <button onClick={() => { setEditingStudent(student); setIsStudentModalOpen(true); }} className="text-blue-500 text-sm font-bold">Editar</button>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {students
+                                                .filter(s =>
+                                                    (s.nombre?.toLowerCase().includes(searchQuery.toLowerCase()) || s.numero_documento?.includes(searchQuery)) &&
+                                                    (filterGrado === '' || s.grado === filterGrado) &&
+                                                    (filterModalidad === '' || s.modalidad === filterModalidad)
+                                                )
+                                                .map(student => (
+                                                    <tr key={student.id} className="border-b border-gray-50">
+                                                        <td className="py-4 px-4 font-bold">{student.nombre}</td>
+                                                        <td className="py-4 px-4 text-gray-500 text-sm">{student.email}</td>
+                                                        <td className="py-4 px-4">
+                                                            <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${student.modalidad === 'Presencial' ? 'bg-blue-50 text-blue-600' :
+                                                                student.modalidad === 'A Distancia' ? 'bg-institutional-magenta/10 text-institutional-magenta' :
+                                                                    'bg-amber-50 text-amber-600'
+                                                                }`}>
+                                                                {student.modalidad || 'N/A'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-4 px-4 text-sm font-bold text-gray-600">{student.grado}</td>
+                                                        <td className="py-4 px-4">
+                                                            {['admin', 'secretary', 'coordinator'].includes(userRole) && (
+                                                                <button onClick={() => {
+                                                                    setEditingStudent(student);
+                                                                    setFormModalidad(student.modalidad || '');
+                                                                    setIsStudentModalOpen(true);
+                                                                }} className="text-blue-500 text-sm font-bold">Editar</button>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))}
                                         </tbody>
                                     </table>
                                     {students.length === 0 && <div className="text-center py-10 text-gray-400 font-medium">No hay estudiantes.</div>}
@@ -1949,7 +2114,7 @@ export default function AdminDashboard({ params }) {
                                                                         <option value="10-11">10-11</option>
                                                                     </>
                                                                 ) : (
-                                                                    (schoolConfig?.grados || ['Pre-jardín', 'Jardín', 'Transición', '1°', '2°', '3°', '4°', '5°', '6°', '7°', '8°', '9°', '10°', '11°']).map(g => (
+                                                                    (schoolConfig?.grados?.length > 0 ? schoolConfig.grados : ['Pre-jardín', 'Jardín', 'Transición', '1°', '2°', '3°', '4°', '5°', '6°', '7°', '8°', '9°', '10°', '11°']).map(g => (
                                                                         <option key={g} value={g}>{g}</option>
                                                                     ))
                                                                 )}
@@ -2030,7 +2195,7 @@ export default function AdminDashboard({ params }) {
                                             </div>
 
                                             {/* Documentos Entregados */}
-                                            <div>
+                                            <div className="mb-6">
                                                 <h4 className="text-xs font-black uppercase tracking-widest text-amber-600 mb-3 flex items-center gap-2">📋 Documentos Entregados</h4>
                                                 <div className="bg-amber-50/50 rounded-2xl p-5">
                                                     <div className="grid grid-cols-1 gap-2">
@@ -2041,6 +2206,20 @@ export default function AdminDashboard({ params }) {
                                                             </label>
                                                         ))}
                                                     </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Observaciones Administrativas */}
+                                            <div>
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-gray-500 mb-3 flex items-center gap-2">📝 Observaciones Administrativas</h4>
+                                                <div className="bg-gray-50 rounded-2xl p-5">
+                                                    <textarea
+                                                        name="observaciones"
+                                                        defaultValue={editingStudent?.observaciones}
+                                                        rows={4}
+                                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-institutional-blue outline-none transition-all"
+                                                        placeholder="Notas sobre el proceso, convenios, becas o comportamiento..."
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -2206,6 +2385,17 @@ export default function AdminDashboard({ params }) {
                                             <textarea name="content" required rows="4" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Escriba aquí los detalles..."></textarea>
                                         </div>
                                         <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dirigido a (Categoría)</label>
+                                            <select name="target_area" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700">
+                                                <option value="Todos">Todos</option>
+                                                <option value="Preescolar">Preescolar</option>
+                                                <option value="Primaria">Primaria</option>
+                                                <option value="Bachillerato">Bachillerato</option>
+                                                <option value="Sabatinas">Sabatinas</option>
+                                                <option value="A Distancia">A Distancia</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Documento Adjunto (Opcional)</label>
                                             <input type="file" name="file_upload" accept=".pdf,.doc,.docx" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 text-xs" />
                                         </div>
@@ -2244,8 +2434,15 @@ export default function AdminDashboard({ params }) {
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grado Destino</label>
                                                 <select name="grado" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700">
-                                                    <option value="">Todos los Grados</option>
-                                                    {schoolConfig?.grados?.map(g => <option key={g} value={g}>{g}</option>)}
+                                                    <option value="">Todos los Grados / Ciclos</option>
+                                                    <optgroup label="Ciclos (A Distancia)">
+                                                        <option value="Ciclo III">Ciclo III (6° y 7°)</option>
+                                                        <option value="Ciclo IV">Ciclo IV (8° y 9°)</option>
+                                                        <option value="Ciclo V">Ciclo V (10° y 11°)</option>
+                                                    </optgroup>
+                                                    <optgroup label="Grados Regulares">
+                                                        {schoolConfig?.grados?.map(g => <option key={g} value={g}>{g}</option>)}
+                                                    </optgroup>
                                                 </select>
                                             </div>
                                             <div className="space-y-2">
@@ -2264,18 +2461,176 @@ export default function AdminDashboard({ params }) {
                             </div>
                         )
                     }
-                </main>
+                    {/* ===================== TAB: CALIFICACIONES ===================== */}
+                    {activeTab === 'calificaciones' && (
+                        <div className="space-y-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h2 className="text-2xl font-black text-gray-800">Gestión de Calificaciones</h2>
+                                    <p className="text-gray-500 font-medium">Administra el rendimiento académico de los estudiantes</p>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setEditingGrade(null);
+                                        setIsGradeModalOpen(true);
+                                    }}
+                                    className="bg-institutional-blue text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-black shadow-lg shadow-blue-500/20 hover:scale-105 transition-all"
+                                >
+                                    <PlusCircle size={20} /> Nueva Calificación
+                                </button>
+                            </div>
 
-                {/* Internal Footer for Admin */}
-                <footer className="bg-gray-100 py-6 border-t border-gray-200">
-                    <div className="container mx-auto px-6 flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                        <span>© 2026 {schoolConfig?.nombre || params.slug}</span>
-                        <div className="flex items-center gap-2">
-                            <span>Powered by</span>
-                            <span className="text-gray-600 font-black tracking-tighter text-xs">Gestor Educativo 365</span>
+                            <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-gray-50/50">
+                                            <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Estudiante</th>
+                                            <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Materia</th>
+                                            <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Nota</th>
+                                            <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Periodo</th>
+                                            <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Fecha</th>
+                                            <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {grades.map((grade) => (
+                                            <tr key={grade.id} className="hover:bg-gray-50/50 transition-colors group">
+                                                <td className="p-6">
+                                                    <p className="font-black text-gray-800">{grade.profiles?.nombre}</p>
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{grade.profiles?.grado}</p>
+                                                </td>
+                                                <td className="p-6">
+                                                    <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                                                        {grade.materia}
+                                                    </span>
+                                                </td>
+                                                <td className="p-6 text-center">
+                                                    <span className={`text-lg font-black ${grade.nota >= 3.0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                                        {grade.nota.toFixed(1)}
+                                                    </span>
+                                                </td>
+                                                <td className="p-6">
+                                                    <p className="text-sm font-bold text-gray-600">{grade.periodo}</p>
+                                                </td>
+                                                <td className="p-6 text-gray-500 text-sm font-medium">
+                                                    {new Date(grade.fecha).toLocaleDateString()}
+                                                </td>
+                                                <td className="p-6 text-right">
+                                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => {
+                                                                setEditingGrade(grade);
+                                                                setIsGradeModalOpen(true);
+                                                            }}
+                                                            className="p-2 text-gray-400 hover:text-institutional-blue transition-colors"
+                                                        >
+                                                            <Edit size={18} />
+                                                        </button>
+                                                        <button
+                                                            onClick={async () => {
+                                                                if (confirm('¿Eliminar esta calificación?')) {
+                                                                    await supabase.from('calificaciones').delete().eq('id', grade.id);
+                                                                    fetchGrades();
+                                                                }
+                                                            }}
+                                                            className="p-2 text-gray-400 hover:text-rose-500 transition-colors"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                </footer>
+                    )}
+
+                    {/* Modal para Crear/Editar Calificación */}
+                    {isGradeModalOpen && (
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                            <div className="bg-white rounded-[40px] w-full max-w-xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+                                <form onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const formData = new FormData(e.target);
+                                    const data = {
+                                        student_id: formData.get('student_id'),
+                                        school_id: school.id,
+                                        materia: formData.get('materia'),
+                                        nota: parseFloat(formData.get('nota')),
+                                        periodo: formData.get('periodo'),
+                                        observaciones: formData.get('observaciones'),
+                                        fecha: new Date().toISOString().split('T')[0]
+                                    };
+
+                                    if (editingGrade) {
+                                        await supabase.from('calificaciones').update(data).eq('id', editingGrade.id);
+                                    } else {
+                                        await supabase.from('calificaciones').insert([data]);
+                                    }
+                                    setIsGradeModalOpen(false);
+                                    fetchGrades();
+                                }}>
+                                    <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                        <div>
+                                            <h3 className="text-xl font-black text-gray-800">{editingGrade ? 'Editar Nota' : 'Nueva Calificación'}</h3>
+                                            <p className="text-xs text-gray-400 font-medium">Registra el desempeño del estudiante</p>
+                                        </div>
+                                        <button type="button" onClick={() => setIsGradeModalOpen(false)} className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 shadow-sm">
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+
+                                    <div className="p-8 space-y-6">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Estudiante</label>
+                                            <select name="student_id" defaultValue={editingGrade?.student_id} required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                                                <option value="">Selecciona un estudiante</option>
+                                                {students.map(s => <option key={s.id} value={s.id}>{s.nombre} ({s.grado})</option>)}
+                                            </select>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Materia</label>
+                                                <input name="materia" defaultValue={editingGrade?.materia} required placeholder="Ej: Matemáticas" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Nota (0.0 - 5.0)</label>
+                                                <input name="nota" type="number" step="0.1" min="0" max="5" defaultValue={editingGrade?.nota} required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none" />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Periodo</label>
+                                            <select name="periodo" defaultValue={editingGrade?.periodo} required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                                                <option value="Periodo 1">Periodo 1</option>
+                                                <option value="Periodo 2">Periodo 2</option>
+                                                <option value="Periodo 3">Periodo 3</option>
+                                                <option value="Periodo 4">Periodo 4</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Observaciones</label>
+                                            <textarea name="observaciones" defaultValue={editingGrade?.observaciones} rows="3" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none resize-none" />
+                                        </div>
+                                    </div>
+
+                                    <div className="p-8 bg-gray-50/50 border-t border-gray-100 flex gap-4">
+                                        <button type="button" onClick={() => setIsGradeModalOpen(false)} className="flex-1 bg-white text-gray-500 font-black py-4 rounded-2xl shadow-sm hover:bg-gray-50 transition-all border border-gray-100">
+                                            Cancelar
+                                        </button>
+                                        <button type="submit" className="flex-1 bg-institutional-blue text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all">
+                                            {editingGrade ? 'Actualizar' : 'Guardar Calificación'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </main>
             </div>
         </div>
     );

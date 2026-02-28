@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { useParams } from 'next/navigation';
 import { ArrowRight, CheckCircle, Upload, User, Phone, MapPin, Calendar } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 const supabase = createClient();
@@ -12,8 +13,22 @@ export default function AdmisionesPage() {
         acudiente: '',
         telefono: '',
         grado: '',
-        email: ''
+        email: '',
+        modalidad: '',
+        observaciones: ''
     });
+    const [schoolId, setSchoolId] = useState(null);
+    const params = useParams();
+
+    React.useEffect(() => {
+        async function fetchSchool() {
+            if (params?.slug) {
+                const { data } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
+                if (data) setSchoolId(data.id);
+            }
+        }
+        fetchSchool();
+    }, [params?.slug]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -32,6 +47,9 @@ export default function AdmisionesPage() {
                         acudiente: formData.acudiente,
                         telefono: formData.telefono,
                         grado: formData.grado,
+                        modalidad: formData.modalidad,
+                        observaciones: formData.observaciones,
+                        school_id: schoolId,
                         estado: 'Pendiente'
                     }
                 ]);
@@ -90,18 +108,37 @@ export default function AdmisionesPage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Modalidad de Interés</label>
+                                    <select
+                                        name="modalidad"
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-institutional-blue outline-none transition-all"
+                                    >
+                                        <option value="">Seleccionar Modalidad...</option>
+                                        <option value="Presencial">Presencial</option>
+                                        <option value="Sabatina">Sabatina</option>
+                                        <option value="A Distancia">A Distancia</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
                                     <label className="text-xs font-black uppercase tracking-widest text-gray-400">Grado de Interés</label>
                                     <select
                                         name="grado"
                                         onChange={handleChange}
+                                        required
                                         className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-institutional-blue outline-none transition-all"
                                     >
                                         <option value="">Seleccionar Grado...</option>
                                         <option value="Pre-jardín">Pre-jardín</option>
                                         <option value="Jardín">Jardín</option>
                                         <option value="Transición">Transición</option>
-                                        <option value="Primaria">Primaria (1° - 5°)</option>
-                                        <option value="Bachillerato">Bachillerato (6° - 11°)</option>
+                                        <option value="Primaria (1° - 5°)">Primaria (1° - 5°)</option>
+                                        <option value="Bachillerato (6° - 11°)">Bachillerato (6° - 11°)</option>
+                                        <option value="Ciclo III (6-7)">Ciclo III (6-7)</option>
+                                        <option value="Ciclo IV (8-9)">Ciclo IV (8-9)</option>
+                                        <option value="Ciclo V (10)">Ciclo V (10)</option>
+                                        <option value="Ciclo VI (11)">Ciclo VI (11)</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
@@ -124,6 +161,19 @@ export default function AdmisionesPage() {
                                         type="tel"
                                         className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-institutional-blue outline-none transition-all"
                                         placeholder="300 123 4567"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Observaciones - Added as per instruction, assuming it's meant for this form despite context */}
+                            <div className="space-y-2">
+                                <h4 className="text-xs font-black uppercase tracking-widest text-gray-500 mb-3 flex items-center gap-2">📝 Observaciones</h4>
+                                <div className="bg-gray-50 rounded-2xl p-5">
+                                    <textarea
+                                        name="observaciones"
+                                        rows={4}
+                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm"
+                                        placeholder="Notas administrativas, comportamiento, convenios especiales..."
                                     />
                                 </div>
                             </div>
