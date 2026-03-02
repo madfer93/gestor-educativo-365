@@ -242,9 +242,12 @@ export default function SecretariaDashboard({ params }) {
             catch (error) { alert("Error al subir imagen: " + error.message); setUploading(false); return; }
         }
 
+        const newsTitle = formData.get('title');
+        const newsSlug = newsTitle.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
         const newsData = {
             school_id: schoolId,
-            title: formData.get('title'),
+            title: newsTitle,
+            slug: newsSlug,
             content: formData.get('content'),
             image_url: imageUrl,
             published_at: new Date().toISOString()

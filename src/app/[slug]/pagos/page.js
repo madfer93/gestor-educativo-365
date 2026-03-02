@@ -308,7 +308,7 @@ export default function WompiPaymentPage({ params }) {
                                     </div>
 
                                     <a
-                                        href={`https://wa.me/57${school.telefono?.replace(/\s/g, "")}?text=Hola, envío soporte de pago realizado por transferencia.`}
+                                        href="https://wa.me/573212808022?text=Hola, envío soporte de pago realizado por transferencia."
                                         target="_blank"
                                         className="w-full bg-green-500 text-white py-5 rounded-[24px] font-black text-xl flex items-center justify-center gap-3 shadow-2xl transition-all hover:scale-[1.02] hover:bg-green-600 active:scale-[0.98]"
                                     >
@@ -320,59 +320,6 @@ export default function WompiPaymentPage({ params }) {
 
                         {/* Sidebar / Resumen */}
                         <div className="md:col-span-2 space-y-8">
-                            {/* Cuentas Bancarias Sidebar */}
-                            {((school.bank_accounts && school.bank_accounts.length > 0) || (school.bank_info?.bank1?.numero)) && (
-                                <div className="bg-white p-8 rounded-[40px] shadow-xl border border-slate-100 space-y-6">
-                                    <h4 className="font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-2">Transferencia Directa</h4>
-
-                                    {school.bank_accounts && school.bank_accounts.length > 0 ? (
-                                        school.bank_accounts.slice(0, 3).map((acc, idx) => (
-                                            <div key={idx} className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                                <div className="flex items-center gap-3 text-institutional-blue">
-                                                    <Landmark size={20} />
-                                                    <p className="font-black text-sm uppercase">{acc.nombre}</p>
-                                                </div>
-                                                <div className="space-y-1 pl-8">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase leading-none">Número de Cuenta ({acc.tipo})</p>
-                                                    <p className="text-lg font-black text-slate-800 font-mono tracking-tighter">{acc.numero}</p>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <>
-                                            {school.bank_info?.bank1?.numero && (
-                                                <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                                    <div className="flex items-center gap-3 text-institutional-blue">
-                                                        <Landmark size={20} />
-                                                        <p className="font-black text-sm uppercase">{school.bank_info.bank1.nombre}</p>
-                                                    </div>
-                                                    <div className="space-y-1 pl-8">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase leading-none">Número de Cuenta ({school.bank_info.bank1.tipo})</p>
-                                                        <p className="text-lg font-black text-slate-800 font-mono tracking-tighter">{school.bank_info.bank1.numero}</p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            {school.bank_info?.bank2?.numero && (
-                                                <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                                    <div className="flex items-center gap-3 text-institutional-magenta">
-                                                        <Smartphone size={20} />
-                                                        <p className="font-black text-sm uppercase">{school.bank_info.bank2.nombre}</p>
-                                                    </div>
-                                                    <div className="space-y-1 pl-8">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase leading-none">Número o Celular</p>
-                                                        <p className="text-lg font-black text-slate-800 font-mono tracking-tighter">{school.bank_info.bank2.numero}</p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-
-                                    <p className="text-[10px] text-slate-400 font-medium text-center italic">
-                                        Favor enviar el soporte de transferencia al WhatsApp de secretaría.
-                                    </p>
-                                </div>
-                            )}
-
                             <div className="bg-white p-8 rounded-[40px] shadow-xl border border-slate-100">
                                 <h4 className="font-black text-slate-800 uppercase tracking-widest mb-6 border-b border-slate-100 pb-2">Resumen</h4>
                                 <div className="space-y-4">
@@ -381,13 +328,19 @@ export default function WompiPaymentPage({ params }) {
                                         <span className="text-slate-800 font-black">{school.nombre}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="text-slate-400 font-bold">Convenio</span>
-                                        <span className="text-slate-800 font-black tracking-widest">WOMPI-8822</span>
+                                        <span className="text-slate-400 font-bold">Método</span>
+                                        <span className="text-slate-800 font-black">{paymentMethod === 'online' ? '💳 Pago en Línea' : '🏦 Transferencia'}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="text-slate-400 font-bold">Concepto</span>
                                         <span className="text-slate-800 font-black">{concepto}</span>
                                     </div>
+                                    {monto && (
+                                        <div className="flex justify-between items-center text-sm pt-4 border-t border-slate-100">
+                                            <span className="text-slate-400 font-bold">Total</span>
+                                            <span className="text-2xl font-black text-slate-800 font-mono">${Number(monto).toLocaleString()}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -398,7 +351,7 @@ export default function WompiPaymentPage({ params }) {
                                     Si tienes problemas con tu pago, por favor contáctanos con el comprobante de la transacción.
                                 </p>
                                 <a
-                                    href={`https://wa.me/57${school.telefono?.replace(/\s/g, "")}`}
+                                    href="https://wa.me/573212808022?text=Hola, necesito soporte con un pago realizado."
                                     target="_blank"
                                     className="block w-full bg-white text-slate-950 text-center py-3 rounded-xl font-bold hover:bg-green-400 hover:text-white transition-all text-sm uppercase tracking-widest"
                                 >

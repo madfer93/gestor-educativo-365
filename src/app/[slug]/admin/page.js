@@ -7,7 +7,8 @@ const supabase = createClient();
 import {
     Users, UserPlus, FileText, DollarSign, LayoutDashboard,
     Settings, LogOut, Bell, PlusCircle, Save, X, Clock, Book, GraduationCap,
-    Link, Image as ImageIcon, Key, FileCode, Edit, Trash2, Camera, Loader2, Heart, Megaphone
+    Link, Image as ImageIcon, Key, FileCode, Edit, Trash2, Camera, Loader2, Heart, Megaphone,
+    Eye, EyeOff, ClipboardList
 } from "lucide-react";
 import { uploadImage } from "@/lib/imgbb";
 
@@ -40,6 +41,8 @@ export default function AdminDashboard({ params }) {
     const [circulares, setCirculares] = useState([]);
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
     const [activities, setActivities] = useState([]);
+    const [activityFile, setActivityFile] = useState(null);
+    const [activityFilePreview, setActivityFilePreview] = useState(null);
     const [wellbeingReports, setWellbeingReports] = useState([]);
     const [grades, setGrades] = useState([]);
     const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
@@ -56,6 +59,11 @@ export default function AdminDashboard({ params }) {
     const [filterGrado, setFilterGrado] = useState('');
     const [formModalidad, setFormModalidad] = useState('');
     const [filterModalidad, setFilterModalidad] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [circularCategory, setCircularCategory] = useState('Todos');
+    const [viewingStudentDetails, setViewingStudentDetails] = useState(null);
+    const [studentObservaciones, setStudentObservaciones] = useState([]);
+    const [newObservacion, setNewObservacion] = useState('');
 
     const documentosRequeridos = [
         'Carpeta amarilla colgante oficio', 'Certificados años anteriores', 'Tres fotos 3x4 fondo azul',
@@ -493,9 +501,12 @@ export default function AdminDashboard({ params }) {
         }
 
         const { data: school } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
+        const newsTitle = formData.get('title');
+        const newsSlug = newsTitle.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
         const newsData = {
             school_id: school.id,
-            title: formData.get('title'),
+            title: newsTitle,
+            slug: newsSlug,
             content: formData.get('content'),
             image_url: imageUrl,
             published_at: new Date().toISOString()
@@ -699,24 +710,38 @@ export default function AdminDashboard({ params }) {
         const formData = new FormData(e.target);
         const { data: school } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
 
-        let fileUrl = '';
-        const file = e.target.file_upload?.files[0];
-        if (file) {
-            fileUrl = `https://storage.colegiolatinoamericano.com/actividades/${file.name}`;
+        // Obtener el usuario actual para created_by
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+        // Subir imagen si hay archivo seleccionado
+        let fileUrl = null;
+        if (activityFile) {
+            try {
+                fileUrl = await uploadImage(activityFile);
+            } catch (uploadErr) {
+                alert('Error al subir la imagen: ' + uploadErr.message);
+                setLoading(false);
+                return;
+            }
         }
 
-        const { error } = await supabase.from('school_activities').insert([{
+        const insertData = {
             school_id: school.id,
             title: formData.get('title'),
             description: formData.get('description'),
             grado: formData.get('grado'),
-            file_url: fileUrl,
-            teacher_id: admin.id // Rector emitiendo
-        }]);
+            created_by: currentUser?.id || null
+        };
+        // Solo incluir file_url si se subió un archivo (requiere columna en Supabase)
+        if (fileUrl) insertData.file_url = fileUrl;
+
+        const { error } = await supabase.from('school_activities').insert([insertData]);
 
         if (error) alert("Error: " + error.message);
         else {
             setIsActivityModalOpen(false);
+            setActivityFile(null);
+            setActivityFilePreview(null);
             fetchActivities();
             alert("Actividad asignada exitosamente a los estudiantes en modalidad A Distancia.");
         }
@@ -1106,7 +1131,12 @@ export default function AdminDashboard({ params }) {
                                                     {!editingTeacher && (
                                                         <div className="space-y-2">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contraseña Temporal</label>
-                                                            <input name="password" type="password" required className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
+                                                            <div className="relative">
+                                                                <input name="password" type={showPassword ? 'text' : 'password'} required className="w-full bg-gray-50 border-none rounded-2xl p-4 pr-14 font-bold text-gray-700" />
+                                                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                                                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1868,7 +1898,8 @@ export default function AdminDashboard({ params }) {
                                                     setLoading(true);
                                                     const { error } = await supabase.from('schools').update({
                                                         schedule_morning: document.getElementById('sh_morning').value,
-                                                        schedule_afternoon: document.getElementById('sh_afternoon').value
+                                                        schedule_afternoon: document.getElementById('sh_afternoon').value,
+                                                        schedule_saturday: document.getElementById('sh_saturday').value
                                                     }).eq('slug', params.slug);
                                                     if (error) alert("Error: " + error.message);
                                                     else { setIsSaved(true); setTimeout(() => setIsSaved(false), 2000); fetchSchoolConfig(); }
@@ -1888,39 +1919,241 @@ export default function AdminDashboard({ params }) {
                                                 <label className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Jornada Tarde</label>
                                                 <input id="sh_afternoon" type="text" defaultValue={schoolConfig.schedule_afternoon} className="w-full bg-white/10 border-none rounded-xl p-4 font-bold text-white placeholder:text-white/20 focus:ring-2 ring-white/30 outline-none" />
                                             </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Jornada Sabatina</label>
+                                                <input id="sh_saturday" type="text" defaultValue={schoolConfig.schedule_saturday} placeholder="Ej: Sábados 8:00 AM - 12:00 PM" className="w-full bg-white/10 border-none rounded-xl p-4 font-bold text-white placeholder:text-white/20 focus:ring-2 ring-white/30 outline-none" />
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* 7. Integraciones Técnicas */}
-                                    <div className="col-span-full bg-gray-50 border-2 border-gray-100 rounded-[40px] p-10 space-y-6">
+                                    {/* 6.5 Información de Contacto */}
+                                    <div className="col-span-full bg-white rounded-[40px] shadow-sm border border-gray-100 p-10 space-y-6">
                                         <div className="flex justify-between items-center">
                                             <h3 className="text-xl font-black text-gray-800 flex items-center gap-3">
-                                                <div className="p-2 bg-gray-200 rounded-xl">
-                                                    <Key size={20} className="text-gray-600" />
+                                                <div className="p-2 bg-cyan-100 rounded-xl">
+                                                    <FileCode size={20} className="text-cyan-600" />
                                                 </div>
-                                                Integraciones Técnicas (API Keys)
+                                                Información de Contacto
                                             </h3>
                                             <button
                                                 onClick={async () => {
                                                     setLoading(true);
                                                     const { error } = await supabase.from('schools').update({
-                                                        groq_key: document.getElementById('groq_key').value
+                                                        correo_institucional: document.getElementById('correo_inst').value,
+                                                        telefono_secundario: document.getElementById('tel_secundario').value,
+                                                        direccion: document.getElementById('direccion_inst').value
                                                     }).eq('slug', params.slug);
                                                     if (error) alert("Error: " + error.message);
                                                     else { setIsSaved(true); setTimeout(() => setIsSaved(false), 2000); fetchSchoolConfig(); }
                                                     setLoading(false);
                                                 }}
-                                                className="bg-gray-800 text-white px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg"
+                                                className="bg-cyan-600 text-white px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all flex items-center gap-2"
                                             >
-                                                <Save size={14} /> Configurar LLM
+                                                <Save size={14} /> Guardar Contacto
+                                            </button>
+                                        </div>
+                                        <p className="text-xs text-gray-400 font-medium -mt-2">Estos datos se mostrarán en la página de <strong>Contacto</strong> del sitio web.</p>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Correo Institucional</label>
+                                                <input id="correo_inst" type="email" defaultValue={schoolConfig.correo_institucional || ''} placeholder="info@colegio.edu.co" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 focus:ring-2 ring-cyan-200 outline-none" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Teléfono / WhatsApp Secretaría</label>
+                                                <input id="tel_secundario" type="text" defaultValue={schoolConfig.telefono_secundario || ''} placeholder="321 280 8022" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 focus:ring-2 ring-cyan-200 outline-none" />
+                                            </div>
+                                            <div className="space-y-2 md:col-span-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Dirección Física</label>
+                                                <input id="direccion_inst" type="text" defaultValue={schoolConfig.direccion || ''} placeholder="Calle X # Y - Z, Villavicencio, Meta" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 focus:ring-2 ring-cyan-200 outline-none" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 7. Configuración de Wompi y Webhook */}
+                                    <div className="col-span-full bg-gray-50 border-2 border-gray-100 rounded-[40px] p-10 space-y-6">
+                                        <div className="flex justify-between items-center">
+                                            <h3 className="text-xl font-black text-gray-800 flex items-center gap-3">
+                                                <div className="p-2 bg-green-100 rounded-xl">
+                                                    <Key size={20} className="text-green-600" />
+                                                </div>
+                                                Integración Wompi (Pagos en Línea)
+                                            </h3>
+                                            <button
+                                                onClick={async () => {
+                                                    setLoading(true);
+                                                    const { error } = await supabase.from('schools').update({
+                                                        wompi_webhook_url: document.getElementById('wompi_webhook_url').value,
+                                                        wompi_webhook_secret: document.getElementById('wompi_webhook_secret').value
+                                                    }).eq('slug', params.slug);
+                                                    if (error) alert("Error: " + error.message);
+                                                    else { setIsSaved(true); setTimeout(() => setIsSaved(false), 2000); fetchSchoolConfig(); }
+                                                    setLoading(false);
+                                                }}
+                                                className="bg-green-600 text-white px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg"
+                                            >
+                                                <Save size={14} /> Guardar Wompi
                                             </button>
                                         </div>
                                         <div className="space-y-4">
+                                            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex gap-3">
+                                                <span className="text-blue-500 shrink-0">ℹ️</span>
+                                                <p className="text-xs text-blue-800 font-medium leading-relaxed">
+                                                    Copia esta URL y pégala en la configuración de <strong>Eventos/Webhooks</strong> de tu panel de Wompi. Así los pagos se registrarán automáticamente en Tesorería.
+                                                </p>
+                                            </div>
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2 ml-1">
-                                                    Groq Cloud API Key <span className="text-[8px] bg-institutional-magenta/10 text-institutional-magenta px-2 py-0.5 rounded-full">Inteligencia Artificial</span>
+                                                    URL Webhook (para pegar en Wompi) <span className="text-[8px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Pagos Automáticos</span>
                                                 </label>
-                                                <input id="groq_key" type="password" placeholder="gsk_..." className="w-full bg-white border border-gray-200 rounded-xl p-4 font-mono text-xs shadow-sm focus:ring-2 ring-institutional-magenta/20 transition-all" />
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        id="wompi_webhook_url"
+                                                        type="text"
+                                                        readOnly
+                                                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhooks/wompi`}
+                                                        className="flex-1 bg-white border border-gray-200 rounded-xl p-4 font-mono text-xs shadow-sm"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(`${window.location.origin}/api/webhooks/wompi`);
+                                                            alert('URL copiada al portapapeles');
+                                                        }}
+                                                        className="bg-gray-800 text-white px-4 rounded-xl font-black text-xs uppercase tracking-widest"
+                                                    >
+                                                        Copiar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2 ml-1">
+                                                    Secreto de Webhook (Events Secret de Wompi) <span className="text-[8px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Seguridad</span>
+                                                </label>
+                                                <input id="wompi_webhook_secret" type="password" defaultValue={schoolConfig.wompi_webhook_secret || ''} placeholder="test_events_..." className="w-full bg-white border border-gray-200 rounded-xl p-4 font-mono text-xs shadow-sm focus:ring-2 ring-green-200 transition-all" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 8. Configuración de Grados y Niveles */}
+                                    <div className="col-span-full bg-white border-2 border-gray-100 rounded-[40px] p-10 space-y-6">
+                                        <div className="flex justify-between items-center">
+                                            <h3 className="text-xl font-black text-gray-800 flex items-center gap-3">
+                                                <div className="p-2 bg-purple-100 rounded-xl">
+                                                    <GraduationCap size={20} className="text-purple-600" />
+                                                </div>
+                                                Grados y Niveles Académicos
+                                            </h3>
+                                            <button
+                                                onClick={async () => {
+                                                    setLoading(true);
+                                                    const gradesText = document.getElementById('school_grades').value;
+                                                    const gradesArray = gradesText.split('\n').map(g => g.trim()).filter(Boolean);
+                                                    const { error } = await supabase.from('schools').update({
+                                                        grados_config: gradesArray
+                                                    }).eq('slug', params.slug);
+                                                    if (error) alert("Error: " + error.message);
+                                                    else { setIsSaved(true); setTimeout(() => setIsSaved(false), 2000); fetchSchoolConfig(); }
+                                                    setLoading(false);
+                                                }}
+                                                className="bg-purple-600 text-white px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg"
+                                            >
+                                                <Save size={14} /> Guardar Grados
+                                            </button>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="bg-purple-50 border border-purple-100 rounded-2xl p-4 flex gap-3">
+                                                <span className="text-purple-500 shrink-0">📋</span>
+                                                <p className="text-xs text-purple-800 font-medium leading-relaxed">
+                                                    Escribe un grado por línea. Estos grados estarán disponibles al registrar estudiantes, asignar actividades y en los filtros de circulares.
+                                                </p>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Listado de Grados (uno por línea)</label>
+                                                <textarea
+                                                    id="school_grades"
+                                                    rows={12}
+                                                    defaultValue={(schoolConfig.grados_config || [
+                                                        'Prejardín', 'Jardín', 'Transición',
+                                                        'Primero', 'Segundo', 'Tercero', 'Cuarto', 'Quinto',
+                                                        'Sexto', 'Séptimo', 'Octavo', 'Noveno',
+                                                        'Décimo', 'Once'
+                                                    ]).join('\n')}
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 font-bold text-sm text-gray-700 focus:ring-2 ring-purple-200 transition-all leading-relaxed"
+                                                    placeholder="Prejardín&#10;Transición&#10;Primero&#10;Segundo..."
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 9. Contenido Legal */}
+                                    <div className="col-span-full bg-gradient-to-br from-slate-50 to-white border-2 border-gray-100 rounded-[40px] p-10 space-y-8">
+                                        <div className="flex justify-between items-center">
+                                            <h3 className="text-xl font-black text-gray-800 flex items-center gap-3">
+                                                <div className="p-2 bg-rose-100 rounded-xl">
+                                                    <FileText size={20} className="text-rose-600" />
+                                                </div>
+                                                Documentos Legales
+                                            </h3>
+                                            <button
+                                                onClick={async () => {
+                                                    setLoading(true);
+                                                    const updates = {};
+                                                    const habeas = document.getElementById('legal_habeas');
+                                                    const priv = document.getElementById('legal_privacidad');
+                                                    const imagen = document.getElementById('legal_imagen');
+                                                    const terminos = document.getElementById('legal_terminos');
+                                                    if (habeas) updates.legal_habeas_data = habeas.value;
+                                                    if (priv) updates.legal_privacidad = priv.value;
+                                                    if (imagen) updates.legal_uso_imagen = imagen.value;
+                                                    if (terminos) updates.legal_terminos = terminos.value;
+                                                    const { error } = await supabase.from('schools').update(updates).eq('slug', params.slug);
+                                                    if (error) alert("Error: " + error.message);
+                                                    else { setIsSaved(true); setTimeout(() => setIsSaved(false), 2000); fetchSchoolConfig(); }
+                                                    setLoading(false);
+                                                }}
+                                                className="bg-rose-600 text-white px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg flex items-center gap-2"
+                                            >
+                                                <Save size={14} /> Guardar Legal
+                                            </button>
+                                        </div>
+                                        <p className="text-xs text-gray-400 font-medium -mt-4">Edita el contenido que se muestra en la página <strong>/legal</strong>. Se incluyen plantillas por defecto basadas en la ley colombiana.</p>
+
+                                        <div className="space-y-6">
+                                            <details className="group">
+                                                <summary className="cursor-pointer font-black text-sm text-gray-700 flex items-center gap-2 p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all">
+                                                    🛡️ Habeas Data <span className="text-[10px] font-bold text-blue-500 ml-auto group-open:hidden">Expandir</span>
+                                                </summary>
+                                                <textarea id="legal_habeas" rows={10} defaultValue={schoolConfig.legal_habeas_data || ''} placeholder="Deja vacío para usar la plantilla por defecto..." className="w-full mt-3 bg-white border border-gray-200 rounded-xl p-4 text-xs text-gray-600 font-medium focus:ring-2 ring-blue-200 transition-all leading-relaxed" />
+                                            </details>
+
+                                            <details className="group">
+                                                <summary className="cursor-pointer font-black text-sm text-gray-700 flex items-center gap-2 p-4 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition-all">
+                                                    📋 Política de Privacidad <span className="text-[10px] font-bold text-emerald-500 ml-auto group-open:hidden">Expandir</span>
+                                                </summary>
+                                                <textarea id="legal_privacidad" rows={10} defaultValue={schoolConfig.legal_privacidad || ''} placeholder="Deja vacío para usar la plantilla por defecto..." className="w-full mt-3 bg-white border border-gray-200 rounded-xl p-4 text-xs text-gray-600 font-medium focus:ring-2 ring-emerald-200 transition-all leading-relaxed" />
+                                            </details>
+
+                                            <details className="group">
+                                                <summary className="cursor-pointer font-black text-sm text-gray-700 flex items-center gap-2 p-4 bg-purple-50 rounded-xl hover:bg-purple-100 transition-all">
+                                                    📸 Uso de Imagen <span className="text-[10px] font-bold text-purple-500 ml-auto group-open:hidden">Expandir</span>
+                                                </summary>
+                                                <textarea id="legal_imagen" rows={10} defaultValue={schoolConfig.legal_uso_imagen || ''} placeholder="Deja vacío para usar la plantilla por defecto..." className="w-full mt-3 bg-white border border-gray-200 rounded-xl p-4 text-xs text-gray-600 font-medium focus:ring-2 ring-purple-200 transition-all leading-relaxed" />
+                                            </details>
+
+                                            <details className="group">
+                                                <summary className="cursor-pointer font-black text-sm text-gray-700 flex items-center gap-2 p-4 bg-amber-50 rounded-xl hover:bg-amber-100 transition-all">
+                                                    ⚖️ Términos y Condiciones <span className="text-[10px] font-bold text-amber-500 ml-auto group-open:hidden">Expandir</span>
+                                                </summary>
+                                                <textarea id="legal_terminos" rows={10} defaultValue={schoolConfig.legal_terminos || ''} placeholder="Deja vacío para usar la plantilla por defecto..." className="w-full mt-3 bg-white border border-gray-200 rounded-xl p-4 text-xs text-gray-600 font-medium focus:ring-2 ring-amber-200 transition-all leading-relaxed" />
+                                            </details>
+
+                                            <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 flex gap-3">
+                                                <span className="text-rose-500 shrink-0">🏆</span>
+                                                <div>
+                                                    <p className="text-xs text-rose-800 font-medium leading-relaxed">
+                                                        <strong>Certificados y Resoluciones:</strong> Para subir documentos PDF (resoluciones, certificados), ve a la sección de <strong>Galería</strong> y sube los archivos. Luego podrás enlazarlos desde la página legal.
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1957,7 +2190,8 @@ export default function AdminDashboard({ params }) {
                                             onChange={(e) => setFilterGrado(e.target.value)}
                                         >
                                             <option value="">Todos los Grados</option>
-                                            {grados.map(g => <option key={g.id} value={g.nombre}>{g.nombre}</option>)}
+                                            {/* Grados únicos extraídos de los estudiantes reales */}
+                                            {[...new Set(students.map(s => s.grado).filter(Boolean))].sort().map(g => <option key={g} value={g}>{g}</option>)}
                                         </select>
                                         <select
                                             className="bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 outline-none"
@@ -2002,13 +2236,30 @@ export default function AdminDashboard({ params }) {
                                                         </td>
                                                         <td className="py-4 px-4 text-sm font-bold text-gray-600">{student.grado}</td>
                                                         <td className="py-4 px-4">
-                                                            {['admin', 'secretary', 'coordinator'].includes(userRole) && (
+                                                            <div className="flex gap-3">
                                                                 <button onClick={() => {
-                                                                    setEditingStudent(student);
-                                                                    setFormModalidad(student.modalidad || '');
-                                                                    setIsStudentModalOpen(true);
-                                                                }} className="text-blue-500 text-sm font-bold">Editar</button>
-                                                            )}
+                                                                    setViewingStudentDetails(student);
+                                                                    setStudentObservaciones([]);
+                                                                    // Cargar observaciones del estudiante
+                                                                    (async () => {
+                                                                        const { data } = await supabase
+                                                                            .from('student_observations')
+                                                                            .select('*, profiles:created_by(nombre, rol)')
+                                                                            .eq('student_id', student.id)
+                                                                            .order('created_at', { ascending: false });
+                                                                        setStudentObservaciones(data || []);
+                                                                    })();
+                                                                }} className="text-amber-600 text-sm font-bold flex items-center gap-1 hover:text-amber-700 transition-colors">
+                                                                    <ClipboardList size={14} /> Detalles
+                                                                </button>
+                                                                {['admin', 'secretary', 'coordinator'].includes(userRole) && (
+                                                                    <button onClick={() => {
+                                                                        setEditingStudent(student);
+                                                                        setFormModalidad(student.modalidad || '');
+                                                                        setIsStudentModalOpen(true);
+                                                                    }} className="text-blue-500 text-sm font-bold hover:text-blue-700 transition-colors">Editar</button>
+                                                                )}
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -2082,7 +2333,12 @@ export default function AdminDashboard({ params }) {
                                                         {!editingStudent ? (
                                                             <div className="space-y-1">
                                                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contraseña *</label>
-                                                                <input name="password" type="text" defaultValue={leadToFormalize?.telefono || "Estudiante2026*"} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm" />
+                                                                <div className="relative">
+                                                                    <input name="password" type={showPassword ? 'text' : 'password'} defaultValue={leadToFormalize?.telefono || "Estudiante2026*"} className="w-full bg-white border border-gray-200 rounded-xl p-3 pr-12 font-bold text-gray-700 text-sm" />
+                                                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                                                                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         ) : (
                                                             <div className="space-y-1">
@@ -2237,6 +2493,148 @@ export default function AdminDashboard({ params }) {
                         )
                     }
 
+                    {/* Modal: Detalles del Estudiante / Libro de Observaciones */}
+                    {
+                        viewingStudentDetails && (
+                            <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-institutional-blue/40 backdrop-blur-md animate-in fade-in duration-200">
+                                <div className="bg-white w-full max-w-3xl max-h-[90vh] rounded-[40px] shadow-2xl relative animate-in zoom-in-95 duration-300 overflow-hidden flex flex-col">
+                                    {/* Header */}
+                                    <div className="p-8 border-b border-gray-100 bg-gradient-to-r from-institutional-blue/5 to-institutional-magenta/5 flex-shrink-0">
+                                        <button type="button" onClick={() => setViewingStudentDetails(null)} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-xl transition-colors z-10">
+                                            <X size={24} className="text-gray-400" />
+                                        </button>
+                                        <div className="flex items-center gap-6">
+                                            <div className="w-16 h-16 bg-institutional-blue/10 rounded-3xl flex items-center justify-center text-institutional-blue font-black text-2xl">
+                                                {viewingStudentDetails.nombre?.[0] || 'E'}
+                                            </div>
+                                            <div>
+                                                <h3 className="text-2xl font-black text-gray-800">{viewingStudentDetails.nombre}</h3>
+                                                <div className="flex gap-3 mt-1">
+                                                    <span className="text-[10px] font-black bg-institutional-blue/10 text-institutional-blue px-3 py-1 rounded-full uppercase tracking-widest">{viewingStudentDetails.grado}</span>
+                                                    <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${viewingStudentDetails.modalidad === 'Presencial' ? 'bg-blue-50 text-blue-600' : viewingStudentDetails.modalidad === 'A Distancia' ? 'bg-institutional-magenta/10 text-institutional-magenta' : 'bg-amber-50 text-amber-600'}`}>{viewingStudentDetails.modalidad || 'N/A'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Info rápida */}
+                                    <div className="px-8 pt-6 pb-2 grid grid-cols-3 gap-4 flex-shrink-0">
+                                        <div className="bg-gray-50 rounded-2xl p-4 text-center">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email</p>
+                                            <p className="text-xs font-bold text-gray-600 mt-1 truncate">{viewingStudentDetails.email}</p>
+                                        </div>
+                                        <div className="bg-gray-50 rounded-2xl p-4 text-center">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Documento</p>
+                                            <p className="text-xs font-bold text-gray-600 mt-1">{viewingStudentDetails.tipo_documento} {viewingStudentDetails.numero_documento || 'N/A'}</p>
+                                        </div>
+                                        <div className="bg-gray-50 rounded-2xl p-4 text-center">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Acudiente</p>
+                                            <p className="text-xs font-bold text-gray-600 mt-1 truncate">{viewingStudentDetails.acudiente_nombre || 'N/A'}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Observaciones Administrativas (campo existente) */}
+                                    {viewingStudentDetails.observaciones && (
+                                        <div className="px-8 py-3 flex-shrink-0">
+                                            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-1">📝 Observación Administrativa</p>
+                                                <p className="text-sm font-medium text-amber-800">{viewingStudentDetails.observaciones}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Libro de Observaciones */}
+                                    <div className="px-8 py-4 flex-shrink-0">
+                                        <h4 className="text-xs font-black uppercase tracking-widest text-gray-800 flex items-center gap-2 mb-4">
+                                            <ClipboardList size={16} className="text-institutional-magenta" /> Libro de Observaciones
+                                        </h4>
+                                    </div>
+
+                                    {/* Nueva Observación (solo admin/secretary/coordinator) */}
+                                    {['admin', 'secretary', 'coordinator', 'teacher'].includes(userRole) && (
+                                        <div className="px-8 pb-4 flex-shrink-0">
+                                            <div className="flex gap-3">
+                                                <input
+                                                    type="text"
+                                                    value={newObservacion}
+                                                    onChange={(e) => setNewObservacion(e.target.value)}
+                                                    placeholder="Escribir nueva observación..."
+                                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3 font-bold text-sm focus:ring-2 focus:ring-institutional-blue outline-none transition-all"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        if (!newObservacion.trim()) return;
+                                                        const { data: { user: currentUser } } = await supabase.auth.getUser();
+                                                        const { error } = await supabase.from('student_observations').insert([{
+                                                            student_id: viewingStudentDetails.id,
+                                                            school_id: school?.id,
+                                                            content: newObservacion,
+                                                            created_by: currentUser?.id
+                                                        }]);
+                                                        if (error) {
+                                                            alert('Error: ' + error.message);
+                                                        } else {
+                                                            setNewObservacion('');
+                                                            // Recargar observaciones
+                                                            const { data } = await supabase
+                                                                .from('student_observations')
+                                                                .select('*, profiles:created_by(nombre, rol)')
+                                                                .eq('student_id', viewingStudentDetails.id)
+                                                                .order('created_at', { ascending: false });
+                                                            setStudentObservaciones(data || []);
+                                                        }
+                                                    }}
+                                                    className="bg-institutional-blue text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all"
+                                                >
+                                                    Agregar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Lista de Observaciones */}
+                                    <div className="px-8 pb-8 overflow-y-auto flex-1">
+                                        <div className="space-y-3">
+                                            {studentObservaciones.map((obs) => (
+                                                <div key={obs.id} className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${obs.profiles?.rol === 'admin' ? 'bg-purple-100 text-purple-700' :
+                                                                obs.profiles?.rol === 'teacher' ? 'bg-blue-100 text-blue-700' :
+                                                                    obs.profiles?.rol === 'secretary' ? 'bg-green-100 text-green-700' :
+                                                                        'bg-gray-100 text-gray-700'
+                                                                }`}>
+                                                                {obs.profiles?.rol === 'admin' ? 'Rectoría' :
+                                                                    obs.profiles?.rol === 'teacher' ? 'Docente' :
+                                                                        obs.profiles?.rol === 'secretary' ? 'Secretaría' :
+                                                                            obs.profiles?.rol || 'Sistema'}
+                                                            </span>
+                                                            <span className="text-xs font-bold text-gray-600">{obs.profiles?.nombre || 'Desconocido'}</span>
+                                                        </div>
+                                                        <span className="text-[10px] text-gray-400 font-bold">{new Date(obs.created_at).toLocaleDateString()} {new Date(obs.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                    </div>
+                                                    <p className="text-sm font-medium text-gray-700 leading-relaxed">{obs.content}</p>
+                                                    {obs.student_reply && (
+                                                        <div className="mt-3 bg-blue-50 rounded-xl p-3 border border-blue-100">
+                                                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Respuesta del estudiante:</p>
+                                                            <p className="text-sm font-medium text-blue-800">{obs.student_reply}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            {studentObservaciones.length === 0 && (
+                                                <div className="py-10 text-center text-gray-400 font-medium">
+                                                    No hay observaciones registradas para este estudiante.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    }
+
                     {/* Modal Galería */}
                     {
                         isGalleryModalOpen && (
@@ -2384,20 +2782,45 @@ export default function AdminDashboard({ params }) {
                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contenido</label>
                                             <textarea name="content" required rows="4" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Escriba aquí los detalles..."></textarea>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dirigido a (Categoría)</label>
-                                            <select name="target_area" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700">
-                                                <option value="Todos">Todos</option>
-                                                <option value="Preescolar">Preescolar</option>
-                                                <option value="Primaria">Primaria</option>
-                                                <option value="Bachillerato">Bachillerato</option>
-                                                <option value="Sabatinas">Sabatinas</option>
-                                                <option value="A Distancia">A Distancia</option>
-                                            </select>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dirigido a (Categoría)</label>
+                                                <select name="target_area" value={circularCategory} onChange={(e) => setCircularCategory(e.target.value)} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700">
+                                                    <option value="Todos">Todos</option>
+                                                    <option value="Preescolar">Preescolar</option>
+                                                    <option value="Primaria">Primaria</option>
+                                                    <option value="Bachillerato">Bachillerato</option>
+                                                    <option value="Sabatinas">Sabatinas</option>
+                                                    <option value="A Distancia">A Distancia</option>
+                                                </select>
+                                            </div>
+                                            {circularCategory !== 'Todos' && (
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grado Específico</label>
+                                                    <select name="target_grado" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700">
+                                                        <option value="">Todos los grados de {circularCategory}</option>
+                                                        {circularCategory === 'Preescolar' && (
+                                                            <>{['Pre-jardín', 'Jardín', 'Transición'].map(g => <option key={g} value={g}>{g}</option>)}</>
+                                                        )}
+                                                        {circularCategory === 'Primaria' && (
+                                                            <>{['1°', '2°', '3°', '4°', '5°'].map(g => <option key={g} value={g}>{g}</option>)}</>
+                                                        )}
+                                                        {circularCategory === 'Bachillerato' && (
+                                                            <>{['6°', '7°', '8°', '9°', '10°', '11°'].map(g => <option key={g} value={g}>{g}</option>)}</>
+                                                        )}
+                                                        {circularCategory === 'Sabatinas' && (
+                                                            <>{['6-7', '8-9', '10-11'].map(g => <option key={g} value={g}>{g}</option>)}</>
+                                                        )}
+                                                        {circularCategory === 'A Distancia' && (
+                                                            <>{['Ciclo III', 'Ciclo IV', 'Ciclo V'].map(g => <option key={g} value={g}>{g}</option>)}</>
+                                                        )}
+                                                    </select>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Documento Adjunto (Opcional)</label>
-                                            <input type="file" name="file_upload" accept=".pdf,.doc,.docx" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 text-xs" />
+                                            <input type="file" name="file_upload" accept=".pdf,.doc,.docx,.jpg,.png" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 text-xs" />
                                         </div>
                                     </div>
                                     <div className="mt-10 flex gap-4">
@@ -2446,8 +2869,45 @@ export default function AdminDashboard({ params }) {
                                                 </select>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Documento Guía</label>
-                                                <input type="file" name="file_upload" accept=".pdf,.doc,.docx" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 text-xs" />
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Imagen / Guía Visual</label>
+                                                <input type="file" id="activity_file_input" className="hidden" accept="image/*" onChange={(e) => {
+                                                    const f = e.target.files[0];
+                                                    if (f) { setActivityFile(f); setActivityFilePreview(URL.createObjectURL(f)); }
+                                                }} />
+                                                <div
+                                                    onClick={() => document.getElementById('activity_file_input').click()}
+                                                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-amber-500', 'bg-amber-50'); }}
+                                                    onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-amber-500', 'bg-amber-50'); }}
+                                                    onDrop={(e) => {
+                                                        e.preventDefault();
+                                                        e.currentTarget.classList.remove('border-amber-500', 'bg-amber-50');
+                                                        const f = e.dataTransfer.files[0];
+                                                        if (f && f.type.startsWith('image/')) {
+                                                            setActivityFile(f);
+                                                            setActivityFilePreview(URL.createObjectURL(f));
+                                                        } else {
+                                                            alert('Solo se permiten archivos de imagen (JPG, PNG, etc.)');
+                                                        }
+                                                    }}
+                                                    className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center gap-3 hover:bg-amber-50/50 hover:border-amber-400 transition-all cursor-pointer group"
+                                                >
+                                                    {activityFilePreview ? (
+                                                        <div className="relative w-full">
+                                                            <img src={activityFilePreview} alt="Preview" className="w-full max-h-40 object-contain rounded-xl" />
+                                                            <button type="button" onClick={(e) => { e.stopPropagation(); setActivityFile(null); setActivityFilePreview(null); }}
+                                                                className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-lg">
+                                                                <X size={16} />
+                                                            </button>
+                                                            <p className="text-[10px] font-bold text-amber-600 text-center mt-2 uppercase tracking-widest">{activityFile?.name}</p>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <ImageIcon size={32} className="text-gray-300 group-hover:text-amber-500 transition-colors" />
+                                                            <p className="text-xs font-bold text-gray-400 group-hover:text-amber-600 uppercase tracking-widest text-center">Arrastra una imagen aquí o haz clic para seleccionar</p>
+                                                            <p className="text-[10px] text-gray-300 font-medium">JPG, PNG, GIF — máx. 32MB</p>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

@@ -52,8 +52,8 @@ export default function SchoolNavbar({ schoolName, logoUrl, brandingColors, slug
             {/* Top Bar - Contacto y Redes */}
             <div className="text-white/80 py-2 px-6 text-[10px] flex justify-between items-center border-b border-white/10" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
                 <div className="flex gap-4 items-center">
-                    <span>📞 313 411 1666</span>
-                    <span className="hidden sm:inline">📍 Villavicencio, Meta</span>
+                    <a href="tel:+573212808022" className="hover:text-white transition-colors">📞 321 280 8022</a>
+                    <a href="https://maps.app.goo.gl/cjzBgYGZxi5bfS8k7" target="_blank" rel="noopener noreferrer" className="hidden sm:inline hover:text-white transition-colors">📍 Villavicencio, Meta</a>
                     {/* Social Links In Top Bar */}
                     {socialLinks && (
                         <div className="hidden md:flex items-center gap-3 border-l border-white/10 ml-4 pl-4">
@@ -65,7 +65,7 @@ export default function SchoolNavbar({ schoolName, logoUrl, brandingColors, slug
                     )}
                 </div>
                 <div className="flex gap-4 font-bold uppercase tracking-wider">
-                    <a href="#contact" className="hover:text-white transition-colors">Contáctenos</a>
+                    <a href={`/${slug}/contacto`} className="hover:text-white transition-colors">Contáctenos</a>
                     <a href={`/${slug}/login`} className="hover:text-white transition-colors flex items-center gap-1">
                         <User size={12} /> Acceso Administrativo
                     </a>
@@ -109,6 +109,9 @@ export default function SchoolNavbar({ schoolName, logoUrl, brandingColors, slug
                     </a>
                     <a href={`/${slug}/pagos`} className="text-white/80 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
                         💳 Pagos
+                    </a>
+                    <a href={`/${slug}/contacto`} className="text-white/80 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
+                        📞 Contacto
                     </a>
                 </div>
 

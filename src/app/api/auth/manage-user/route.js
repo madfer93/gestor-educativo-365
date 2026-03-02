@@ -13,9 +13,12 @@ export async function POST(req) {
         const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
         if (!supabaseUrl || !supabaseKey) {
-            console.error('Configuración faltante:', { url: !!supabaseUrl, key: !!supabaseKey });
+            const missing = [];
+            if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL');
+            if (!supabaseKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+            console.error('Variables de entorno faltantes:', missing.join(', '), '- Reinicie el servidor de desarrollo para recargar .env.local');
             return NextResponse.json({
-                error: 'Configuración de Supabase incompleta en el servidor. Por favor, reinicie el servidor de desarrollo.'
+                error: `Configuración de Supabase incompleta en el servidor (faltan: ${missing.join(', ')}). Reinicie el servidor de desarrollo.`
             }, { status: 500 });
         }
 
