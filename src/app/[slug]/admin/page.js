@@ -783,12 +783,14 @@ export default function AdminDashboard({ params }) {
             }
         }
 
+        const gradoVal = formData.get('grado');
         const insertData = {
             school_id: school.id,
             title: formData.get('title'),
             description: formData.get('description'),
-            grado: formData.get('grado'),
-            created_by: currentUser?.id || null
+            grado: gradoVal || 'General',
+            created_by: currentUser?.id || null,
+            due_date: formData.get('due_date') || null
         };
         // Solo incluir file_url si se subió un archivo (requiere columna en Supabase)
         if (fileUrl) insertData.file_url = fileUrl;
@@ -1522,6 +1524,7 @@ export default function AdminDashboard({ params }) {
                                                 <tr className="text-xs font-black uppercase tracking-widest text-gray-400">
                                                     <th className="py-6 px-8">Actividad / Título</th>
                                                     <th className="py-6 px-8">Grado</th>
+                                                    <th className="py-6 px-8">Fecha Límite</th>
                                                     <th className="py-6 px-8 text-right">Acciones</th>
                                                 </tr>
                                             </thead>
@@ -1538,6 +1541,15 @@ export default function AdminDashboard({ params }) {
                                                             </div>
                                                         </td>
                                                         <td className="py-6 px-8 font-bold text-gray-500 text-xs">{activity.grado || 'Todos'}</td>
+                                                        <td className="py-6 px-8">
+                                                            {activity.due_date ? (
+                                                                <span className={`text-xs font-bold px-3 py-1 rounded-full ${new Date(activity.due_date) < new Date() ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                                                                    {new Date(activity.due_date).toLocaleDateString('es-CO')}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-xs text-gray-300">Sin límite</span>
+                                                            )}
+                                                        </td>
                                                         <td className="py-6 px-8 text-right">
                                                             <button onClick={async () => {
                                                                 if (confirm('Eliminar actividad?')) {
@@ -2970,6 +2982,16 @@ export default function AdminDashboard({ params }) {
                                                         </>
                                                     )}
                                                 </div>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Fecha Límite de Entrega</label>
+                                                <input name="due_date" type="date" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Fecha de Asignación</label>
+                                                <input type="date" disabled value={new Date().toISOString().split('T')[0]} className="w-full bg-gray-100 border-none rounded-2xl p-4 font-bold text-gray-400" />
                                             </div>
                                         </div>
                                     </div>

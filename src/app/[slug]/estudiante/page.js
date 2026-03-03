@@ -80,7 +80,7 @@ export default function StudentDashboard({ params }) {
                         const { data: acts } = await supabase.from('school_activities')
                             .select('*')
                             .eq('school_id', school.id)
-                            .or(`grado.eq.${prof.grado},grado.eq.General`)
+                            .or(`grado.eq.${prof.grado},grado.eq.General,grado.eq.,grado.is.null`)
                             .order('created_at', { ascending: false });
                         setActivities(acts || []);
                         setStats(prev => ({ ...prev, tasks: acts?.length || 0 }));
