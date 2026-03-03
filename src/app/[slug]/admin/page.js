@@ -8,7 +8,7 @@ import {
     Users, UserPlus, FileText, DollarSign, LayoutDashboard,
     Settings, LogOut, Bell, PlusCircle, Save, X, Clock, Book, GraduationCap,
     Link, Image as ImageIcon, Key, FileCode, Edit, Trash2, Camera, Loader2, Heart, Megaphone,
-    Eye, EyeOff, ClipboardList
+    Eye, EyeOff, ClipboardList, Award
 } from "lucide-react";
 import { uploadImage } from "@/lib/imgbb";
 
@@ -1847,42 +1847,6 @@ export default function AdminDashboard({ params }) {
                                         </div>
                                     </div>
 
-                                    {/* 5. Operación: Grados */}
-                                    <div className="bg-white rounded-[40px] shadow-sm border border-gray-100 p-10 space-y-8">
-                                        <div className="flex justify-between items-center">
-                                            <h3 className="text-2xl font-black text-gray-800 flex items-center gap-3">
-                                                <div className="p-2 bg-institutional-blue/10 rounded-xl">
-                                                    <GraduationCap className="text-institutional-blue" size={24} />
-                                                </div>
-                                                Grados y Niveles
-                                            </h3>
-                                            <button
-                                                onClick={async () => {
-                                                    setLoading(true);
-                                                    const { error } = await supabase.from('schools').update({ grados }).eq('slug', params.slug);
-                                                    if (error) alert("Error: " + error.message);
-                                                    else { setIsSaved(true); setTimeout(() => setIsSaved(false), 2000); fetchSchoolConfig(); }
-                                                    setLoading(false);
-                                                }}
-                                                className="bg-institutional-blue text-white px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg"
-                                            >
-                                                <Save size={14} />
-                                            </button>
-                                        </div>
-                                        <div className="space-y-6">
-                                            <div className="flex gap-2">
-                                                <input type="text" value={newGrado} onChange={(e) => setNewGrado(e.target.value)} placeholder="Añadir nuevo grado..." className="flex-1 bg-gray-50 border-none rounded-xl p-4 font-bold shadow-inner" />
-                                                <button onClick={() => { if (newGrado.trim()) { setGrados([...grados, newGrado.trim()]); setNewGrado(""); } }} className="bg-institutional-blue text-white px-6 rounded-xl font-black shadow-lg">+</button>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2">
-                                                {grados.map((g, i) => (
-                                                    <span key={i} className="bg-white text-institutional-blue px-4 py-2 rounded-xl text-xs font-black uppercase tracking-tight border border-institutional-blue/20 flex items-center gap-2 shadow-sm">
-                                                        {g} <X size={12} className="cursor-pointer text-institutional-magenta" onClick={() => setGrados(grados.filter((_, index) => index !== i))} />
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
 
                                     {/* 6. Operación: Horarios */}
                                     <div className="bg-institutional-blue rounded-[40px] shadow-xl p-10 space-y-8 text-white">
@@ -2147,14 +2111,54 @@ export default function AdminDashboard({ params }) {
                                                 <textarea id="legal_terminos" rows={10} defaultValue={schoolConfig.legal_terminos || ''} placeholder="Deja vacío para usar la plantilla por defecto..." className="w-full mt-3 bg-white border border-gray-200 rounded-xl p-4 text-xs text-gray-600 font-medium focus:ring-2 ring-amber-200 transition-all leading-relaxed" />
                                             </details>
 
-                                            <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 flex gap-3">
-                                                <span className="text-rose-500 shrink-0">🏆</span>
-                                                <div>
-                                                    <p className="text-xs text-rose-800 font-medium leading-relaxed">
-                                                        <strong>Certificados y Resoluciones:</strong> Para subir documentos PDF (resoluciones, certificados), ve a la sección de <strong>Galería</strong> y sube los archivos. Luego podrás enlazarlos desde la página legal.
-                                                    </p>
+                                            <details className="group">
+                                                <summary className="cursor-pointer font-black text-sm text-gray-700 flex items-center gap-2 p-4 bg-rose-50 rounded-xl hover:bg-rose-100 transition-all">
+                                                    🏆 Certificados y Resoluciones <span className="text-[10px] font-bold text-rose-500 ml-auto group-open:hidden">Expandir</span>
+                                                </summary>
+                                                <div className="mt-3 space-y-4">
+                                                    <p className="text-xs text-gray-500 font-medium">Sube archivos PDF (resoluciones, certificados). Aparecerán en la página <strong>/legal</strong> para descarga.</p>
+                                                    <div className="flex gap-2">
+                                                        <input id="cert_nombre" type="text" placeholder="Nombre del certificado..." className="flex-1 bg-white border border-gray-200 rounded-xl p-3 text-xs font-bold focus:ring-2 ring-rose-200" />
+                                                        <input id="cert_url" type="text" placeholder="URL del archivo PDF..." className="flex-1 bg-white border border-gray-200 rounded-xl p-3 text-xs font-bold focus:ring-2 ring-rose-200" />
+                                                        <button
+                                                            onClick={async () => {
+                                                                const nombre = document.getElementById('cert_nombre').value.trim();
+                                                                const url = document.getElementById('cert_url').value.trim();
+                                                                if (!nombre || !url) return alert('Completa nombre y URL del certificado');
+                                                                const updated = [...(schoolConfig.legal_certificados || []), { nombre, url }];
+                                                                const { error } = await supabase.from('schools').update({ legal_certificados: updated }).eq('slug', params.slug);
+                                                                if (error) alert('Error: ' + error.message);
+                                                                else { document.getElementById('cert_nombre').value = ''; document.getElementById('cert_url').value = ''; setIsSaved(true); setTimeout(() => setIsSaved(false), 2000); fetchSchoolConfig(); }
+                                                            }}
+                                                            className="bg-rose-600 text-white px-4 rounded-xl font-black text-xs"
+                                                        >+</button>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        {(schoolConfig.legal_certificados || []).map((cert, i) => (
+                                                            <div key={i} className="flex items-center justify-between bg-white border border-gray-100 rounded-xl p-3">
+                                                                <div className="flex items-center gap-3">
+                                                                    <Award size={16} className="text-rose-500" />
+                                                                    <div>
+                                                                        <p className="text-xs font-bold text-gray-800">{cert.nombre}</p>
+                                                                        <p className="text-[10px] text-gray-400 truncate max-w-[200px]">{cert.url}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        const updated = (schoolConfig.legal_certificados || []).filter((_, idx) => idx !== i);
+                                                                        await supabase.from('schools').update({ legal_certificados: updated }).eq('slug', params.slug);
+                                                                        fetchSchoolConfig();
+                                                                    }}
+                                                                    className="text-red-400 hover:text-red-600"
+                                                                ><Trash2 size={14} /></button>
+                                                            </div>
+                                                        ))}
+                                                        {(!schoolConfig.legal_certificados || schoolConfig.legal_certificados.length === 0) && (
+                                                            <p className="text-xs text-gray-400 italic text-center py-4">No hay certificados aún. Agrega el primero arriba.</p>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            </details>
                                         </div>
                                     </div>
                                 </div>
