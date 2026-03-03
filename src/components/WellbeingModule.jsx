@@ -21,15 +21,16 @@ export default function WellbeingModule({ studentId, schoolId }) {
             if (file) {
                 const fileExt = file.name.split('.').pop();
                 const fileName = `${studentId}-${Date.now()}.${fileExt}`;
+                const filePath = `bienestar/${fileName}`;
                 const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('wellbeing-evidence')
-                    .upload(fileName, file);
+                    .from('documentos')
+                    .upload(filePath, file);
 
                 if (uploadError) throw new Error("Error al subir evidencia: " + uploadError.message);
 
                 const { data: { publicUrl } } = supabase.storage
-                    .from('wellbeing-evidence')
-                    .getPublicUrl(fileName);
+                    .from('documentos')
+                    .getPublicUrl(filePath);
 
                 evidenceUrl = publicUrl;
             }

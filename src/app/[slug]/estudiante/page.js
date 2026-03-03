@@ -119,9 +119,19 @@ export default function StudentDashboard({ params }) {
 
                         // Observations
                         const { data: obsData } = await supabase.from('student_observations')
-                            .select('*, profiles:created_by(nombre, rol)')
+                            .select('*')
                             .eq('student_id', prof.id)
                             .order('created_at', { ascending: false });
+
+                        if (obsData && obsData.length > 0) {
+                            const creatorIds = [...new Set(obsData.map(o => o.created_by).filter(Boolean))];
+                            if (creatorIds.length > 0) {
+                                const { data: profiles } = await supabase.from('profiles').select('id, nombre, rol').in('id', creatorIds);
+                                const proMap = {};
+                                if (profiles) profiles.forEach(p => proMap[p.id] = p);
+                                obsData.forEach(o => o.profiles = proMap[o.created_by] || null);
+                            }
+                        }
                         setObservations(obsData || []);
                     }
 
@@ -222,15 +232,16 @@ export default function StudentDashboard({ params }) {
             const fileExt = file.name.split('.').pop();
             const fileName = `${profile.id}-${Date.now()}.${fileExt}`;
 
+            const filePath = `estudiante_docs/${fileName}`;
             const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('student-documents')
-                .upload(fileName, file);
+                .from('documentos')
+                .upload(filePath, file);
 
             if (uploadError) throw new Error("Error al subir documento: " + uploadError.message);
 
             const { data: { publicUrl } } = supabase.storage
-                .from('student-documents')
-                .getPublicUrl(fileName);
+                .from('documentos')
+                .getPublicUrl(filePath);
 
             const newDocs = { ...docsEntregados, [documentName]: publicUrl };
             setProfile({ ...profile, documentos_entregados: newDocs });
@@ -623,15 +634,16 @@ export default function StudentDashboard({ params }) {
                                                                         const fileExt = file.name.split('.').pop();
                                                                         const fileName = `${user.id}-${act.id}-${Date.now()}.${fileExt}`;
 
+                                                                        const filePath = `evidencias/${fileName}`;
                                                                         const { data: uploadData, error: uploadError } = await supabase.storage
-                                                                            .from('student-evidence')
-                                                                            .upload(fileName, file);
+                                                                            .from('documentos')
+                                                                            .upload(filePath, file);
 
                                                                         if (uploadError) throw new Error("Error al subir evidencia: " + uploadError.message);
 
                                                                         const { data: { publicUrl } } = supabase.storage
-                                                                            .from('student-evidence')
-                                                                            .getPublicUrl(fileName);
+                                                                            .from('documentos')
+                                                                            .getPublicUrl(filePath);
 
                                                                         const fileUrl = publicUrl;
 
@@ -1309,15 +1321,16 @@ export default function StudentDashboard({ params }) {
                                                             const fileExt = file.name.split('.').pop();
                                                             const fileName = `${user.id}-${selectedActivity.id}-${Date.now()}.${fileExt}`;
 
+                                                            const filePath = `evidencias/${fileName}`;
                                                             const { data: uploadData, error: uploadError } = await supabase.storage
-                                                                .from('student-evidence')
-                                                                .upload(fileName, file);
+                                                                .from('documentos')
+                                                                .upload(filePath, file);
 
                                                             if (uploadError) throw new Error("Error al subir evidencia: " + uploadError.message);
 
                                                             const { data: { publicUrl } } = supabase.storage
-                                                                .from('student-evidence')
-                                                                .getPublicUrl(fileName);
+                                                                .from('documentos')
+                                                                .getPublicUrl(filePath);
 
                                                             const fileUrl = publicUrl;
 
