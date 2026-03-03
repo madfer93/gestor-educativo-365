@@ -3094,15 +3094,31 @@ export default function AdminDashboard({ params }) {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <a
-                                                        href={sub.archivo_url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-purple-600/20 transition-all"
-                                                    >
-                                                        {sub.archivo_url.toLowerCase().includes('.pdf') ? <FileText size={16} /> : <ImageIcon size={16} />}
-                                                        Ver Evidencia
-                                                    </a>
+                                                    <div className="flex flex-col sm:flex-row gap-2">
+                                                        <a
+                                                            href={sub.archivo_url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-purple-600/20 transition-all"
+                                                        >
+                                                            {sub.archivo_url.toLowerCase().includes('.pdf') ? <FileText size={16} /> : <ImageIcon size={16} />}
+                                                            Ver Evidencia
+                                                        </a>
+                                                        <button
+                                                            onClick={() => {
+                                                                const act = activities.find(a => a.id === selectedActivityForSubmissions);
+                                                                setEditingGrade(null);
+                                                                setSelectedStudentForGrades(sub.estudiante_id);
+                                                                setGradeActivityTitle(act ? act.title : '');
+                                                                setSelectedActivityForSubmissions(null);
+                                                                setActiveTab('calificaciones');
+                                                                setIsGradeModalOpen(true);
+                                                            }}
+                                                            className="flex items-center justify-center gap-2 bg-institutional-blue hover:bg-blue-800 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-blue-500/20 transition-all"
+                                                        >
+                                                            <Star size={16} /> Calificar
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -3129,6 +3145,7 @@ export default function AdminDashboard({ params }) {
                                     onClick={() => {
                                         setEditingGrade(null);
                                         setGradeActivityTitle('');
+                                        setSelectedStudentForGrades(null);
                                         setIsGradeModalOpen(true);
                                     }}
                                     className="bg-institutional-blue text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-black shadow-lg shadow-blue-500/20 hover:scale-105 transition-all"
@@ -3226,6 +3243,8 @@ export default function AdminDashboard({ params }) {
                                     } else {
                                         await supabase.from('calificaciones').insert([data]);
                                     }
+                                    setGradeActivityTitle('');
+                                    setSelectedStudentForGrades(null);
                                     setIsGradeModalOpen(false);
                                     fetchGrades();
                                 }}>
@@ -3242,7 +3261,7 @@ export default function AdminDashboard({ params }) {
                                     <div className="p-8 space-y-6">
                                         <div>
                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Estudiante</label>
-                                            <select name="student_id" defaultValue={editingGrade?.student_id} required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                                            <select name="student_id" defaultValue={selectedStudentForGrades || editingGrade?.student_id} required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none">
                                                 <option value="">Selecciona un estudiante</option>
                                                 {students.map(s => <option key={s.id} value={s.id}>{s.nombre} ({s.grado})</option>)}
                                             </select>
