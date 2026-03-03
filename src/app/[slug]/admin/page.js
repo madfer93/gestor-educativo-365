@@ -8,7 +8,7 @@ import {
     Users, UserPlus, FileText, DollarSign, LayoutDashboard,
     Settings, LogOut, Bell, PlusCircle, Save, X, Clock, Book, GraduationCap,
     Link, Image as ImageIcon, Key, FileCode, Edit, Trash2, Camera, Loader2, Heart, Megaphone,
-    Eye, EyeOff, ClipboardList, Award
+    Eye, EyeOff, ClipboardList, Award, Star
 } from "lucide-react";
 import { uploadImage } from "@/lib/imgbb";
 
