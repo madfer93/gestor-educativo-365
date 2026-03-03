@@ -13,15 +13,7 @@ export async function POST(request) {
         }
 
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        let supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-        if (!supabaseServiceKey) {
-            // Attempt manual fallback load for Next.js dev server quirks
-            try {
-                require('dotenv').config({ path: '.env.local' });
-                supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-            } catch (e) { }
-        }
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
         if (!supabaseUrl || !supabaseServiceKey) {
             return NextResponse.json({
