@@ -238,7 +238,7 @@ export default function AdminDashboard({ params }) {
         fetchTeachers();
         fetchSchoolConfig();
         fetchStats();
-        if (activeTab === "students") fetchStudents();
+        if (activeTab === "students" || activeTab === "calificaciones") fetchStudents();
         if (activeTab === "gallery") fetchGallery();
         if (activeTab === "news") fetchNews();
         if (activeTab === "costs") fetchCosts();
