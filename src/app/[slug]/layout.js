@@ -113,15 +113,8 @@ export default async function SchoolLayout({ children, params }) {
                 {children}
             </main>
             <SchoolFooter
-                schoolName={school.nombre}
-                logoUrl={school.logo_url}
-                primaryColor={branding.primary}
-                socialLinks={{
-                    facebook: school.facebook_url,
-                    instagram: school.instagram_url,
-                    tiktok: school.tiktok_url,
-                    youtube: school.youtube_url
-                }}
+                school={school}
+                slug={params.slug}
             />
         </div>
     );
