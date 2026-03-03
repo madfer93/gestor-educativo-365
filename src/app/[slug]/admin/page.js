@@ -2714,7 +2714,7 @@ export default function AdminDashboard({ params }) {
                     {
                         isGalleryModalOpen && (
                             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-institutional-blue/40 backdrop-blur-md animate-in fade-in duration-200">
-                                <form onSubmit={handleSaveGallery} className="bg-white w-full max-w-3xl rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
+                                <form onSubmit={handleSaveGallery} className="bg-white w-full max-w-5xl rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
                                     <button type="button" onClick={() => setIsGalleryModalOpen(false)} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-xl transition-colors">
                                         <X size={24} className="text-gray-400" />
                                     </button>
@@ -2798,7 +2798,7 @@ export default function AdminDashboard({ params }) {
                     {
                         isCostModalOpen && (
                             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-institutional-blue/40 backdrop-blur-md animate-in fade-in duration-200">
-                                <form onSubmit={handleSaveCost} className="bg-white w-full max-w-3xl rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
+                                <form onSubmit={handleSaveCost} className="bg-white w-full max-w-5xl rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
                                     <button type="button" onClick={() => setIsCostModalOpen(false)} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-xl transition-colors">
                                         <X size={24} className="text-gray-400" />
                                     </button>
@@ -2842,7 +2842,7 @@ export default function AdminDashboard({ params }) {
                     {
                         isCircularModalOpen && (
                             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-institutional-blue/40 backdrop-blur-md animate-in fade-in duration-200">
-                                <form onSubmit={handleSaveCircular} className="bg-white w-full max-w-3xl rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
+                                <form onSubmit={handleSaveCircular} className="bg-white w-full max-w-5xl rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
                                     <button type="button" onClick={() => setIsCircularModalOpen(false)} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-xl transition-colors">
                                         <X size={24} className="text-gray-400" />
                                     </button>
@@ -2913,7 +2913,7 @@ export default function AdminDashboard({ params }) {
                     {
                         isActivityModalOpen && (
                             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-institutional-blue/40 backdrop-blur-md animate-in fade-in duration-200">
-                                <form onSubmit={handleSaveActivity} className="bg-white w-full max-w-3xl rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
+                                <form onSubmit={handleSaveActivity} className="bg-white w-full max-w-5xl rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
                                     <button type="button" onClick={() => setIsActivityModalOpen(false)} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-xl transition-colors">
                                         <X size={24} className="text-gray-400" />
                                     </button>
@@ -3095,7 +3095,7 @@ export default function AdminDashboard({ params }) {
                     {/* Modal para Crear/Editar Calificación */}
                     {isGradeModalOpen && (
                         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                            <div className="bg-white rounded-[40px] w-full max-w-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+                            <div className="bg-white rounded-[40px] w-full max-w-5xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
                                 <form onSubmit={async (e) => {
                                     e.preventDefault();
                                     const formData = new FormData(e.target);
