@@ -1191,13 +1191,34 @@ export default function StudentDashboard({ params }) {
                                                         try {
                                                             const fileUrl = await uploadImage(file);
                                                             const { data: { user } } = await supabase.auth.getUser();
-                                                            await supabase.from('submissions').insert([{
-                                                                tarea_id: selectedActivity.id,
-                                                                estudiante_id: user.id,
-                                                                archivo_url: fileUrl,
-                                                                comentario: file.name
-                                                            }]);
-                                                            setSubmissions(prev => ({ ...prev, [selectedActivity.id]: { archivo_url: fileUrl, comentario: file.name } }));
+
+                                                            // Check if submission already exists to update it, otherwise insert
+                                                            const { data: existingSub } = await supabase.from('submissions')
+                                                                .select('id')
+                                                                .eq('tarea_id', selectedActivity.id)
+                                                                .eq('estudiante_id', user.id)
+                                                                .single();
+
+                                                            if (existingSub) {
+                                                                await supabase.from('submissions').update({
+                                                                    archivo_url: fileUrl,
+                                                                    comentario: file.name
+                                                                }).eq('id', existingSub.id);
+                                                            } else {
+                                                                await supabase.from('submissions').insert([{
+                                                                    tarea_id: selectedActivity.id,
+                                                                    estudiante_id: user.id,
+                                                                    archivo_url: fileUrl,
+                                                                    comentario: file.name
+                                                                }]);
+                                                            }
+
+                                                            // Actulizamos el estado local principal
+                                                            setSubmissions(prev => ({
+                                                                ...prev,
+                                                                [selectedActivity.id]: { archivo_url: fileUrl, comentario: file.name }
+                                                            }));
+
                                                             alert('¡Evidencia subida exitosamente!');
                                                         } catch (err) {
                                                             alert('Error al subir: ' + err.message);
