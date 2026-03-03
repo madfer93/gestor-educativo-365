@@ -213,7 +213,7 @@ export default function AdminDashboard({ params }) {
     const fetchActivities = async () => {
         const { data: school } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
         if (school) {
-            const { data } = await supabase.from('school_activities').select(`*, profiles(nombre)`).eq('school_id', school.id).order('created_at', { ascending: false });
+            const { data } = await supabase.from('school_activities').select('*').eq('school_id', school.id).order('created_at', { ascending: false });
             setActivities(data || []);
         }
     };
