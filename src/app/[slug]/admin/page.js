@@ -2979,10 +2979,10 @@ export default function AdminDashboard({ params }) {
                                         </div>
                                         {/* Right Column — Image */}
                                         <div className="space-y-1">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Imagen / Guía Visual</label>
-                                            <input type="file" id="activity_file_input" className="hidden" accept="image/*" onChange={(e) => {
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Imagen / Guía / PDF</label>
+                                            <input type="file" id="activity_file_input" className="hidden" accept="image/*,.pdf" onChange={(e) => {
                                                 const f = e.target.files[0];
-                                                if (f) { setActivityFile(f); setActivityFilePreview(URL.createObjectURL(f)); }
+                                                if (f) { setActivityFile(f); setActivityFilePreview(f.type === 'application/pdf' ? 'PDF' : URL.createObjectURL(f)); }
                                             }} />
                                             <div
                                                 onClick={() => document.getElementById('activity_file_input').click()}
@@ -2992,29 +2992,35 @@ export default function AdminDashboard({ params }) {
                                                     e.preventDefault();
                                                     e.currentTarget.classList.remove('border-amber-500', 'bg-amber-50');
                                                     const f = e.dataTransfer.files[0];
-                                                    if (f && f.type.startsWith('image/')) {
+                                                    if (f && (f.type.startsWith('image/') || f.type === 'application/pdf')) {
                                                         setActivityFile(f);
-                                                        setActivityFilePreview(URL.createObjectURL(f));
+                                                        setActivityFilePreview(f.type === 'application/pdf' ? 'PDF' : URL.createObjectURL(f));
                                                     } else {
-                                                        alert('Solo se permiten archivos de imagen (JPG, PNG, etc.)');
+                                                        alert('Solo se permiten imágenes o PDF.');
                                                     }
                                                 }}
                                                 className="w-full h-full min-h-[200px] bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 hover:bg-amber-50/50 hover:border-amber-400 transition-all cursor-pointer group"
                                             >
                                                 {activityFilePreview ? (
-                                                    <div className="relative w-full">
-                                                        <img src={activityFilePreview} alt="Preview" className="w-full max-h-52 object-contain rounded-xl" />
+                                                    <div className="relative w-full h-full flex flex-col items-center justify-center">
+                                                        {activityFilePreview === 'PDF' ? (
+                                                            <div className="bg-red-50 text-red-500 w-16 h-16 rounded-2xl flex items-center justify-center mb-2">
+                                                                <FileText size={32} />
+                                                            </div>
+                                                        ) : (
+                                                            <img src={activityFilePreview} alt="Preview" className="w-full max-h-52 object-contain rounded-xl" />
+                                                        )}
                                                         <button type="button" onClick={(e) => { e.stopPropagation(); setActivityFile(null); setActivityFilePreview(null); }}
                                                             className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-lg">
                                                             <X size={16} />
                                                         </button>
-                                                        <p className="text-[10px] font-bold text-amber-600 text-center mt-2 uppercase tracking-widest">{activityFile?.name}</p>
+                                                        <p className="text-[10px] font-bold text-amber-600 text-center mt-2 uppercase tracking-widest truncate w-full px-4">{activityFile?.name}</p>
                                                     </div>
                                                 ) : (
                                                     <>
                                                         <ImageIcon size={40} className="text-gray-300 group-hover:text-amber-500 transition-colors" />
                                                         <p className="text-xs font-bold text-gray-400 group-hover:text-amber-600 uppercase tracking-widest text-center">Arrastra o haz clic</p>
-                                                        <p className="text-[10px] text-gray-300 font-medium">JPG, PNG, GIF — máx. 32MB</p>
+                                                        <p className="text-[10px] text-gray-300 font-medium">JPG, PNG o PDF — máx. 32MB</p>
                                                     </>
                                                 )}
                                             </div>

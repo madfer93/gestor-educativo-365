@@ -37,6 +37,7 @@ export default function StudentDashboard({ params }) {
     const [paymentStatus, setPaymentStatus] = useState("idle");
     const [submissions, setSubmissions] = useState({});
     const [uploadingActivity, setUploadingActivity] = useState(null);
+    const [selectedActivity, setSelectedActivity] = useState(null);
 
     const documentosRequeridos = [
         'Carpeta amarilla colgante oficio', 'Certificados años anteriores', 'Tres fotos 3×4 fondo azul',
@@ -540,7 +541,7 @@ export default function StudentDashboard({ params }) {
                                 {activities.length > 0 ? (
                                     <div className="space-y-4">
                                         {activities.map((act, i) => (
-                                            <div key={act.id} className="p-6 rounded-[32px] bg-gray-50 border border-gray-100 hover:border-purple-200 hover:bg-white hover:shadow-xl hover:shadow-purple-500/5 transition-all group">
+                                            <div key={act.id} onClick={() => setSelectedActivity(act)} className="p-6 rounded-[32px] bg-gray-50 border border-gray-100 hover:border-purple-200 hover:bg-white hover:shadow-xl hover:shadow-purple-500/5 transition-all group cursor-pointer">
                                                 <div className="flex flex-col sm:flex-row justify-between gap-4">
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-3 mb-3">
@@ -558,8 +559,9 @@ export default function StudentDashboard({ params }) {
                                                         <p className="text-sm text-gray-500 font-medium leading-relaxed line-clamp-2">
                                                             {act.description}
                                                         </p>
+                                                        {act.file_url && <p className="text-[10px] text-purple-500 font-bold mt-2">📎 Tiene guía adjunta — clic para ver</p>}
                                                     </div>
-                                                    <div className="flex flex-col gap-2 justify-center">
+                                                    <div className="flex flex-col gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
                                                         {submissions[act.id] ? (
                                                             <div className="text-center">
                                                                 <span className="flex items-center justify-center gap-1 bg-green-50 text-green-600 px-4 py-2 rounded-2xl text-xs font-black">
@@ -1111,6 +1113,114 @@ export default function StudentDashboard({ params }) {
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {/* Modal Detalle de Actividad */}
+                    {selectedActivity && (
+                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative animate-in zoom-in-95 duration-200">
+                                <button
+                                    onClick={() => setSelectedActivity(null)}
+                                    className="absolute top-6 right-6 w-10 h-10 bg-gray-50 text-gray-400 hover:text-gray-800 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors z-10"
+                                >
+                                    <X size={20} />
+                                </button>
+
+                                <div className="p-8 sm:p-10 space-y-6">
+                                    <div className="flex items-center gap-3">
+                                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-lg ${selectedActivity.type === 'Examen' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
+                                            {selectedActivity.type || 'Actividad'}
+                                        </span>
+                                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                                            <Clock size={10} /> Entrega: {new Date(selectedActivity.due_date || selectedActivity.created_at).toLocaleDateString()}
+                                        </span>
+                                    </div>
+
+                                    <h2 className="text-2xl font-black text-gray-800">{selectedActivity.title}</h2>
+
+                                    <div className="bg-gray-50 rounded-3xl p-6 text-sm text-gray-600 font-medium leading-relaxed">
+                                        {selectedActivity.description || 'Sin descripción adicional.'}
+                                    </div>
+
+                                    {/* Guía/Archivo adjunto */}
+                                    {selectedActivity.file_url && (
+                                        <div className="mt-6 border-t border-gray-100 pt-6">
+                                            <h4 className="text-[10px] font-black uppercase tracking-widest text-institutional-blue mb-4">Material Adjunto</h4>
+                                            {selectedActivity.file_url.toLowerCase().includes('.pdf') ? (
+                                                <a href={selectedActivity.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-red-50 text-red-600 p-4 rounded-2xl hover:bg-red-100 transition-colors">
+                                                    <FileText size={24} />
+                                                    <div>
+                                                        <p className="font-bold text-sm">Ver Documento PDF</p>
+                                                        <p className="text-[10px] font-medium opacity-80 uppercase tracking-widest">Abre en nueva pestaña</p>
+                                                    </div>
+                                                </a>
+                                            ) : (
+                                                <div className="rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
+                                                    <img src={selectedActivity.file_url} alt="Material de apoyo" className="w-full h-auto object-contain max-h-[400px]" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Sección de Entrega */}
+                                    <div className="mt-8 bg-purple-50 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                        <div>
+                                            <h4 className="font-black text-purple-900 text-sm mb-1">Tu Entrega</h4>
+                                            {submissions[selectedActivity.id] ? (
+                                                <p className="text-xs text-purple-600/80 font-medium">Ya enviaste tu trabajo para esta actividad.</p>
+                                            ) : (
+                                                <p className="text-xs text-purple-600/80 font-medium">Sube una imagen o PDF con tu trabajo.</p>
+                                            )}
+                                        </div>
+
+                                        <div className="flex-shrink-0 w-full sm:w-auto">
+                                            {submissions[selectedActivity.id] ? (
+                                                <div className="text-center">
+                                                    <span className="flex items-center justify-center gap-1 bg-green-500 text-white px-6 py-3 rounded-2xl text-xs font-black shadow-lg shadow-green-500/20">
+                                                        <CheckCircle size={16} /> Entregado
+                                                    </span>
+                                                    <a href={submissions[selectedActivity.id].archivo_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-purple-700 font-bold mt-2 block hover:underline">Ver mi entrega</a>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <input type="file" id={`upload_modal_${selectedActivity.id}`} className="hidden" accept="image/*,.pdf" onChange={async (e) => {
+                                                        const file = e.target.files[0];
+                                                        if (!file) return;
+                                                        setUploadingActivity(selectedActivity.id);
+                                                        try {
+                                                            const fileUrl = await uploadImage(file);
+                                                            const { data: { user } } = await supabase.auth.getUser();
+                                                            await supabase.from('submissions').insert([{
+                                                                tarea_id: selectedActivity.id,
+                                                                estudiante_id: user.id,
+                                                                archivo_url: fileUrl,
+                                                                comentario: file.name
+                                                            }]);
+                                                            setSubmissions(prev => ({ ...prev, [selectedActivity.id]: { archivo_url: fileUrl, comentario: file.name } }));
+                                                            alert('¡Evidencia subida exitosamente!');
+                                                        } catch (err) {
+                                                            alert('Error al subir: ' + err.message);
+                                                        }
+                                                        setUploadingActivity(null);
+                                                    }} />
+                                                    <button
+                                                        onClick={() => document.getElementById(`upload_modal_${selectedActivity.id}`).click()}
+                                                        disabled={uploadingActivity === selectedActivity.id}
+                                                        className={`w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-2xl text-xs font-black shadow-lg transition-transform ${uploadingActivity === selectedActivity.id ? 'bg-gray-300 text-gray-500' : 'bg-institutional-blue text-white shadow-blue-500/20 hover:scale-105'}`}
+                                                    >
+                                                        {uploadingActivity === selectedActivity.id ? (
+                                                            <><Loader2 size={16} className="animate-spin" /> Subiendo...</>
+                                                        ) : (
+                                                            <><Upload size={16} /> Subir Evidencia</>
+                                                        )}
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </main>
