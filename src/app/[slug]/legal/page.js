@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import SchoolNavbar from "@/components/SchoolNavbar";
-import ChatIA from "@/components/ChatIA";
 import { Shield, FileText, Camera, Scale, Award, ChevronRight, Download } from "lucide-react";
 
 const supabase = createClient();
@@ -205,19 +203,7 @@ export default function LegalPage() {
     const certificados = school.legal_certificados || [];
 
     return (
-        <div className="bg-slate-50 min-h-screen font-sans">
-            <SchoolNavbar
-                schoolName={school.nombre}
-                logoUrl={school.logo_url}
-                brandingColors={branding}
-                slug={params.slug}
-                socialLinks={{
-                    facebook: school.facebook_url,
-                    instagram: school.instagram_url,
-                    tiktok: school.tiktok_url,
-                    youtube: school.youtube_url
-                }}
-            />
+        <div className="bg-slate-50 font-sans">
 
             {/* Hero */}
             <div className="relative py-16 text-white text-center overflow-hidden" style={{ background: `linear-gradient(135deg, ${branding.primary}, #1e293b)` }}>
@@ -334,8 +320,6 @@ export default function LegalPage() {
                     </div>
                 </div>
             </div>
-
-            <ChatIA />
         </div>
     );
 }

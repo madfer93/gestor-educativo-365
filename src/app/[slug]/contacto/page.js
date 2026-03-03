@@ -1,7 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
 import { Phone, Mail, MapPin, Clock, Globe, Shield, FileText, Award } from "lucide-react";
-import SchoolNavbar from "@/components/SchoolNavbar";
-import ChatIA from "@/components/ChatIA";
 
 export default async function ContactoPage({ params }) {
     const supabase = createClient();
@@ -22,19 +20,7 @@ export default async function ContactoPage({ params }) {
     const branding = school.branding_colors || { primary: '#1e3a8a', secondary: '#1e3a8a' };
 
     return (
-        <div className="bg-slate-50 min-h-screen font-sans">
-            <SchoolNavbar
-                schoolName={school.nombre}
-                logoUrl={school.logo_url}
-                brandingColors={branding}
-                slug={params.slug}
-                socialLinks={{
-                    facebook: school.facebook_url,
-                    instagram: school.instagram_url,
-                    tiktok: school.tiktok_url,
-                    youtube: school.youtube_url
-                }}
-            />
+        <div className="bg-slate-50 font-sans">
 
             {/* Hero */}
             <div className="relative py-20 text-white text-center overflow-hidden" style={{ background: `linear-gradient(135deg, ${branding.primary}, ${branding.secondary || branding.primary}dd)` }}>
@@ -228,12 +214,6 @@ export default async function ContactoPage({ params }) {
                 </div>
             </div>
 
-            {/* Footer */}
-            <div className="text-center py-12 text-gray-400 text-xs font-bold uppercase tracking-widest">
-                © {new Date().getFullYear()} {school.nombre} — Todos los derechos reservados
-            </div>
-
-            <ChatIA />
         </div>
     );
 }
