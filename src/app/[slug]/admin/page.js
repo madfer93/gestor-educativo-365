@@ -625,12 +625,70 @@ export default function AdminDashboard({ params }) {
         }
     };
 
-    const handleDownloadReport = () => {
-        alert("Generando reporte PDF consolidado... El archivo se descargará en unos segundos.");
-        // Simulación de descarga
-        setTimeout(() => {
-            alert("Reporte generado con éxito.");
-        }, 2000);
+    const handleDownloadReport = async () => {
+        setLoading(true);
+        try {
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit' });
+            const startOfDay = new Date(today.toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+            startOfDay.setHours(0, 0, 0, 0);
+            const isoStart = startOfDay.toISOString();
+
+            // Fetch today's leads
+            const { data: todayLeads } = await supabase
+                .from('leads')
+                .select('*')
+                .eq('school_id', schoolConfig.id)
+                .gte('created_at', isoStart)
+                .order('created_at', { ascending: false });
+
+            // Fetch today's payments
+            const { data: todayPayments } = await supabase
+                .from('pagos_estudiantes')
+                .select('*, profiles:student_id(nombre, grado)')
+                .eq('school_id', schoolConfig.id)
+                .gte('created_at', isoStart)
+                .order('created_at', { ascending: false });
+
+            // Build CSV
+            let csv = `REPORTE DIARIO — ${schoolConfig.nombre || 'Colegio'}\n`;
+            csv += `Fecha: ${dateStr}\n\n`;
+
+            // Leads section
+            csv += `=== ADMISIONES DEL DÍA (${(todayLeads || []).length}) ===\n`;
+            csv += `Nombre,Teléfono,Email,Grado Interés,Estado,Hora\n`;
+            (todayLeads || []).forEach(l => {
+                const hora = new Date(l.created_at).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit' });
+                csv += `"${l.nombre_estudiante || l.nombre || ''}","${l.telefono || ''}","${l.email || ''}","${l.grado_interes || ''}","${l.estado || 'nuevo'}","${hora}"\n`;
+            });
+
+            csv += `\n=== PAGOS DEL DÍA (${(todayPayments || []).length}) ===\n`;
+            csv += `Estudiante,Grado,Concepto,Monto,Método,Estado,Hora\n`;
+            (todayPayments || []).forEach(p => {
+                const hora = new Date(p.created_at).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit' });
+                const nombre = p.profiles?.nombre || 'N/A';
+                const grado = p.profiles?.grado || '';
+                csv += `"${nombre}","${grado}","${p.concepto || ''}","$${(p.monto || 0).toLocaleString('es-CO')}","${p.metodo_pago || ''}","${p.estado || ''}","${hora}"\n`;
+            });
+
+            // Totals
+            const totalPagos = (todayPayments || []).filter(p => p.estado === 'aprobado').reduce((sum, p) => sum + (p.monto || 0), 0);
+            csv += `\nTOTAL RECAUDADO HOY:,"$${totalPagos.toLocaleString('es-CO')}"\n`;
+            csv += `Total admisiones:,${(todayLeads || []).length}\n`;
+            csv += `Total pagos registrados:,${(todayPayments || []).length}\n`;
+
+            // Download
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `reporte_diario_${today.toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            alert('Error generando reporte: ' + err.message);
+        }
+        setLoading(false);
     };
 
     const handleSaveCost = async (e) => {
