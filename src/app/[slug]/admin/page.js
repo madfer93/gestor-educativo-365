@@ -2913,90 +2913,92 @@ export default function AdminDashboard({ params }) {
                     {
                         isActivityModalOpen && (
                             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-institutional-blue/40 backdrop-blur-md animate-in fade-in duration-200">
-                                <form onSubmit={handleSaveActivity} className="bg-white w-full max-w-5xl rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
-                                    <button type="button" onClick={() => setIsActivityModalOpen(false)} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                                <form onSubmit={handleSaveActivity} className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
+                                    <button type="button" onClick={() => setIsActivityModalOpen(false)} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-xl transition-colors z-10">
                                         <X size={24} className="text-gray-400" />
                                     </button>
-                                    <h3 className="text-2xl font-black text-gray-800 mb-2">Asignar Actividad</h3>
-                                    <p className="text-xs text-amber-500 font-bold mb-8">Esta actividad se asignará y notificará ÚNICAMENTE a los estudiantes en Modalidad A Distancia.</p>
-                                    <div className="space-y-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Título de la Actividad</label>
-                                            <input name="title" required className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ej: Taller 1 - Matemáticas" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Descripción / Instrucciones</label>
-                                            <textarea name="description" required rows="4" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Instrucciones para resolver la guía..."></textarea>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grado Destino</label>
-                                                <select name="grado" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700">
-                                                    <option value="">Todos los Grados / Ciclos</option>
-                                                    <optgroup label="Ciclos (A Distancia)">
-                                                        <option value="Ciclo III">Ciclo III (6° y 7°)</option>
-                                                        <option value="Ciclo IV">Ciclo IV (8° y 9°)</option>
-                                                        <option value="Ciclo V">Ciclo V (10° y 11°)</option>
-                                                    </optgroup>
-                                                    <optgroup label="Grados Regulares">
-                                                        {schoolConfig?.grados?.map(g => <option key={g} value={g}>{g}</option>)}
-                                                    </optgroup>
-                                                </select>
+                                    <h3 className="text-2xl font-black text-gray-800 mb-1">Asignar Actividad</h3>
+                                    <p className="text-xs text-amber-500 font-bold mb-6">Modalidad A Distancia</p>
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                        {/* Left Column */}
+                                        <div className="space-y-5">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Título</label>
+                                                <input name="title" required className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ej: Taller 1 - Matemáticas" />
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Imagen / Guía Visual</label>
-                                                <input type="file" id="activity_file_input" className="hidden" accept="image/*" onChange={(e) => {
-                                                    const f = e.target.files[0];
-                                                    if (f) { setActivityFile(f); setActivityFilePreview(URL.createObjectURL(f)); }
-                                                }} />
-                                                <div
-                                                    onClick={() => document.getElementById('activity_file_input').click()}
-                                                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-amber-500', 'bg-amber-50'); }}
-                                                    onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-amber-500', 'bg-amber-50'); }}
-                                                    onDrop={(e) => {
-                                                        e.preventDefault();
-                                                        e.currentTarget.classList.remove('border-amber-500', 'bg-amber-50');
-                                                        const f = e.dataTransfer.files[0];
-                                                        if (f && f.type.startsWith('image/')) {
-                                                            setActivityFile(f);
-                                                            setActivityFilePreview(URL.createObjectURL(f));
-                                                        } else {
-                                                            alert('Solo se permiten archivos de imagen (JPG, PNG, etc.)');
-                                                        }
-                                                    }}
-                                                    className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center gap-3 hover:bg-amber-50/50 hover:border-amber-400 transition-all cursor-pointer group"
-                                                >
-                                                    {activityFilePreview ? (
-                                                        <div className="relative w-full">
-                                                            <img src={activityFilePreview} alt="Preview" className="w-full max-h-40 object-contain rounded-xl" />
-                                                            <button type="button" onClick={(e) => { e.stopPropagation(); setActivityFile(null); setActivityFilePreview(null); }}
-                                                                className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-lg">
-                                                                <X size={16} />
-                                                            </button>
-                                                            <p className="text-[10px] font-bold text-amber-600 text-center mt-2 uppercase tracking-widest">{activityFile?.name}</p>
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            <ImageIcon size={32} className="text-gray-300 group-hover:text-amber-500 transition-colors" />
-                                                            <p className="text-xs font-bold text-gray-400 group-hover:text-amber-600 uppercase tracking-widest text-center">Arrastra una imagen aquí o haz clic para seleccionar</p>
-                                                            <p className="text-[10px] text-gray-300 font-medium">JPG, PNG, GIF — máx. 32MB</p>
-                                                        </>
-                                                    )}
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Descripción / Instrucciones</label>
+                                                <textarea name="description" required rows="3" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Instrucciones para resolver la guía..."></textarea>
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-3">
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grado</label>
+                                                    <select name="grado" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 text-xs">
+                                                        <option value="">Todos</option>
+                                                        <optgroup label="Ciclos">
+                                                            <option value="Ciclo III">Ciclo III</option>
+                                                            <option value="Ciclo IV">Ciclo IV</option>
+                                                            <option value="Ciclo V">Ciclo V</option>
+                                                        </optgroup>
+                                                        <optgroup label="Grados">
+                                                            {schoolConfig?.grados?.map(g => <option key={g} value={g}>{g}</option>)}
+                                                        </optgroup>
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Fecha Límite</label>
+                                                    <input name="due_date" type="date" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 text-xs" />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Asignación</label>
+                                                    <input type="date" disabled value={new Date().toISOString().split('T')[0]} className="w-full bg-gray-100 border-none rounded-2xl p-4 font-bold text-gray-400 text-xs" />
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Fecha Límite de Entrega</label>
-                                                <input name="due_date" type="date" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Fecha de Asignación</label>
-                                                <input type="date" disabled value={new Date().toISOString().split('T')[0]} className="w-full bg-gray-100 border-none rounded-2xl p-4 font-bold text-gray-400" />
+                                        {/* Right Column — Image */}
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Imagen / Guía Visual</label>
+                                            <input type="file" id="activity_file_input" className="hidden" accept="image/*" onChange={(e) => {
+                                                const f = e.target.files[0];
+                                                if (f) { setActivityFile(f); setActivityFilePreview(URL.createObjectURL(f)); }
+                                            }} />
+                                            <div
+                                                onClick={() => document.getElementById('activity_file_input').click()}
+                                                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-amber-500', 'bg-amber-50'); }}
+                                                onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-amber-500', 'bg-amber-50'); }}
+                                                onDrop={(e) => {
+                                                    e.preventDefault();
+                                                    e.currentTarget.classList.remove('border-amber-500', 'bg-amber-50');
+                                                    const f = e.dataTransfer.files[0];
+                                                    if (f && f.type.startsWith('image/')) {
+                                                        setActivityFile(f);
+                                                        setActivityFilePreview(URL.createObjectURL(f));
+                                                    } else {
+                                                        alert('Solo se permiten archivos de imagen (JPG, PNG, etc.)');
+                                                    }
+                                                }}
+                                                className="w-full h-full min-h-[200px] bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 hover:bg-amber-50/50 hover:border-amber-400 transition-all cursor-pointer group"
+                                            >
+                                                {activityFilePreview ? (
+                                                    <div className="relative w-full">
+                                                        <img src={activityFilePreview} alt="Preview" className="w-full max-h-52 object-contain rounded-xl" />
+                                                        <button type="button" onClick={(e) => { e.stopPropagation(); setActivityFile(null); setActivityFilePreview(null); }}
+                                                            className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-lg">
+                                                            <X size={16} />
+                                                        </button>
+                                                        <p className="text-[10px] font-bold text-amber-600 text-center mt-2 uppercase tracking-widest">{activityFile?.name}</p>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <ImageIcon size={40} className="text-gray-300 group-hover:text-amber-500 transition-colors" />
+                                                        <p className="text-xs font-bold text-gray-400 group-hover:text-amber-600 uppercase tracking-widest text-center">Arrastra o haz clic</p>
+                                                        <p className="text-[10px] text-gray-300 font-medium">JPG, PNG, GIF — máx. 32MB</p>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="mt-10 flex gap-4">
+                                    <div className="mt-8 flex gap-4">
                                         <button type="button" onClick={() => setIsActivityModalOpen(false)} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest">Cancelar</button>
                                         <button type="submit" disabled={loading} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all ${loading ? 'bg-gray-400' : 'bg-amber-500 shadow-amber-500/20'}`}>
                                             {loading ? 'Asignando...' : 'Asignar a Estudiantes'}
