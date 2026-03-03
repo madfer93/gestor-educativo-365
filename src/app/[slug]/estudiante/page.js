@@ -6,7 +6,7 @@ import {
     CheckCircle, Clock, AlertCircle, Newspaper, GraduationCap,
     Heart, Phone, Mail, MapPin, Calendar, FileText, Shield,
     ChevronRight, BookOpen, Bell, Loader2, DollarSign, Upload, Info,
-    LayoutGrid, Star, FileCheck, Building2, Landmark, X
+    LayoutGrid, Star, FileCheck, Building2, Landmark, X, MessageSquare
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 const supabase = createClient();
@@ -207,6 +207,40 @@ export default function StudentDashboard({ params }) {
     const docsTotal = documentosRequeridos.length;
     const docsPercent = Math.round((docsCompleted / docsTotal) * 100);
 
+    const handleFileUpload = async (documentName, file) => {
+        if (!file || !profile) return;
+        setUploadingDoc(documentName);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${profile.id}-${Date.now()}.${fileExt}`;
+
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('student-documents')
+                .upload(fileName, file);
+
+            if (uploadError) throw new Error("Error al subir documento: " + uploadError.message);
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('student-documents')
+                .getPublicUrl(fileName);
+
+            const newDocs = { ...docsEntregados, [documentName]: publicUrl };
+            setProfile({ ...profile, documentos_entregados: newDocs });
+
+            const { error: updateError } = await supabase.from('profiles').update({
+                documentos_entregados: newDocs
+            }).eq('id', profile.id);
+
+            if (updateError) throw updateError;
+            alert('¡Documento subido exitosamente!');
+        } catch (err) {
+            console.error('Error uploading document:', err);
+            alert('Error al subir documento: ' + err.message);
+        } finally {
+            setUploadingDoc(null);
+        }
+    };
+
     const getGradeCosts = () => {
         if (!costs.length || !profile?.grado) return [];
         return costs;
@@ -220,6 +254,7 @@ export default function StudentDashboard({ params }) {
         { id: 'inicio', label: 'Inicio', icon: Home },
         { id: 'tareas', label: 'Actividades', icon: ClipboardList },
         { id: 'calificaciones', label: 'Calificaciones', icon: Star },
+        { id: 'observaciones', label: 'Observaciones', icon: MessageSquare },
         { id: 'pagos', label: 'Pagos', icon: CreditCard },
         { id: 'documentos', label: 'Documentos', icon: FolderCheck },
         { id: 'bienestar', label: 'Bienestar', icon: Heart },
@@ -576,8 +611,22 @@ export default function StudentDashboard({ params }) {
                                                                     if (!file) return;
                                                                     setUploadingActivity(act.id);
                                                                     try {
-                                                                        const fileUrl = await uploadImage(file);
                                                                         const { data: { user } } = await supabase.auth.getUser();
+                                                                        const fileExt = file.name.split('.').pop();
+                                                                        const fileName = `${user.id}-${act.id}-${Date.now()}.${fileExt}`;
+
+                                                                        const { data: uploadData, error: uploadError } = await supabase.storage
+                                                                            .from('student-evidence')
+                                                                            .upload(fileName, file);
+
+                                                                        if (uploadError) throw new Error("Error al subir evidencia: " + uploadError.message);
+
+                                                                        const { data: { publicUrl } } = supabase.storage
+                                                                            .from('student-evidence')
+                                                                            .getPublicUrl(fileName);
+
+                                                                        const fileUrl = publicUrl;
+
                                                                         await supabase.from('submissions').insert([{
                                                                             tarea_id: act.id,
                                                                             estudiante_id: user.id,
@@ -684,6 +733,65 @@ export default function StudentDashboard({ params }) {
                                         </div>
                                     </div>
                                 )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ===================== TAB: OBSERVACIONES ===================== */}
+                    {activeTab === 'observaciones' && (
+                        <div className="space-y-6">
+                            <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 sm:p-8">
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                                        <MessageSquare size={20} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-black text-gray-800">Observaciones Disciplinarias y Académicas</h3>
+                                        <p className="text-xs text-gray-400 font-medium">Historial de notas de comportamiento o sugerencias de tus docentes y directivos.</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {observations.length > 0 ? (
+                                        observations.map((obs) => (
+                                            <div key={obs.id} className="p-6 rounded-3xl bg-gray-50 border border-gray-100 flex flex-col sm:flex-row gap-4">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg ${obs.type === 'Positive' ? 'bg-emerald-100 text-emerald-700' :
+                                                            obs.type === 'Negative' ? 'bg-rose-100 text-rose-700' :
+                                                                'bg-blue-100 text-blue-700'
+                                                            }`}>
+                                                            {obs.type === 'Positive' ? 'Positiva' : obs.type === 'Negative' ? 'A Llamar Atención' : 'Informativa'}
+                                                        </span>
+                                                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                                                            <Clock size={10} /> {new Date(obs.created_at).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm font-medium text-gray-700 leading-relaxed bg-white p-4 rounded-2xl shadow-sm border border-gray-50">{obs.content}</p>
+                                                </div>
+                                                <div className="sm:w-48 shrink-0 flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-100">
+                                                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-black shrink-0">
+                                                        {obs.profiles?.nombre?.charAt(0) || '?'}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-gray-800 truncate" title={obs.profiles?.nombre}>{obs.profiles?.nombre || 'Administración'}</p>
+                                                        <p className="text-[9px] font-black uppercase tracking-widest text-indigo-400">{obs.profiles?.rol || 'Staff'}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-16 bg-gray-50 rounded-[32px] border border-dashed border-gray-200">
+                                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                                                <MessageSquare size={24} className="text-gray-300" />
+                                            </div>
+                                            <h4 className="text-lg font-black text-gray-700 mb-1">Sin Observaciones</h4>
+                                            <p className="text-sm text-gray-400 font-medium max-w-sm mx-auto">
+                                                No tienes notas disciplinarias ni reportes académicos recientes en tu historial.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -1189,8 +1297,21 @@ export default function StudentDashboard({ params }) {
                                                         if (!file) return;
                                                         setUploadingActivity(selectedActivity.id);
                                                         try {
-                                                            const fileUrl = await uploadImage(file);
                                                             const { data: { user } } = await supabase.auth.getUser();
+                                                            const fileExt = file.name.split('.').pop();
+                                                            const fileName = `${user.id}-${selectedActivity.id}-${Date.now()}.${fileExt}`;
+
+                                                            const { data: uploadData, error: uploadError } = await supabase.storage
+                                                                .from('student-evidence')
+                                                                .upload(fileName, file);
+
+                                                            if (uploadError) throw new Error("Error al subir evidencia: " + uploadError.message);
+
+                                                            const { data: { publicUrl } } = supabase.storage
+                                                                .from('student-evidence')
+                                                                .getPublicUrl(fileName);
+
+                                                            const fileUrl = publicUrl;
 
                                                             // Check if submission already exists to update it, otherwise insert
                                                             const { data: existingSub } = await supabase.from('submissions')
