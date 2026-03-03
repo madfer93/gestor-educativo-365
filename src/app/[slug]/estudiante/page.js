@@ -6,7 +6,7 @@ import {
     CheckCircle, Clock, AlertCircle, Newspaper, GraduationCap,
     Heart, Phone, Mail, MapPin, Calendar, FileText, Shield,
     ChevronRight, BookOpen, Bell, Loader2, DollarSign, Upload, Info,
-    LayoutGrid, Star, FileCheck, Building2, Landmark
+    LayoutGrid, Star, FileCheck, Building2, Landmark, X
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 const supabase = createClient();
