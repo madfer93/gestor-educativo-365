@@ -99,12 +99,12 @@ export default function StudentDashboard({ params }) {
                         setStats(prev => ({ ...prev, tasks: acts?.length || 0 }));
 
                         // Fetch existing submissions
-                        const { data: subs } = await supabase.from('activity_submissions')
+                        const { data: subs } = await supabase.from('submissions')
                             .select('*')
-                            .eq('student_id', user.id)
+                            .eq('estudiante_id', user.id)
                             .order('created_at', { ascending: false });
                         const subsMap = {};
-                        (subs || []).forEach(s => { subsMap[s.activity_id] = s; });
+                        (subs || []).forEach(s => { subsMap[s.tarea_id] = s; });
                         setSubmissions(subsMap);
 
                         // Alerts
@@ -565,7 +565,7 @@ export default function StudentDashboard({ params }) {
                                                                 <span className="flex items-center justify-center gap-1 bg-green-50 text-green-600 px-4 py-2 rounded-2xl text-xs font-black">
                                                                     <CheckCircle size={14} /> Entregado
                                                                 </span>
-                                                                <a href={submissions[act.id].file_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-institutional-blue font-bold mt-1 block">Ver mi entrega</a>
+                                                                <a href={submissions[act.id].archivo_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-institutional-blue font-bold mt-1 block">Ver mi entrega</a>
                                                             </div>
                                                         ) : (
                                                             <>
@@ -576,14 +576,13 @@ export default function StudentDashboard({ params }) {
                                                                     try {
                                                                         const fileUrl = await uploadImage(file);
                                                                         const { data: { user } } = await supabase.auth.getUser();
-                                                                        await supabase.from('activity_submissions').insert([{
-                                                                            activity_id: act.id,
-                                                                            student_id: user.id,
-                                                                            school_id: schoolConfig.id,
-                                                                            file_url: fileUrl,
-                                                                            file_name: file.name
+                                                                        await supabase.from('submissions').insert([{
+                                                                            tarea_id: act.id,
+                                                                            estudiante_id: user.id,
+                                                                            archivo_url: fileUrl,
+                                                                            comentario: file.name
                                                                         }]);
-                                                                        setSubmissions(prev => ({ ...prev, [act.id]: { file_url: fileUrl, file_name: file.name } }));
+                                                                        setSubmissions(prev => ({ ...prev, [act.id]: { archivo_url: fileUrl, comentario: file.name } }));
                                                                         alert('¡Evidencia subida exitosamente!');
                                                                     } catch (err) {
                                                                         alert('Error al subir: ' + err.message);
