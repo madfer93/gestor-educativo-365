@@ -38,6 +38,7 @@ export default function StudentDashboard({ params }) {
     const [submissions, setSubmissions] = useState({});
     const [uploadingActivity, setUploadingActivity] = useState(null);
     const [selectedActivity, setSelectedActivity] = useState(null);
+    const [observations, setObservations] = useState([]);
 
     const documentosRequeridos = [
         'Carpeta amarilla colgante oficio', 'Certificados años anteriores', 'Tres fotos 3×4 fondo azul',
@@ -115,6 +116,13 @@ export default function StudentDashboard({ params }) {
                             .order('created_at', { ascending: false });
                         setAlerts(alertData || []);
                         setUnreadAlerts(alertData?.filter(a => !a.read).length || 0);
+
+                        // Observations
+                        const { data: obsData } = await supabase.from('student_observations')
+                            .select('*, profiles:created_by(nombre, rol)')
+                            .eq('student_id', prof.id)
+                            .order('created_at', { ascending: false });
+                        setObservations(obsData || []);
                     }
 
                     const { data: newsData } = await supabase.from('school_news').select('*').eq('school_id', school.id).order('published_at', { ascending: false }).limit(10);
