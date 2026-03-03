@@ -65,12 +65,9 @@ INSTRUCCIONES:
 };
 
 export async function POST(req) {
-    console.log("🔥 [API/CHAT] Solicitud Recibida");
     try {
         const body = await req.json();
         const { messages, mode = 'edu' } = body;
-        console.log(`📋 [API/CHAT] Modo: ${mode}, Mensajes: ${messages?.length}`);
-
         // 1. Selector de System Prompt
         const systemPrompt = getSystemPrompt(mode);
 
@@ -81,7 +78,6 @@ export async function POST(req) {
 
         const selectedModel = hasImages ? 'llama-3.2-11b-vision-preview' : 'llama-3.3-70b-versatile';
 
-        console.log(`🚀 [API/CHAT] Conectando con Groq (Modelo: ${selectedModel})...`);
         const chatCompletion = await groq.chat.completions.create({
             messages: [
                 { role: 'system', content: systemPrompt },
@@ -93,19 +89,14 @@ export async function POST(req) {
         });
 
         const aiResponse = chatCompletion.choices[0]?.message?.content || "";
-        console.log("✅ [API/CHAT] Respuesta IA recibida.");
-
         // 3. Lógica de Captura de Leads (Modo Ventas o Educación)
         if (mode === 'sales' || mode === 'edu') {
             const { school_id } = body;
             const lastUserMessage = messages[messages.length - 1].content;
-            console.log(`🕵️ [API/CHAT] Analizando: "${lastUserMessage}"`);
-
             // Regex para detectar números de 7 a 10 dígitos (posibles teléfonos)
             const phoneRegex = /\b\d{7,10}\b/;
 
             if (phoneRegex.test(lastUserMessage.replace(/\s/g, ''))) {
-                console.log("📞 [API/CHAT] Teléfono encontrado. Guardando lead...");
                 try {
                     const { data, error } = await supabase.from('leads').insert([{
                         school_id: school_id,
@@ -119,7 +110,6 @@ export async function POST(req) {
                     if (error) {
                         console.error("❌ [API/CHAT] Error Supabase:", error);
                     } else {
-                        console.log("💾 [API/CHAT] Lead guardado ID:", data[0]?.id);
                     }
                 } catch (err) {
                     console.error("💥 [API/CHAT] Excepción al guardar lead:", err);

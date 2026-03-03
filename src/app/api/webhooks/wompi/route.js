@@ -30,27 +30,19 @@ const supabase = createClient(
  */
 
 export async function POST(req) {
-    console.log("🔔 [WEBHOOK/WOMPI] Evento recibido");
-
     try {
         const body = await req.json();
         const { event, data, signature } = body;
 
-        console.log(`📋 [WEBHOOK/WOMPI] Tipo: ${event}`);
-
         // Only process transaction updates
         if (event !== 'transaction.updated') {
-            console.log("⏭️ [WEBHOOK/WOMPI] Evento ignorado (no es transaction.updated)");
             return NextResponse.json({ status: 'ignored' });
         }
 
         const transaction = data?.transaction;
         if (!transaction) {
-            console.log("❌ [WEBHOOK/WOMPI] No hay datos de transacción");
             return NextResponse.json({ error: 'Missing transaction data' }, { status: 400 });
         }
-
-        console.log(`💳 [WEBHOOK/WOMPI] TX ${transaction.id} - Status: ${transaction.status} - Monto: ${transaction.amount_in_cents / 100} COP`);
 
         // Signature validation (optional but recommended)
         if (signature?.checksum) {
@@ -89,13 +81,11 @@ export async function POST(req) {
                     console.error("🚫 [WEBHOOK/WOMPI] Checksum inválido");
                     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
                 }
-                console.log("✅ [WEBHOOK/WOMPI] Firma verificada correctamente");
             }
         }
 
         // Only record APPROVED transactions
         if (transaction.status !== 'APPROVED') {
-            console.log(`⚠️ [WEBHOOK/WOMPI] Transacción ${transaction.status} — no se registra`);
             return NextResponse.json({ status: 'noted', transaction_status: transaction.status });
         }
 
@@ -147,8 +137,6 @@ export async function POST(req) {
             notas: `Pago automático via Wompi. Email: ${transaction.customer_email || 'N/A'}. Ref: ${transaction.id}`
         };
 
-        console.log("💾 [WEBHOOK/WOMPI] Registrando pago:", JSON.stringify(paymentRecord));
-
         const { data: insertedPayment, error: insertError } = await supabase
             .from('pagos_estudiantes')
             .insert([paymentRecord])
@@ -159,8 +147,6 @@ export async function POST(req) {
             // Still return 200 to Wompi so it doesn't retry
             return NextResponse.json({ status: 'error_recording', error: insertError.message });
         }
-
-        console.log("✅ [WEBHOOK/WOMPI] Pago registrado exitosamente:", insertedPayment?.[0]?.id);
 
         return NextResponse.json({
             status: 'success',
