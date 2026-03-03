@@ -22,17 +22,23 @@ export default function WellbeingModule({ studentId, schoolId }) {
                 const fileExt = file.name.split('.').pop();
                 const fileName = `${studentId}-${Date.now()}.${fileExt}`;
                 const filePath = `bienestar/${fileName}`;
-                const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('documentos')
-                    .upload(filePath, file);
 
-                if (uploadError) throw new Error("Error al subir evidencia: " + uploadError.message);
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('filePath', filePath);
 
-                const { data: { publicUrl } } = supabase.storage
-                    .from('documentos')
-                    .getPublicUrl(filePath);
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
 
-                evidenceUrl = publicUrl;
+                if (!uploadRes.ok) {
+                    const errorData = await uploadRes.json();
+                    throw new Error("Error al subir evidencia: " + (errorData.error || 'Desconocido'));
+                }
+
+                const { url } = await uploadRes.json();
+                evidenceUrl = url;
             }
 
             const { error: insertError } = await supabase.from('wellbeing_alerts').insert([{
