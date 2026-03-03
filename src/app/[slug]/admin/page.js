@@ -821,6 +821,7 @@ export default function AdminDashboard({ params }) {
         { id: "gallery", label: "Galería", icon: ImageIcon },
         { id: "news", label: "Noticias", icon: FileText },
         { id: "costs", label: "Costos", icon: DollarSign },
+        { id: "calificaciones", label: "Calificaciones", icon: ClipboardList },
         { id: "settings", label: "Identidad", icon: Settings },
     ];
 
