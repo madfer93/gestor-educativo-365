@@ -219,6 +219,17 @@ export default function AdminDashboard({ params }) {
         }
     };
 
+    const fetchGrades = async () => {
+        const { data: school } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
+        if (school) {
+            const { data } = await supabase.from('calificaciones')
+                .select('*, profiles:student_id(nombre, grado)')
+                .eq('school_id', school.id)
+                .order('fecha', { ascending: false });
+            setGrades(data || []);
+        }
+    };
+
     const handleBannerChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -246,6 +257,7 @@ export default function AdminDashboard({ params }) {
         if (activeTab === "circulares") fetchCirculares();
         if (activeTab === "academic") fetchActivities();
         if (activeTab === "wellbeing") fetchWellbeingReports();
+        if (activeTab === "calificaciones") fetchGrades();
     }, [params.slug, activeTab]);
 
     const handleFormalizeStudent = (lead) => {

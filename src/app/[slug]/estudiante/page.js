@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 const supabase = createClient();
+import { uploadImage } from '@/lib/imgbb';
 import WompiWidget from '@/components/WompiWidget';
 import WellbeingModule from '@/components/WellbeingModule';
 
@@ -34,6 +35,8 @@ export default function StudentDashboard({ params }) {
     const [selectedMonto, setSelectedMonto] = useState("");
     const [selectedConcepto, setSelectedConcepto] = useState("");
     const [paymentStatus, setPaymentStatus] = useState("idle");
+    const [submissions, setSubmissions] = useState({});
+    const [uploadingActivity, setUploadingActivity] = useState(null);
 
     const documentosRequeridos = [
         'Carpeta amarilla colgante oficio', 'Certificados años anteriores', 'Tres fotos 3×4 fondo azul',
@@ -94,6 +97,15 @@ export default function StudentDashboard({ params }) {
                             .order('created_at', { ascending: false });
                         setActivities(acts || []);
                         setStats(prev => ({ ...prev, tasks: acts?.length || 0 }));
+
+                        // Fetch existing submissions
+                        const { data: subs } = await supabase.from('activity_submissions')
+                            .select('*')
+                            .eq('student_id', user.id)
+                            .order('created_at', { ascending: false });
+                        const subsMap = {};
+                        (subs || []).forEach(s => { subsMap[s.activity_id] = s; });
+                        setSubmissions(subsMap);
 
                         // Alerts
                         const { data: alertData } = await supabase.from('wellbeing_alerts')
@@ -548,12 +560,49 @@ export default function StudentDashboard({ params }) {
                                                         </p>
                                                     </div>
                                                     <div className="flex flex-col gap-2 justify-center">
-                                                        <button className="flex items-center justify-center gap-2 bg-institutional-blue text-white px-6 py-3 rounded-2xl text-xs font-black shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform">
-                                                            <Upload size={16} /> Subir Evidencia
-                                                        </button>
-                                                        <button className="text-gray-400 hover:text-gray-600 text-[10px] font-black uppercase tracking-widest text-center">
-                                                            Ver Detalles
-                                                        </button>
+                                                        {submissions[act.id] ? (
+                                                            <div className="text-center">
+                                                                <span className="flex items-center justify-center gap-1 bg-green-50 text-green-600 px-4 py-2 rounded-2xl text-xs font-black">
+                                                                    <CheckCircle size={14} /> Entregado
+                                                                </span>
+                                                                <a href={submissions[act.id].file_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-institutional-blue font-bold mt-1 block">Ver mi entrega</a>
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <input type="file" id={`upload_${act.id}`} className="hidden" accept="image/*,.pdf" onChange={async (e) => {
+                                                                    const file = e.target.files[0];
+                                                                    if (!file) return;
+                                                                    setUploadingActivity(act.id);
+                                                                    try {
+                                                                        const fileUrl = await uploadImage(file);
+                                                                        const { data: { user } } = await supabase.auth.getUser();
+                                                                        await supabase.from('activity_submissions').insert([{
+                                                                            activity_id: act.id,
+                                                                            student_id: user.id,
+                                                                            school_id: schoolConfig.id,
+                                                                            file_url: fileUrl,
+                                                                            file_name: file.name
+                                                                        }]);
+                                                                        setSubmissions(prev => ({ ...prev, [act.id]: { file_url: fileUrl, file_name: file.name } }));
+                                                                        alert('¡Evidencia subida exitosamente!');
+                                                                    } catch (err) {
+                                                                        alert('Error al subir: ' + err.message);
+                                                                    }
+                                                                    setUploadingActivity(null);
+                                                                }} />
+                                                                <button
+                                                                    onClick={() => document.getElementById(`upload_${act.id}`).click()}
+                                                                    disabled={uploadingActivity === act.id}
+                                                                    className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-xs font-black shadow-lg transition-transform ${uploadingActivity === act.id ? 'bg-gray-300 text-gray-500' : 'bg-institutional-blue text-white shadow-blue-500/20 hover:scale-105'}`}
+                                                                >
+                                                                    {uploadingActivity === act.id ? (
+                                                                        <><Loader2 size={16} className="animate-spin" /> Subiendo...</>
+                                                                    ) : (
+                                                                        <><Upload size={16} /> Subir Evidencia</>
+                                                                    )}
+                                                                </button>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
