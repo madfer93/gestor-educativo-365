@@ -78,9 +78,11 @@ export default function SchoolFooter({ school, slug }) {
                                     </a>
                                 </li>
                             )}
-                            <li className="flex items-start gap-3 text-white/40">
-                                <MapPin size={14} className="mt-0.5 shrink-0" />
-                                <span className="text-xs font-medium">{school.direccion || 'Villavicencio, Meta'}</span>
+                            <li>
+                                <a href="https://maps.app.goo.gl/cjzBgYGZxi5bfS8k7" target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 text-white/40 hover:text-white transition-colors group">
+                                    <MapPin size={14} className="mt-0.5 shrink-0 group-hover:text-red-400" />
+                                    <span className="text-xs font-medium">{school.direccion || 'Villavicencio, Meta'}</span>
+                                </a>
                             </li>
                         </ul>
                     </div>
