@@ -3213,7 +3213,7 @@ export default function AdminDashboard({ params }) {
                                     const formData = new FormData(e.target);
                                     const data = {
                                         student_id: formData.get('student_id'),
-                                        school_id: school.id,
+                                        school_id: schoolConfig?.id,
                                         materia: formData.get('materia'),
                                         nota: parseFloat(formData.get('nota')),
                                         periodo: formData.get('periodo'),
