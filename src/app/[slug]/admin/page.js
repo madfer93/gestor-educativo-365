@@ -8,7 +8,7 @@ import {
     Users, UserPlus, FileText, DollarSign, LayoutDashboard,
     Settings, LogOut, Bell, PlusCircle, Save, X, Clock, Book, GraduationCap,
     Link, Image as ImageIcon, Key, FileCode, Edit, Trash2, Camera, Loader2, Heart, Megaphone,
-    Eye, EyeOff, ClipboardList, Award, Star
+    Eye, EyeOff, ClipboardList, Award, Star, FolderCheck, User
 } from "lucide-react";
 import { uploadImage } from "@/lib/imgbb";
 
@@ -43,6 +43,8 @@ export default function AdminDashboard({ params }) {
     const [activities, setActivities] = useState([]);
     const [activityFile, setActivityFile] = useState(null);
     const [activityFilePreview, setActivityFilePreview] = useState(null);
+    const [selectedActivityForSubmissions, setSelectedActivityForSubmissions] = useState(null);
+    const [activitySubmissions, setActivitySubmissions] = useState([]);
     const [wellbeingReports, setWellbeingReports] = useState([]);
     const [grades, setGrades] = useState([]);
     const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
@@ -228,6 +230,16 @@ export default function AdminDashboard({ params }) {
                 .order('fecha', { ascending: false });
             setGrades(data || []);
         }
+    };
+
+    const fetchSubmissions = async (activityId) => {
+        setSelectedActivityForSubmissions(activityId);
+        setActivitySubmissions([]); // clear previous
+        const { data } = await supabase.from('submissions')
+            .select('*, profiles:estudiante_id(nombre, grado)')
+            .eq('tarea_id', activityId)
+            .order('created_at', { ascending: false });
+        setActivitySubmissions(data || []);
     };
 
     const handleBannerChange = (e) => {
@@ -1566,6 +1578,11 @@ export default function AdminDashboard({ params }) {
                                                         </td>
                                                         <td className="py-6 px-8 text-right">
                                                             <div className="flex justify-end gap-2">
+                                                                <button onClick={() => {
+                                                                    fetchSubmissions(activity.id);
+                                                                }} className="text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1">
+                                                                    <FolderCheck size={14} /> Entregas
+                                                                </button>
                                                                 <button onClick={() => {
                                                                     setEditingGrade(null);
                                                                     setGradeActivityTitle(activity.title);
@@ -3036,6 +3053,70 @@ export default function AdminDashboard({ params }) {
                             </div>
                         )
                     }
+
+                    {/* Modal Entregas de Actividad */}
+                    {selectedActivityForSubmissions && (
+                        <div className="fixed inset-0 z-[120] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative animate-in zoom-in-95 duration-200">
+                                <button
+                                    onClick={() => setSelectedActivityForSubmissions(null)}
+                                    className="absolute top-6 right-6 w-10 h-10 bg-gray-50 text-gray-400 hover:text-gray-800 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors z-10"
+                                >
+                                    <X size={20} />
+                                </button>
+
+                                <div className="p-8 sm:p-10">
+                                    <div className="flex items-center gap-4 mb-8">
+                                        <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600">
+                                            <FolderCheck size={28} />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-2xl font-black text-gray-800">Entregas de Estudiantes</h2>
+                                            <p className="text-sm text-gray-500 font-medium">Revisa la evidencia enviada para esta actividad</p>
+                                        </div>
+                                    </div>
+
+                                    {activitySubmissions.length > 0 ? (
+                                        <div className="space-y-4">
+                                            {activitySubmissions.map((sub) => (
+                                                <div key={sub.id} className="p-5 rounded-[24px] bg-gray-50 border border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-400">
+                                                            <User size={20} />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold text-gray-800">{sub.profiles?.nombre || 'Estudiante Desconocido'}</p>
+                                                            <div className="flex items-center gap-2 mt-1 -ml-1">
+                                                                <span className="text-[10px] font-black uppercase tracking-widest text-institutional-blue bg-blue-50 px-2 py-0.5 rounded-lg">{sub.profiles?.grado || 'N/A'}</span>
+                                                                <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
+                                                                    <Clock size={10} /> {new Date(sub.created_at).toLocaleString('es-CO')}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <a
+                                                        href={sub.archivo_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-purple-600/20 transition-all"
+                                                    >
+                                                        {sub.archivo_url.toLowerCase().includes('.pdf') ? <FileText size={16} /> : <ImageIcon size={16} />}
+                                                        Ver Evidencia
+                                                    </a>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-16 bg-gray-50 rounded-[32px] border border-dashed border-gray-200">
+                                            <FolderCheck size={48} className="mx-auto text-gray-300 mb-4" />
+                                            <p className="text-lg font-bold text-gray-500">No hay entregas aún</p>
+                                            <p className="text-sm text-gray-400 mt-2">Los estudiantes no han subido evidencia para esta actividad.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     {/* ===================== TAB: CALIFICACIONES ===================== */}
                     {activeTab === 'calificaciones' && (
                         <div className="space-y-6">
