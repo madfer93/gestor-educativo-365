@@ -76,11 +76,21 @@ export default function StudentDashboard({ params }) {
                     setLoadingGrades(false);
 
                     if (prof) {
-                        // Activities for student's grade
+                        // Map student grado to matching ciclo
+                        const gradoStr = (prof.grado || '').toLowerCase();
+                        let cicloMatch = '';
+                        if (gradoStr.includes('6') || gradoStr.includes('7')) cicloMatch = 'Ciclo III';
+                        else if (gradoStr.includes('8') || gradoStr.includes('9')) cicloMatch = 'Ciclo IV';
+                        else if (gradoStr.includes('10') || gradoStr.includes('11')) cicloMatch = 'Ciclo V';
+
+                        // Activities for student's grade, matching ciclo, General, empty, or null
+                        let orFilter = `grado.eq.${prof.grado},grado.eq.General,grado.eq.,grado.is.null`;
+                        if (cicloMatch) orFilter += `,grado.eq.${cicloMatch}`;
+
                         const { data: acts } = await supabase.from('school_activities')
                             .select('*')
                             .eq('school_id', school.id)
-                            .or(`grado.eq.${prof.grado},grado.eq.General,grado.eq.,grado.is.null`)
+                            .or(orFilter)
                             .order('created_at', { ascending: false });
                         setActivities(acts || []);
                         setStats(prev => ({ ...prev, tasks: acts?.length || 0 }));

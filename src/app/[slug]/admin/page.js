@@ -48,6 +48,7 @@ export default function AdminDashboard({ params }) {
     const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
     const [editingGrade, setEditingGrade] = useState(null);
     const [selectedStudentForGrades, setSelectedStudentForGrades] = useState(null);
+    const [gradeActivityTitle, setGradeActivityTitle] = useState('');
 
     // Estados para Estudiantes y Modalidad
     const [students, setStudents] = useState([]);
@@ -238,7 +239,7 @@ export default function AdminDashboard({ params }) {
         fetchTeachers();
         fetchSchoolConfig();
         fetchStats();
-        if (activeTab === "students" || activeTab === "calificaciones") fetchStudents();
+        if (activeTab === "students" || activeTab === "calificaciones" || activeTab === "academic") fetchStudents();
         if (activeTab === "gallery") fetchGallery();
         if (activeTab === "news") fetchNews();
         if (activeTab === "costs") fetchCosts();
@@ -1552,14 +1553,23 @@ export default function AdminDashboard({ params }) {
                                                             )}
                                                         </td>
                                                         <td className="py-6 px-8 text-right">
-                                                            <button onClick={async () => {
-                                                                if (confirm('Eliminar actividad?')) {
-                                                                    await supabase.from('school_activities').delete().eq('id', activity.id);
-                                                                    fetchActivities();
-                                                                }
-                                                            }} className="text-red-500 hover:bg-red-50 p-2 rounded-xl">
-                                                                <Trash2 size={16} />
-                                                            </button>
+                                                            <div className="flex justify-end gap-2">
+                                                                <button onClick={() => {
+                                                                    setEditingGrade(null);
+                                                                    setGradeActivityTitle(activity.title);
+                                                                    setIsGradeModalOpen(true);
+                                                                }} className="text-institutional-blue hover:bg-blue-50 px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1">
+                                                                    <Star size={14} /> Calificar
+                                                                </button>
+                                                                <button onClick={async () => {
+                                                                    if (confirm('Eliminar actividad?')) {
+                                                                        await supabase.from('school_activities').delete().eq('id', activity.id);
+                                                                        fetchActivities();
+                                                                    }
+                                                                }} className="text-red-500 hover:bg-red-50 p-2 rounded-xl">
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -3019,6 +3029,7 @@ export default function AdminDashboard({ params }) {
                                 <button
                                     onClick={() => {
                                         setEditingGrade(null);
+                                        setGradeActivityTitle('');
                                         setIsGradeModalOpen(true);
                                     }}
                                     className="bg-institutional-blue text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-black shadow-lg shadow-blue-500/20 hover:scale-105 transition-all"
@@ -3140,8 +3151,8 @@ export default function AdminDashboard({ params }) {
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Materia</label>
-                                                <input name="materia" defaultValue={editingGrade?.materia} required placeholder="Ej: Matemáticas" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none" />
+                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Materia / Actividad</label>
+                                                <input name="materia" defaultValue={gradeActivityTitle || editingGrade?.materia} required placeholder="Ej: Matemáticas" className={`w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none ${gradeActivityTitle ? 'bg-blue-50 text-institutional-blue' : ''}`} readOnly={!!gradeActivityTitle} />
                                             </div>
                                             <div>
                                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Nota (0.0 - 5.0)</label>
