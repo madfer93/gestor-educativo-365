@@ -13,10 +13,20 @@ export async function POST(request) {
         }
 
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        let supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (!supabaseServiceKey) {
+            // Attempt manual fallback load for Next.js dev server quirks
+            try {
+                require('dotenv').config({ path: '.env.local' });
+                supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+            } catch (e) { }
+        }
 
         if (!supabaseUrl || !supabaseServiceKey) {
-            return NextResponse.json({ error: 'Error de configuración del servidor (Falta Service Key).' }, { status: 500 });
+            return NextResponse.json({
+                error: `Faltan credenciales del servidor. URL: ${!!supabaseUrl}, KEY: ${!!supabaseServiceKey}`
+            }, { status: 500 });
         }
 
         const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
