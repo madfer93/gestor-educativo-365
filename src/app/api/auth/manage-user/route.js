@@ -48,7 +48,7 @@ export async function POST(req) {
 
         // 2. Crear/Actualizar Perfil en public.profiles
         // Solo permitir campos válidos de la tabla profiles en metadata
-        const allowedProfileFields = ['grado', 'modalidad', 'public_bio', 'public_photo_url', 'specialty', 'is_public', 'fecha_nacimiento', 'tipo_documento', 'numero_documento', 'direccion', 'acudiente_nombre', 'acudiente_telefono', 'acudiente_email', 'acudiente_parentesco', 'es_menor_edad', 'documentos_entregados', 'grupo_sanguineo', 'alergias', 'condiciones_medicas', 'eps_salud', 'observaciones'];
+        const allowedProfileFields = ['grado', 'modalidad', 'public_bio', 'public_photo_url', 'specialty', 'is_public', 'fecha_nacimiento', 'tipo_documento', 'numero_documento', 'direccion', 'acudiente_nombre', 'acudiente_telefono', 'acudiente_email', 'acudiente_parentesco', 'es_menor_edad', 'documentos_entregados', 'grupo_sanguineo', 'alergias', 'condiciones_medicas', 'eps_salud', 'observaciones', 'facebook_url', 'instagram_url', 'linkedin_url', 'twitter_url'];
         const dateFields = ['fecha_nacimiento'];
         const safeMetadata = {};
         for (const key of allowedProfileFields) {
@@ -118,7 +118,7 @@ export async function PUT(req) {
         }
 
         // Solo permitir campos válidos de la tabla profiles
-        const allowedFields = ['nombre', 'email', 'rol', 'modalidad', 'specialty', 'public_bio', 'public_photo_url', 'grado', 'is_public', 'school_id', 'fecha_nacimiento', 'tipo_documento', 'numero_documento', 'direccion', 'acudiente_nombre', 'acudiente_telefono', 'acudiente_email', 'acudiente_parentesco', 'es_menor_edad', 'documentos_entregados', 'grupo_sanguineo', 'alergias', 'condiciones_medicas', 'eps_salud', 'observaciones'];
+        const allowedFields = ['nombre', 'email', 'rol', 'modalidad', 'specialty', 'public_bio', 'public_photo_url', 'grado', 'is_public', 'school_id', 'fecha_nacimiento', 'tipo_documento', 'numero_documento', 'direccion', 'acudiente_nombre', 'acudiente_telefono', 'acudiente_email', 'acudiente_parentesco', 'es_menor_edad', 'documentos_entregados', 'grupo_sanguineo', 'alergias', 'condiciones_medicas', 'eps_salud', 'observaciones', 'facebook_url', 'instagram_url', 'linkedin_url', 'twitter_url'];
         const dateFields = ['fecha_nacimiento'];
         const safeData = {};
         for (const key of allowedFields) {
