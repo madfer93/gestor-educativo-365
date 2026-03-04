@@ -2511,28 +2511,33 @@ export default function AdminDashboard({ params }) {
                     {
                         isStudentModalOpen && (
                             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-institutional-blue/40 backdrop-blur-md animate-in fade-in duration-200">
-                                <form onSubmit={editingStudent ? handleEditStudent : handleCreateStudent} className="bg-white w-full max-w-7xl max-h-[95vh] rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300 overflow-y-auto">
-                                    <button type="button" onClick={() => { setIsStudentModalOpen(false); setEditingStudent(null); setLeadToFormalize(null); }} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-xl transition-colors z-10">
+                                <form onSubmit={editingStudent ? handleEditStudent : handleCreateStudent} className="bg-white w-full max-w-[95vw] lg:max-w-7xl max-h-[90vh] rounded-[40px] shadow-2xl p-8 lg:p-10 relative animate-in zoom-in-95 duration-300 overflow-y-auto flex flex-col">
+                                    <button type="button" onClick={() => { setIsStudentModalOpen(false); setEditingStudent(null); setLeadToFormalize(null); }} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-xl transition-colors z-10 w-10 h-10 flex items-center justify-center">
                                         <X size={24} className="text-gray-400" />
                                     </button>
-                                    <h3 className="text-2xl font-black text-gray-800 mb-1">{editingStudent ? '✏️ Editar Estudiante' : '👤 Nuevo Estudiante'}</h3>
-                                    <p className="text-sm text-gray-400 mb-6">Captura completa de datos estudiantiles</p>
+                                    <div className="mb-8">
+                                        <h3 className="text-2xl font-black text-gray-800 flex items-center gap-3">
+                                            <Users size={28} className="text-institutional-blue" />
+                                            {editingStudent ? 'Editar Estudiante' : 'Nuevo Estudiante'}
+                                        </h3>
+                                        <p className="text-sm text-gray-500 font-medium mt-1">Captura completa de datos estudiantiles, médicos y acudiente</p>
+                                    </div>
 
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                        {/* ======= COLUMNA IZQUIERDA ======= */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1">
+                                        {/* ======= COLUMNA 1: PERSONALES Y ACADEMICOS ======= */}
                                         <div className="space-y-5">
                                             {/* Datos Personales */}
                                             <div>
-                                                <h4 className="text-xs font-black uppercase tracking-widest text-institutional-blue mb-3 flex items-center gap-2"><Users size={14} /> Datos Personales</h4>
-                                                <div className="bg-gray-50 rounded-2xl p-5 space-y-3">
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-3 flex items-center gap-2">👤 Datos Personales</h4>
+                                                <div className="bg-blue-50/50 rounded-2xl p-5 space-y-3">
                                                     <div className="space-y-1">
                                                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nombre Completo *</label>
-                                                        <input name="nombre" required defaultValue={editingStudent?.nombre || leadToFormalize?.nombre} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm" placeholder="Nombres y Apellidos" />
+                                                        <input name="nombre" required defaultValue={editingStudent?.nombre || leadToFormalize?.nombre} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Nombres y Apellidos" />
                                                     </div>
-                                                    <div className="grid grid-cols-3 gap-3">
+                                                    <div className="grid grid-cols-2 gap-3">
                                                         <div className="space-y-1">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Tipo Doc.</label>
-                                                            <select name="tipo_documento" defaultValue={editingStudent?.tipo_documento || ''} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm">
+                                                            <select name="tipo_documento" defaultValue={editingStudent?.tipo_documento || ''} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                                                                 <option value="">—</option>
                                                                 <option value="TI">T.I.</option>
                                                                 <option value="CC">C.C.</option>
@@ -2543,53 +2548,48 @@ export default function AdminDashboard({ params }) {
                                                         </div>
                                                         <div className="space-y-1">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">N° Documento</label>
-                                                            <input name="numero_documento" defaultValue={editingStudent?.numero_documento} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm" placeholder="1234567890" />
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Fecha Nac.</label>
-                                                            <input name="fecha_nacimiento" type="date" defaultValue={editingStudent?.fecha_nacimiento} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm" />
+                                                            <input name="numero_documento" defaultValue={editingStudent?.numero_documento} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="1234567890" />
                                                         </div>
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dirección</label>
-                                                        <input name="direccion" defaultValue={editingStudent?.direccion} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm" placeholder="Calle / Carrera / Barrio" />
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="space-y-1">
+                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Fecha Nac.</label>
+                                                            <input name="fecha_nacimiento" type="date" defaultValue={editingStudent?.fecha_nacimiento} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dirección</label>
+                                                            <input name="direccion" defaultValue={editingStudent?.direccion} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Calle / Barrio" />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Datos Académicos */}
                                             <div>
-                                                <h4 className="text-xs font-black uppercase tracking-widest text-institutional-blue mb-3 flex items-center gap-2"><GraduationCap size={14} /> Datos Académicos</h4>
-                                                <div className="bg-gray-50 rounded-2xl p-5 space-y-3">
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        <div className="space-y-1">
-                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email *</label>
-                                                            <input name="email" type="email" required defaultValue={editingStudent?.email || leadToFormalize?.email || (leadToFormalize ? leadToFormalize.nombre.toLowerCase().replace(/\s/g, '.') + '@colegio.com' : '')} readOnly={!!editingStudent} className={`w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm ${editingStudent ? 'opacity-50' : ''}`} placeholder="estudiante@email.com" />
-                                                        </div>
-                                                        {!editingStudent ? (
-                                                            <div className="space-y-1">
-                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contraseña *</label>
-                                                                <div className="relative">
-                                                                    <input name="password" type={showPassword ? 'text' : 'password'} defaultValue={leadToFormalize?.telefono || "Estudiante2026*"} className="w-full bg-white border border-gray-200 rounded-xl p-3 pr-12 font-bold text-gray-700 text-sm" />
-                                                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-                                                                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="space-y-1">
-                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nueva Contraseña</label>
-                                                                <input name="password" type="text" className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm" placeholder="Dejar vacío para no cambiar" />
-                                                            </div>
-                                                        )}
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-purple-600 mb-3 flex items-center gap-2">🎓 Datos Académicos</h4>
+                                                <div className="bg-purple-50/50 rounded-2xl p-5 space-y-3">
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email Académico *</label>
+                                                        <input name="email" type="email" required disabled={editingStudent} defaultValue={editingStudent?.email || leadToFormalize?.email || (leadToFormalize ? leadToFormalize.nombre.toLowerCase().replace(/\s/g, '.') + '@colegio.com' : '')} className={`w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-purple-500 outline-none ${editingStudent ? 'opacity-50 cursor-not-allowed' : ''}`} placeholder="estudiante@colegio.edu.co" />
                                                     </div>
+                                                    {!editingStudent && (
+                                                        <div className="space-y-1">
+                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contraseña *</label>
+                                                            <div className="relative">
+                                                                <input name="password" type={showPassword ? 'text' : 'password'} defaultValue={leadToFormalize?.telefono || "Estudiante2026*"} className="w-full bg-white border border-gray-200 rounded-xl p-3 pr-12 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-purple-500 outline-none" />
+                                                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                                                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <div className="space-y-1">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Modalidad *</label>
                                                             <select name="modalidad" required defaultValue={editingStudent?.modalidad || leadToFormalize?.modalidad || ''}
                                                                 onChange={(e) => setFormModalidad(e.target.value)}
-                                                                className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm">
-                                                                <option value="">Seleccionar modalidad</option>
+                                                                className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                                                                <option value="">Seleccionar...</option>
                                                                 <option value="Presencial">Presencial</option>
                                                                 <option value="Sabatina">Sabatina</option>
                                                                 <option value="A Distancia">A Distancia</option>
@@ -2597,8 +2597,8 @@ export default function AdminDashboard({ params }) {
                                                         </div>
                                                         <div className="space-y-1">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grado *</label>
-                                                            <select name="grado" required defaultValue={editingStudent?.grado || leadToFormalize?.grado || ''} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm">
-                                                                <option value="">Seleccionar grado</option>
+                                                            <select name="grado" required defaultValue={editingStudent?.grado || leadToFormalize?.grado || ''} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                                                                <option value="">Seleccionar...</option>
                                                                 {(formModalidad === 'Sabatina' || formModalidad === 'A Distancia' || (editingStudent?.modalidad === 'Sabatina' || editingStudent?.modalidad === 'A Distancia' && !formModalidad)) ? (
                                                                     <>
                                                                         <option value="6-7">6-7</option>
@@ -2615,15 +2615,18 @@ export default function AdminDashboard({ params }) {
                                                     </div>
                                                 </div>
                                             </div>
+                                        </div>
 
+                                        {/* ======= COLUMNA 2: MEDICOS Y ACUDIENTE ======= */}
+                                        <div className="space-y-5">
                                             {/* Datos Médicos */}
                                             <div>
-                                                <h4 className="text-xs font-black uppercase tracking-widest text-institutional-magenta mb-3 flex items-center gap-2">🏥 Datos Médicos</h4>
-                                                <div className="bg-pink-50/50 rounded-2xl p-5 space-y-3">
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-rose-600 mb-3 flex items-center gap-2">⚕️ Datos Médicos</h4>
+                                                <div className="bg-rose-50/50 rounded-2xl p-5 space-y-3">
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <div className="space-y-1">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grupo Sanguíneo</label>
-                                                            <select name="grupo_sanguineo" defaultValue={editingStudent?.grupo_sanguineo || ''} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm">
+                                                            <select name="grupo_sanguineo" defaultValue={editingStudent?.grupo_sanguineo || ''} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-rose-500 outline-none">
                                                                 <option value="">—</option>
                                                                 <option>O+</option><option>O-</option><option>A+</option><option>A-</option>
                                                                 <option>B+</option><option>B-</option><option>AB+</option><option>AB-</option>
@@ -2631,70 +2634,68 @@ export default function AdminDashboard({ params }) {
                                                         </div>
                                                         <div className="space-y-1">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">EPS / Salud</label>
-                                                            <input name="eps_salud" defaultValue={editingStudent?.eps_salud} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm" placeholder="Sanitas, Nueva EPS..." />
+                                                            <input name="eps_salud" defaultValue={editingStudent?.eps_salud} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Sanitas..." />
                                                         </div>
                                                     </div>
                                                     <div className="space-y-1">
                                                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Alergias</label>
-                                                        <textarea name="alergias" defaultValue={editingStudent?.alergias} rows={2} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm" placeholder="Ninguna conocida / Detallar..." />
+                                                        <textarea name="alergias" defaultValue={editingStudent?.alergias} rows={2} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Ninguna..." />
                                                     </div>
                                                     <div className="space-y-1">
                                                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Condiciones Médicas</label>
-                                                        <textarea name="condiciones_medicas" defaultValue={editingStudent?.condiciones_medicas} rows={2} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm" placeholder="Asma, diabetes, epilepsia..." />
+                                                        <textarea name="condiciones_medicas" defaultValue={editingStudent?.condiciones_medicas} rows={2} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Asma..." />
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        {/* ======= COLUMNA DERECHA ======= */}
-                                        <div className="space-y-5">
                                             {/* Acudiente */}
                                             <div>
-                                                <h4 className="text-xs font-black uppercase tracking-widest text-green-600 mb-3 flex items-center gap-2">👨👩👧 Acudiente / Padre</h4>
-                                                <div className="bg-green-50/50 rounded-2xl p-5 space-y-3">
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-3 flex items-center gap-2">👨‍👩‍👧 Acudiente / Familia</h4>
+                                                <div className="bg-emerald-50/50 rounded-2xl p-5 space-y-3">
                                                     <div className="flex items-center gap-3 mb-1">
-                                                        <label className="text-sm font-bold text-gray-600">¿Menor de edad?</label>
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">¿Menor de edad?</label>
                                                         <button type="button" onClick={() => setEsMenor(!esMenor)}
-                                                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${esMenor ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${esMenor ? 'bg-emerald-500 text-white' : 'bg-white border border-gray-200 text-gray-500'}`}>
                                                             {esMenor ? 'Sí — Obligatorio' : 'No — Opcional'}
                                                         </button>
                                                     </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nombre Acudiente {esMenor && '*'}</label>
+                                                        <input name="acudiente_nombre" required={esMenor} defaultValue={editingStudent?.acudiente_nombre || leadToFormalize?.acudiente_nombre} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Nombre completo" />
+                                                    </div>
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <div className="space-y-1">
-                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nombre Acudiente {esMenor && '*'}</label>
-                                                            <input name="acudiente_nombre" required={esMenor} defaultValue={editingStudent?.acudiente_nombre || leadToFormalize?.acudiente_nombre} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm" placeholder="Nombre completo" />
-                                                        </div>
-                                                        <div className="space-y-1">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Parentesco</label>
-                                                            <select name="acudiente_parentesco" defaultValue={editingStudent?.acudiente_parentesco || leadToFormalize?.acudiente_parentesco || ''} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm">
+                                                            <select name="acudiente_parentesco" defaultValue={editingStudent?.acudiente_parentesco || leadToFormalize?.acudiente_parentesco || ''} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
                                                                 <option value="">—</option>
                                                                 <option>Madre</option><option>Padre</option><option>Abuelo/a</option>
                                                                 <option>Tío/a</option><option>Hermano/a</option><option>Otro</option>
                                                             </select>
                                                         </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-3">
                                                         <div className="space-y-1">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Teléfono {esMenor && '*'}</label>
-                                                            <input name="acudiente_telefono" required={esMenor} defaultValue={editingStudent?.acudiente_telefono || leadToFormalize?.telefono} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm" placeholder="300 123 4567" />
+                                                            <input type="tel" name="acudiente_telefono" required={esMenor} defaultValue={editingStudent?.acudiente_telefono || leadToFormalize?.telefono} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="300 123 4567" />
                                                         </div>
-                                                        <div className="space-y-1">
-                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email Acudiente</label>
-                                                            <input name="acudiente_email" type="email" defaultValue={editingStudent?.acudiente_email || leadToFormalize?.email} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm" placeholder="acudiente@email.com" />
-                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email Acudiente</label>
+                                                        <input name="acudiente_email" type="email" defaultValue={editingStudent?.acudiente_email || leadToFormalize?.email} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="acudiente@email.com" />
                                                     </div>
                                                 </div>
                                             </div>
+                                        </div>
 
+                                        {/* ======= COLUMNA 3: DOCUMENTOS Y OBS ======= */}
+                                        <div className="space-y-5">
                                             {/* Documentos Entregados */}
-                                            <div className="mb-6">
-                                                <h4 className="text-xs font-black uppercase tracking-widest text-amber-600 mb-3 flex items-center gap-2">📋 Documentos Entregados</h4>
+                                            <div>
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-amber-600 mb-3 flex items-center gap-2">📋 Documentación</h4>
                                                 <div className="bg-amber-50/50 rounded-2xl p-5">
-                                                    <div className="grid grid-cols-1 gap-2">
+                                                    <div className="grid grid-cols-1 gap-2.5 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                                                         {documentosRequeridos.map(doc => (
-                                                            <label key={doc} className="flex items-center gap-3 cursor-pointer group">
-                                                                <input type="checkbox" data-doc={doc} defaultChecked={editingStudent?.documentos_entregados?.[doc]} className="w-5 h-5 rounded-lg accent-green-500" />
-                                                                <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">{doc}</span>
+                                                            <label key={doc} className="flex items-start gap-3 cursor-pointer group">
+                                                                <input type="checkbox" data-doc={doc} defaultChecked={editingStudent?.documentos_entregados?.[doc]} className="w-4 h-4 mt-0.5 rounded border-gray-300 text-amber-500 focus:ring-amber-500 shadow-sm" />
+                                                                <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900 transition-colors leading-tight">{doc}</span>
                                                             </label>
                                                         ))}
                                                     </div>
@@ -2703,14 +2704,14 @@ export default function AdminDashboard({ params }) {
 
                                             {/* Observaciones Administrativas */}
                                             <div>
-                                                <h4 className="text-xs font-black uppercase tracking-widest text-gray-500 mb-3 flex items-center gap-2">📝 Observaciones Administrativas</h4>
-                                                <div className="bg-gray-50 rounded-2xl p-5">
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-gray-500 mb-3 flex items-center gap-2">📝 Notas Privadas</h4>
+                                                <div className="bg-gray-50/80 border border-gray-100 rounded-2xl p-5">
                                                     <textarea
                                                         name="observaciones"
                                                         defaultValue={editingStudent?.observaciones}
-                                                        rows={4}
-                                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-institutional-blue outline-none transition-all"
-                                                        placeholder="Notas sobre el proceso, convenios, becas o comportamiento..."
+                                                        rows={5}
+                                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-gray-300 outline-none transition-all resize-none"
+                                                        placeholder="Notas sobre el proceso de matrícula, convenios comerciales, descuentos o reportes generales..."
                                                     />
                                                 </div>
                                             </div>
@@ -2719,8 +2720,8 @@ export default function AdminDashboard({ params }) {
 
                                     {/* Botones */}
                                     <div className="flex gap-4 mt-6 sticky bottom-0 bg-white pt-4 border-t border-gray-100">
-                                        <button type="button" onClick={() => { setIsStudentModalOpen(false); setEditingStudent(null); setLeadToFormalize(null); }} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest">Cancelar</button>
-                                        <button type="submit" disabled={loading} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all ${loading ? 'bg-gray-400' : 'bg-institutional-blue shadow-blue-500/20'}`}>
+                                        <button type="button" onClick={() => { setIsStudentModalOpen(false); setEditingStudent(null); setLeadToFormalize(null); }} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-colors">Cancelar</button>
+                                        <button type="submit" disabled={loading} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all ${loading ? 'bg-gray-400' : 'bg-institutional-blue shadow-blue-500/20 hover:scale-[1.02]'}`}>
                                             {loading ? 'Guardando...' : editingStudent ? 'Actualizar Estudiante' : 'Crear Estudiante'}
                                         </button>
                                     </div>
