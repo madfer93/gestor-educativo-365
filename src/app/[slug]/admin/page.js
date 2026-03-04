@@ -44,6 +44,7 @@ export default function AdminDashboard({ params }) {
     const [activityFile, setActivityFile] = useState(null);
     const [activityFilePreview, setActivityFilePreview] = useState(null);
     const [selectedActivityForSubmissions, setSelectedActivityForSubmissions] = useState(null);
+    const [submissionFilterStudentId, setSubmissionFilterStudentId] = useState(null);
     const [activitySubmissions, setActivitySubmissions] = useState([]);
     const [wellbeingReports, setWellbeingReports] = useState([]);
     const [grades, setGrades] = useState([]);
@@ -51,6 +52,8 @@ export default function AdminDashboard({ params }) {
     const [editingGrade, setEditingGrade] = useState(null);
     const [selectedStudentForGrades, setSelectedStudentForGrades] = useState(null);
     const [gradeActivityTitle, setGradeActivityTitle] = useState('');
+    const [pendingActivities, setPendingActivities] = useState([]);
+    const [isPendingDropdownOpen, setIsPendingDropdownOpen] = useState(false);
 
     // Estados para Estudiantes y Modalidad
     const [students, setStudents] = useState([]);
@@ -242,6 +245,28 @@ export default function AdminDashboard({ params }) {
         setActivitySubmissions(data || []);
     };
 
+    const fetchPendingActivities = async () => {
+        const { data: school } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
+        if (school) {
+            const { data: acts } = await supabase.from('school_activities').select('id, title').eq('school_id', school.id);
+            if (acts && acts.length > 0) {
+                const actIds = acts.map(a => a.id);
+                // Fetch latest 10 submissions that don't have grades (in this system, grade is a separate table, but we can just show latest 10 submissions as 'notifications' of new activities)
+                const { data } = await supabase.from('submissions')
+                    .select('*, profiles:estudiante_id(nombre, grado)')
+                    .in('tarea_id', actIds)
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                const subsWithTitles = (data || []).map(s => ({
+                    ...s,
+                    activity_title: acts.find(a => a.id === s.tarea_id)?.title || 'Actividad'
+                }));
+                setPendingActivities(subsWithTitles);
+            }
+        }
+    };
+
     const handleBannerChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -262,6 +287,7 @@ export default function AdminDashboard({ params }) {
         fetchTeachers();
         fetchSchoolConfig();
         fetchStats();
+        fetchPendingActivities();
         if (activeTab === "students" || activeTab === "calificaciones" || activeTab === "academic") fetchStudents();
         if (activeTab === "gallery") fetchGallery();
         if (activeTab === "news") fetchNews();
@@ -690,41 +716,53 @@ export default function AdminDashboard({ params }) {
                 .gte('created_at', isoStart)
                 .order('created_at', { ascending: false });
 
-            // Build CSV
-            let csv = `REPORTE DIARIO — ${schoolConfig.nombre || 'Colegio'}\n`;
-            csv += `Fecha: ${dateStr}\n\n`;
+            // Initialize XLSX workbook
+            const XLSX = await import('xlsx');
+            const wb = XLSX.utils.book_new();
 
-            // Leads section
-            csv += `=== ADMISIONES DEL DÍA (${(todayLeads || []).length}) ===\n`;
-            csv += `Nombre,Teléfono,Email,Grado Interés,Estado,Hora\n`;
+            // 1. Resumen Tab
+            const totalPagos = (todayPayments || []).filter(p => p.estado === 'aprobado').reduce((sum, p) => sum + (p.monto || 0), 0);
+            const resumenData = [
+                ['REPORTE DIARIO', schoolConfig.nombre || 'Colegio Latinoamericano'],
+                ['Fecha', dateStr],
+                [],
+                ['TOTAL RECAUDADO HOY', `$${totalPagos.toLocaleString('es-CO')}`],
+                ['Total admisiones', (todayLeads || []).length],
+                ['Total pagos registrados', (todayPayments || []).length]
+            ];
+            const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
+            XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen");
+
+            // 2. Admisiones Tab
+            const leadsData = [
+                ['Nombre', 'Teléfono', 'Email', 'Grado Interés', 'Estado', 'Hora']
+            ];
             (todayLeads || []).forEach(l => {
                 const hora = new Date(l.created_at).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit' });
-                csv += `"${l.nombre_estudiante || l.nombre || ''}","${l.telefono || ''}","${l.email || ''}","${l.grado_interes || ''}","${l.estado || 'nuevo'}","${hora}"\n`;
+                leadsData.push([l.nombre_estudiante || l.nombre || '', l.telefono || '', l.email || '', l.grado_interes || '', l.estado || 'nuevo', hora]);
             });
+            const wsLeads = XLSX.utils.aoa_to_sheet(leadsData);
+            // Auto width columns
+            wsLeads['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 10 }];
+            XLSX.utils.book_append_sheet(wb, wsLeads, "Admisiones");
 
-            csv += `\n=== PAGOS DEL DÍA (${(todayPayments || []).length}) ===\n`;
-            csv += `Estudiante,Grado,Concepto,Monto,Método,Estado,Hora\n`;
+            // 3. Pagos Tab
+            const pagosData = [
+                ['Estudiante', 'Grado', 'Concepto', 'Monto', 'Método', 'Estado', 'Hora']
+            ];
             (todayPayments || []).forEach(p => {
                 const hora = new Date(p.created_at).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit' });
                 const nombre = p.profiles?.nombre || 'N/A';
                 const grado = p.profiles?.grado || '';
-                csv += `"${nombre}","${grado}","${p.concepto || ''}","$${(p.monto || 0).toLocaleString('es-CO')}","${p.metodo_pago || ''}","${p.estado || ''}","${hora}"\n`;
+                pagosData.push([nombre, grado, p.concepto || '', `$${(p.monto || 0).toLocaleString('es-CO')}`, p.metodo_pago || '', p.estado || '', hora]);
             });
+            const wsPagos = XLSX.utils.aoa_to_sheet(pagosData);
+            wsPagos['!cols'] = [{ wch: 30 }, { wch: 10 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 10 }, { wch: 10 }];
+            XLSX.utils.book_append_sheet(wb, wsPagos, "Pagos");
 
-            // Totals
-            const totalPagos = (todayPayments || []).filter(p => p.estado === 'aprobado').reduce((sum, p) => sum + (p.monto || 0), 0);
-            csv += `\nTOTAL RECAUDADO HOY:,"$${totalPagos.toLocaleString('es-CO')}"\n`;
-            csv += `Total admisiones:,${(todayLeads || []).length}\n`;
-            csv += `Total pagos registrados:,${(todayPayments || []).length}\n`;
+            // Download File
+            XLSX.writeFile(wb, `reporte_diario_${today.toISOString().split('T')[0]}.xlsx`);
 
-            // Download
-            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `reporte_diario_${today.toISOString().split('T')[0]}.csv`;
-            link.click();
-            URL.revokeObjectURL(url);
         } catch (err) {
             alert('Error generando reporte: ' + err.message);
         }
@@ -967,6 +1005,59 @@ export default function AdminDashboard({ params }) {
                             </div>
 
                             <div className="flex items-center gap-4 shrink-0">
+                                {/* Notifications Dropdown */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setIsPendingDropdownOpen(!isPendingDropdownOpen)}
+                                        className="bg-white/10 backdrop-blur-md p-4 rounded-full border border-white/10 shadow-xl hover:bg-white/20 transition-all text-white relative"
+                                    >
+                                        <Bell size={24} />
+                                        {pendingActivities.length > 0 && (
+                                            <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-blue-900 animate-pulse"></span>
+                                        )}
+                                    </button>
+
+                                    {isPendingDropdownOpen && (
+                                        <div className="absolute right-0 mt-4 w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4">
+                                            <div className="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                                                <h4 className="font-black text-gray-800 text-sm">Nuevas Entregas</h4>
+                                                <span className="text-xs font-bold text-gray-400">{pendingActivities.length} pendientes</span>
+                                            </div>
+                                            <div className="max-h-80 overflow-y-auto custom-scrollbar p-2">
+                                                {pendingActivities.length === 0 ? (
+                                                    <div className="p-6 text-center text-gray-400 font-medium text-xs">No hay entregas nuevas</div>
+                                                ) : (
+                                                    pendingActivities.map((sub, i) => (
+                                                        <button
+                                                            key={i}
+                                                            onClick={async () => {
+                                                                setIsPendingDropdownOpen(false);
+                                                                if (activeTab !== 'academic') {
+                                                                    setActiveTab('academic');
+                                                                    // allow simple render cycle
+                                                                    await new Promise(r => setTimeout(r, 100));
+                                                                }
+                                                                setSubmissionFilterStudentId(sub.estudiante_id);
+                                                                fetchSubmissions(sub.tarea_id);
+                                                            }}
+                                                            className="w-full text-left p-3 hover:bg-blue-50 rounded-2xl transition-all border border-transparent hover:border-blue-100 flex items-start gap-3"
+                                                        >
+                                                            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0">
+                                                                <FileText size={16} />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0 text-left">
+                                                                <p className="text-sm font-bold text-gray-800 truncate">{sub.profiles?.nombre}</p>
+                                                                <p className="text-xs text-gray-500 truncate">{sub.activity_title}</p>
+                                                                <p className="text-[10px] text-blue-500 font-black mt-1 uppercase tracking-widest">{sub.profiles?.grado}</p>
+                                                            </div>
+                                                        </button>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
                                 {activeTab === 'dashboard' && (
                                     <div className="bg-white/10 backdrop-blur-md p-6 rounded-[30px] border border-white/10 shadow-xl flex items-center gap-4 hover:bg-white/20 transition-all cursor-default">
                                         <div className="w-12 h-12 bg-white text-institutional-blue rounded-2xl flex items-center justify-center font-black shadow-lg">
@@ -1067,13 +1158,9 @@ export default function AdminDashboard({ params }) {
                                         <PlusCircle className="absolute -top-10 -right-10 opacity-10" size={200} />
                                         <h3 className="text-2xl font-black mb-6 relative z-10">Acciones Directas</h3>
                                         <div className="space-y-4 relative z-10">
-                                            <button onClick={() => setActiveTab('wellbeing')} className="w-full bg-red-500/30 hover:bg-red-500/40 p-5 rounded-3xl text-left border border-white/20 transition-all backdrop-blur-sm">
-                                                <p className="font-black text-sm mb-1 uppercase tracking-tighter text-white">🚨 Reportar Alerta</p>
-                                                <p className="text-[10px] opacity-90 text-white">Gestión de ausencias y urgencias</p>
-                                            </button>
                                             <button onClick={handleDownloadReport} className="w-full bg-white/20 hover:bg-white/30 p-5 rounded-3xl text-left border border-white/20 transition-all backdrop-blur-sm">
-                                                <p className="font-black text-sm mb-1 uppercase tracking-tighter">📋 Reporte Diario</p>
-                                                <p className="text-[10px] opacity-70">Resumen de admisiones y pagos</p>
+                                                <p className="font-black text-sm mb-1 uppercase tracking-tighter">📋 Reporte Diario (Excel)</p>
+                                                <p className="text-[10px] opacity-70">Resumen detallado de admisiones y pagos</p>
                                             </button>
                                         </div>
                                     </div>
@@ -3203,7 +3290,10 @@ export default function AdminDashboard({ params }) {
                         <div className="fixed inset-0 z-[120] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
                             <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative animate-in zoom-in-95 duration-200">
                                 <button
-                                    onClick={() => setSelectedActivityForSubmissions(null)}
+                                    onClick={() => {
+                                        setSelectedActivityForSubmissions(null);
+                                        setSubmissionFilterStudentId(null);
+                                    }}
                                     className="absolute top-6 right-6 w-10 h-10 bg-gray-50 text-gray-400 hover:text-gray-800 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors z-10"
                                 >
                                     <X size={20} />
@@ -3220,59 +3310,66 @@ export default function AdminDashboard({ params }) {
                                         </div>
                                     </div>
 
-                                    {activitySubmissions.length > 0 ? (
-                                        <div className="space-y-4">
-                                            {activitySubmissions.map((sub) => (
-                                                <div key={sub.id} className="p-5 rounded-[24px] bg-gray-50 border border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-400">
-                                                            <User size={20} />
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-bold text-gray-800">{sub.profiles?.nombre || 'Estudiante Desconocido'}</p>
-                                                            <div className="flex items-center gap-2 mt-1 -ml-1">
-                                                                <span className="text-[10px] font-black uppercase tracking-widest text-institutional-blue bg-blue-50 px-2 py-0.5 rounded-lg">{sub.profiles?.grado || 'N/A'}</span>
-                                                                <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
-                                                                    <Clock size={10} /> {new Date(sub.created_at).toLocaleString('es-CO')}
-                                                                </span>
+                                    {(() => {
+                                        const displayedSubmissions = submissionFilterStudentId
+                                            ? activitySubmissions.filter(s => s.estudiante_id === submissionFilterStudentId)
+                                            : activitySubmissions;
+
+                                        return displayedSubmissions.length > 0 ? (
+                                            <div className="space-y-4">
+                                                {displayedSubmissions.map((sub) => (
+                                                    <div key={sub.id} className="p-5 rounded-[24px] bg-gray-50 border border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-400">
+                                                                <User size={20} />
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-gray-800">{sub.profiles?.nombre || 'Estudiante Desconocido'}</p>
+                                                                <div className="flex items-center gap-2 mt-1 -ml-1">
+                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-institutional-blue bg-blue-50 px-2 py-0.5 rounded-lg">{sub.profiles?.grado || 'N/A'}</span>
+                                                                    <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
+                                                                        <Clock size={10} /> {new Date(sub.created_at).toLocaleString('es-CO')}
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                        <div className="flex flex-col sm:flex-row gap-2">
+                                                            <a
+                                                                href={sub.archivo_url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-purple-600/20 transition-all"
+                                                            >
+                                                                {sub.archivo_url.toLowerCase().includes('.pdf') ? <FileText size={16} /> : <ImageIcon size={16} />}
+                                                                Ver Evidencia
+                                                            </a>
+                                                            <button
+                                                                onClick={() => {
+                                                                    const act = activities.find(a => a.id === selectedActivityForSubmissions);
+                                                                    setEditingGrade(null);
+                                                                    setSelectedStudentForGrades(sub.estudiante_id);
+                                                                    setGradeActivityTitle(act ? act.title : '');
+                                                                    setSelectedActivityForSubmissions(null);
+                                                                    setSubmissionFilterStudentId(null);
+                                                                    setActiveTab('calificaciones');
+                                                                    setIsGradeModalOpen(true);
+                                                                }}
+                                                                className="flex items-center justify-center gap-2 bg-institutional-blue hover:bg-blue-800 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-blue-500/20 transition-all"
+                                                            >
+                                                                <Star size={16} /> Calificar
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex flex-col sm:flex-row gap-2">
-                                                        <a
-                                                            href={sub.archivo_url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-purple-600/20 transition-all"
-                                                        >
-                                                            {sub.archivo_url.toLowerCase().includes('.pdf') ? <FileText size={16} /> : <ImageIcon size={16} />}
-                                                            Ver Evidencia
-                                                        </a>
-                                                        <button
-                                                            onClick={() => {
-                                                                const act = activities.find(a => a.id === selectedActivityForSubmissions);
-                                                                setEditingGrade(null);
-                                                                setSelectedStudentForGrades(sub.estudiante_id);
-                                                                setGradeActivityTitle(act ? act.title : '');
-                                                                setSelectedActivityForSubmissions(null);
-                                                                setActiveTab('calificaciones');
-                                                                setIsGradeModalOpen(true);
-                                                            }}
-                                                            className="flex items-center justify-center gap-2 bg-institutional-blue hover:bg-blue-800 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-blue-500/20 transition-all"
-                                                        >
-                                                            <Star size={16} /> Calificar
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="text-center py-16 bg-gray-50 rounded-[32px] border border-dashed border-gray-200">
-                                            <FolderCheck size={48} className="mx-auto text-gray-300 mb-4" />
-                                            <p className="text-lg font-bold text-gray-500">No hay entregas aún</p>
-                                            <p className="text-sm text-gray-400 mt-2">Los estudiantes no han subido evidencia para esta actividad.</p>
-                                        </div>
-                                    )}
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-16 bg-gray-50 rounded-[32px] border border-dashed border-gray-200">
+                                                <FolderCheck size={48} className="mx-auto text-gray-300 mb-4" />
+                                                <p className="text-lg font-bold text-gray-500">No hay entregas aún</p>
+                                                <p className="text-sm text-gray-400 mt-2">Los estudiantes no han subido evidencia para esta actividad.</p>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         </div>
