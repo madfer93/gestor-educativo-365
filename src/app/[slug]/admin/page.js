@@ -1991,12 +1991,12 @@ export default function AdminDashboard({ params }) {
                                                 <div className="p-2 bg-institutional-blue/10 rounded-xl">
                                                     <Link className="text-institutional-blue" size={24} />
                                                 </div>
-                                                Redes y Pagos
+                                                Redes Sociales
                                             </h3>
                                             <button
                                                 onClick={async () => {
                                                     setLoading(true);
-                                                    const fields = ['facebook_url', 'instagram_url', 'tiktok_url', 'youtube_url', 'wompi_url'];
+                                                    const fields = ['facebook_url', 'instagram_url', 'tiktok_url', 'youtube_url'];
                                                     for (const field of fields) {
                                                         const val = document.getElementById(field).value;
                                                         await supabase.from('schools').update({ [field]: val }).eq('slug', params.slug);
@@ -2025,10 +2025,6 @@ export default function AdminDashboard({ params }) {
                                             <div className="space-y-1">
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-red-600 ml-1">YouTube</label>
                                                 <input id="youtube_url" type="url" defaultValue={schoolConfig.youtube_url} placeholder="https://..." className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-700" />
-                                            </div>
-                                            <div className="col-span-full pt-4 border-t border-gray-50">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-green-600 ml-1">Botón de Pago (Wompi)</label>
-                                                <input id="wompi_url" type="url" defaultValue={schoolConfig.wompi_url} placeholder="Link de Wompi..." className="w-full bg-institutional-blue/5 border-institutional-blue/10 border rounded-xl p-4 font-bold text-institutional-blue" />
                                             </div>
                                         </div>
                                     </div>
@@ -2179,7 +2175,8 @@ export default function AdminDashboard({ params }) {
                                                     setLoading(true);
                                                     const { error } = await supabase.from('schools').update({
                                                         wompi_webhook_url: document.getElementById('wompi_webhook_url').value,
-                                                        wompi_webhook_secret: document.getElementById('wompi_webhook_secret').value
+                                                        wompi_webhook_secret: document.getElementById('wompi_webhook_secret').value,
+                                                        wompi_url: document.getElementById('wompi_url_integration').value
                                                     }).eq('slug', params.slug);
                                                     if (error) alert("Error: " + error.message);
                                                     else { setIsSaved(true); setTimeout(() => setIsSaved(false), 2000); fetchSchoolConfig(); }
@@ -2226,6 +2223,12 @@ export default function AdminDashboard({ params }) {
                                                     Secreto de Webhook (Events Secret de Wompi) <span className="text-[8px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Seguridad</span>
                                                 </label>
                                                 <input id="wompi_webhook_secret" type="password" defaultValue={schoolConfig.wompi_webhook_secret || ''} placeholder="test_events_..." className="w-full bg-white border border-gray-200 rounded-xl p-4 font-mono text-xs shadow-sm focus:ring-2 ring-green-200 transition-all" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2 ml-1">
+                                                    Enlace / Botón de Pago Wompi <span className="text-[8px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Público</span>
+                                                </label>
+                                                <input id="wompi_url_integration" type="url" defaultValue={schoolConfig.wompi_url || ''} placeholder="Ej: https://checkout.wompi.co/l/..." className="w-full bg-white border border-gray-200 rounded-xl p-4 font-mono text-xs shadow-sm focus:ring-2 ring-green-200 transition-all font-bold text-gray-800" />
                                             </div>
                                         </div>
                                     </div>
