@@ -1301,9 +1301,9 @@ export default function AdminDashboard({ params }) {
                                                                 teacher.rol === 'superadmin' ? 'Desarrollador' :
                                                                     teacher.rol === 'coordinador_convivencia' ? 'Coord. Convivencia' :
                                                                         teacher.rol === 'coordinador_academico' ? 'Coord. Académico' :
-                                                                                    teacher.rol === 'secretary' ? 'Secretaría' :
-                                                                                        teacher.rol === 'treasury' ? 'Tesorería' :
-                                                                                            'Docente'}
+                                                                            teacher.rol === 'secretary' ? 'Secretaría' :
+                                                                                teacher.rol === 'treasury' ? 'Tesorería' :
+                                                                                    'Docente'}
                                                         </span>
                                                     </td>
                                                     <td className="py-6 px-8 text-right">
@@ -1387,7 +1387,7 @@ export default function AdminDashboard({ params }) {
                                                         <div className="bg-purple-50/50 rounded-2xl p-5 space-y-3">
                                                             <div className="space-y-1">
                                                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email Académico *</label>
-                                                                <input name="email" type="email" defaultValue={editingTeacher?.email} required disabled={editingTeacher} className={`w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-purple-500 outline-none ${editingTeacher ? 'opacity-50 cursor-not-allowed' : ''}`} placeholder="docente@colegio.edu.co" />
+                                                                <input name="email" type="email" defaultValue={editingTeacher?.email} required={!editingTeacher} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-purple-500 outline-none" placeholder="docente@colegio.edu.co" />
                                                             </div>
                                                             {!editingTeacher && (
                                                                 <div className="space-y-1">
@@ -2768,7 +2768,7 @@ export default function AdminDashboard({ params }) {
                                                 <div className="bg-purple-50/50 rounded-2xl p-5 space-y-3">
                                                     <div className="space-y-1">
                                                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email Académico *</label>
-                                                        <input name="email" type="email" required={!editingStudent} readOnly={!!editingStudent} defaultValue={editingStudent?.email || leadToFormalize?.email || (leadToFormalize ? leadToFormalize.nombre.toLowerCase().replace(/\s/g, '.') + '@colegio.com' : '')} className={`w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-purple-500 outline-none ${editingStudent ? 'bg-gray-50 text-gray-500' : ''}`} placeholder="estudiante@colegio.edu.co" />
+                                                        <input name="email" type="email" defaultValue={editingStudent?.email || leadToFormalize?.email || (leadToFormalize ? leadToFormalize.nombre.toLowerCase().replace(/\s/g, '.') + '@colegio.com' : '')} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-purple-500 outline-none" placeholder="estudiante@colegio.edu.co" />
                                                     </div>
                                                     {!editingStudent && (
                                                         <div className="space-y-1">
