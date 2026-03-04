@@ -1018,7 +1018,7 @@ export default function AdminDashboard({ params }) {
                                     </button>
 
                                     {isPendingDropdownOpen && (
-                                        <div className="absolute right-0 mt-4 w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4">
+                                        <div className="absolute right-0 top-full mt-4 w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 origin-top-right">
                                             <div className="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
                                                 <h4 className="font-black text-gray-800 text-sm">Nuevas Entregas</h4>
                                                 <span className="text-xs font-bold text-gray-400">{pendingActivities.length} pendientes</span>
