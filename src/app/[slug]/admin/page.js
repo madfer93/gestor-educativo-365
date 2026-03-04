@@ -1149,21 +1149,23 @@ export default function AdminDashboard({ params }) {
                                                         </div>
                                                     </td>
                                                     <td className="py-6 px-8 font-bold text-gray-500">{teacher.specialty || 'General'}</td>
-                                                    <td className="py-6 px-8">
-                                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${teacher.rol === 'admin' ? 'bg-purple-100 text-purple-700' :
-                                                            teacher.rol?.includes('coordinator') ? 'bg-blue-100 text-blue-700' :
-                                                                teacher.rol === 'secretary' ? 'bg-green-100 text-green-700' :
-                                                                    teacher.rol === 'treasury' ? 'bg-amber-100 text-amber-700' :
-                                                                        'bg-gray-100 text-gray-700'
+                                                    <td className="py-6 px-8 text-center sm:text-left">
+                                                        <span className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest block sm:inline-block w-full sm:w-auto mt-2 sm:mt-0 ${teacher.rol === 'admin' ? 'bg-purple-100 text-purple-700' :
+                                                            teacher.rol === 'superadmin' ? 'bg-indigo-100 text-indigo-700' :
+                                                                teacher.rol?.includes('coordinator') ? 'bg-blue-100 text-blue-700' :
+                                                                    teacher.rol === 'secretary' ? 'bg-green-100 text-green-700' :
+                                                                        teacher.rol === 'treasury' ? 'bg-amber-100 text-amber-700' :
+                                                                            'bg-gray-100 text-gray-700'
                                                             }`}>
                                                             {teacher.rol === 'admin' ? 'Rectoría' :
-                                                                teacher.rol === 'coordinator_convivencia' ? 'Coord. Convivencia' :
-                                                                    teacher.rol === 'coordinator_academic' ? 'Coord. Académico' :
-                                                                        teacher.rol === 'coordinator_primary' ? 'Coord. Primaria' :
-                                                                            teacher.rol === 'coordinator' ? 'Coordinación' :
-                                                                                teacher.rol === 'secretary' ? 'Secretaría' :
-                                                                                    teacher.rol === 'treasury' ? 'Tesorería' :
-                                                                                        'Docente'}
+                                                                teacher.rol === 'superadmin' ? 'Desarrollador' :
+                                                                    teacher.rol === 'coordinator_convivencia' ? 'Coord. Convivencia' :
+                                                                        teacher.rol === 'coordinator_academic' ? 'Coord. Académico' :
+                                                                            teacher.rol === 'coordinator_primary' ? 'Coord. Primaria' :
+                                                                                teacher.rol === 'coordinator' ? 'Coordinación' :
+                                                                                    teacher.rol === 'secretary' ? 'Secretaría' :
+                                                                                        teacher.rol === 'treasury' ? 'Tesorería' :
+                                                                                            'Docente'}
                                                         </span>
                                                     </td>
                                                     <td className="py-6 px-8 text-right">
@@ -1247,6 +1249,7 @@ export default function AdminDashboard({ params }) {
                                                             <option value="secretary">Secretaría</option>
                                                             <option value="treasury">Tesorería</option>
                                                             <option value="admin">Rectoría (Admin)</option>
+                                                            <option value="superadmin">Desarrollador (Superadmin)</option>
                                                         </select>
                                                     </div>
                                                     <div className="space-y-2">
