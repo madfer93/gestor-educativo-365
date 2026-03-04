@@ -3075,15 +3075,15 @@ export default function AdminDashboard({ params }) {
                     {
                         isActivityModalOpen && (
                             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-institutional-blue/40 backdrop-blur-md animate-in fade-in duration-200">
-                                <form onSubmit={handleSaveActivity} className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
+                                <form onSubmit={handleSaveActivity} className="bg-white w-full max-w-[95vw] lg:max-w-7xl max-h-[90vh] overflow-y-auto rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
                                     <button type="button" onClick={() => setIsActivityModalOpen(false)} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-xl transition-colors z-10">
                                         <X size={24} className="text-gray-400" />
                                     </button>
                                     <h3 className="text-2xl font-black text-gray-800 mb-1">Asignar Actividad</h3>
                                     <p className="text-xs text-amber-500 font-bold mb-6">Modalidad A Distancia</p>
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                        {/* Left Column */}
-                                        <div className="space-y-5">
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        {/* Left Column (Spans 2) */}
+                                        <div className="space-y-5 lg:col-span-2">
                                             <div className="space-y-1">
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Título</label>
                                                 <input name="title" required className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ej: Taller 1 - Matemáticas" />
@@ -3097,15 +3097,15 @@ export default function AdminDashboard({ params }) {
                                                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grado</label>
                                                     <select name="grado" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 text-xs text-ellipsis pr-8 focus:ring-2 focus:ring-amber-200 outline-none">
                                                         <option value="">Todos (Toda la institución)</option>
-                                                        <optgroup label="Sabatina y A Distancia (Ciclos)">
-                                                            <option value="Ciclo III">Ciclo III (6º - 7º)</option>
-                                                            <option value="Ciclo IV">Ciclo IV (8º - 9º)</option>
-                                                            <option value="Ciclo V">Ciclo V (10º - 11º)</option>
-                                                        </optgroup>
-                                                        <optgroup label="A Distancia (6º a 11º)">
+                                                        <optgroup label="Sabatinas">
                                                             <option value="6-7">Grados 6-7</option>
                                                             <option value="8-9">Grados 8-9</option>
                                                             <option value="10-11">Grados 10-11</option>
+                                                        </optgroup>
+                                                        <optgroup label="A Distancia">
+                                                            <option value="Ciclo III">Ciclo III</option>
+                                                            <option value="Ciclo IV">Ciclo IV</option>
+                                                            <option value="Ciclo V">Ciclo V</option>
                                                         </optgroup>
                                                         <optgroup label="Preescolar (Presencial)">
                                                             {['Pre-jardín', 'Jardín', 'Transición'].map(g => <option key={g} value={g}>{g}</option>)}
