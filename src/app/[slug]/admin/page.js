@@ -251,14 +251,26 @@ export default function AdminDashboard({ params }) {
             const { data: acts } = await supabase.from('school_activities').select('id, title').eq('school_id', school.id);
             if (acts && acts.length > 0) {
                 const actIds = acts.map(a => a.id);
-                // Fetch latest 10 submissions that don't have grades (in this system, grade is a separate table, but we can just show latest 10 submissions as 'notifications' of new activities)
+                // Fetch latest submissions and filter out already-graded ones
                 const { data } = await supabase.from('submissions')
                     .select('*, profiles:estudiante_id(nombre, grado)')
                     .in('tarea_id', actIds)
                     .order('created_at', { ascending: false })
-                    .limit(10);
+                    .limit(30);
 
-                const subsWithTitles = (data || []).map(s => ({
+                // Fetch existing grades to exclude already-graded submissions
+                const { data: existingGrades } = await supabase.from('calificaciones')
+                    .select('student_id, materia')
+                    .eq('school_id', school.id);
+
+                const gradedSet = new Set((existingGrades || []).map(g => g.student_id + '|' + g.materia));
+
+                const ungraded = (data || []).filter(s => {
+                    const actTitle = acts.find(a => a.id === s.tarea_id)?.title || 'Actividad';
+                    return !gradedSet.has(s.estudiante_id + '|' + actTitle);
+                });
+
+                const subsWithTitles = ungraded.slice(0, 10).map(s => ({
                     ...s,
                     activity_title: acts.find(a => a.id === s.tarea_id)?.title || 'Actividad'
                 }));
