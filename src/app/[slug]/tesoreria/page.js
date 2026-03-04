@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
-import { DollarSign, PieChart, TrendingUp, CreditCard, Search, Filter, Download, PlusCircle, CheckCircle, AlertCircle, FileText, Loader2 } from 'lucide-react';
+import { DollarSign, PieChart, TrendingUp, CreditCard, Search, Filter, Download, PlusCircle, CheckCircle, AlertCircle, FileText, Loader2, Save, UserCircle } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 const supabase = createClient();
 
@@ -8,6 +8,8 @@ export default function TesoreriaDashboard({ params }) {
     const [activeTab, setActiveTab] = useState('resumen');
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [userProfile, setUserProfile] = useState(null);
     const [stats, setStats] = useState({ total: 0, pending: 0, debt: 0, goal: 60000000 });
     const [school, setSchool] = useState(null);
 
@@ -36,7 +38,44 @@ export default function TesoreriaDashboard({ params }) {
 
     useEffect(() => {
         fetchData();
+        // Fetch user profile
+        (async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+                setUserProfile(data);
+            }
+        })();
     }, [fetchData]);
+
+    const handleSaveProfile = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        const fd = new FormData(e.target);
+        try {
+            const updateData = {
+                id: userProfile.id,
+                public_bio: fd.get('public_bio') || null,
+                facebook_url: fd.get('facebook_url') || null,
+                instagram_url: fd.get('instagram_url') || null,
+                linkedin_url: fd.get('linkedin_url') || null,
+                twitter_url: fd.get('twitter_url') || null
+            };
+            const response = await fetch('/api/auth/manage-user', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error);
+            alert('¡Perfil actualizado con éxito!');
+            setUserProfile({ ...userProfile, ...updateData });
+        } catch (error) {
+            alert('Error al actualizar: ' + error.message);
+        } finally {
+            setSaving(false);
+        }
+    };
 
     const handleApprovePayment = async (payId) => {
         try {
@@ -90,6 +129,12 @@ export default function TesoreriaDashboard({ params }) {
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === 'pagos' ? 'bg-institutional-blue text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:bg-gray-50'}`}
                     >
                         <CreditCard size={20} /> Registrar Pago
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('perfil')}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === 'perfil' ? 'bg-institutional-blue text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:bg-gray-50'}`}
+                    >
+                        <UserCircle size={20} /> Mi Perfil
                     </button>
                 </nav>
             </aside>
@@ -245,6 +290,68 @@ export default function TesoreriaDashboard({ params }) {
                         </table>
                     </div>
                 </div>
+
+                {/* ==================== MI PERFIL ==================== */}
+                {activeTab === 'perfil' && (
+                    <div className="space-y-10">
+                        <div>
+                            <h2 className="text-3xl font-black text-gray-800">Mi Perfil Público</h2>
+                            <p className="text-gray-400 font-medium">Actualiza tu biografía profesional y redes sociales.</p>
+                        </div>
+
+                        <div className="bg-white rounded-[40px] shadow-sm border border-gray-100 p-8 md:p-12 max-w-4xl">
+                            <form onSubmit={handleSaveProfile} className="space-y-10">
+                                <div className="flex items-center gap-8 border-b border-gray-50 pb-8">
+                                    <div className="w-24 h-24 bg-gray-100 rounded-3xl overflow-hidden border-4 border-white shadow-lg">
+                                        {userProfile?.public_photo_url ? (
+                                            <img src={userProfile.public_photo_url} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-gray-300"><UserCircle size={40} /></div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-black text-gray-800">{userProfile?.nombre}</h3>
+                                        <span className="px-3 py-1 bg-gray-100 text-gray-500 font-black text-[10px] uppercase tracking-widest rounded-full">{userProfile?.specialty || 'Tesorería'}</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="text-xs font-black uppercase tracking-widest text-institutional-magenta flex items-center gap-2"><UserCircle size={16} /> Biografía Profesional</label>
+                                    <textarea name="public_bio" defaultValue={userProfile?.public_bio} className="w-full bg-gray-50 border-none rounded-3xl p-6 font-medium text-gray-600 focus:ring-2 focus:ring-institutional-blue min-h-[150px]" placeholder="Escribe un breve resumen profesional..."></textarea>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <h4 className="text-xs font-black text-gray-800 uppercase tracking-widest pt-6 border-t border-gray-100">Redes Sociales</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Facebook URL</label>
+                                            <input name="facebook_url" type="url" defaultValue={userProfile?.facebook_url} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 placeholder-gray-300" placeholder="https://facebook.com/..." />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Instagram URL</label>
+                                            <input name="instagram_url" type="url" defaultValue={userProfile?.instagram_url} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 placeholder-gray-300" placeholder="https://instagram.com/..." />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">LinkedIn URL</label>
+                                            <input name="linkedin_url" type="url" defaultValue={userProfile?.linkedin_url} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 placeholder-gray-300" placeholder="https://linkedin.com/in/..." />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Twitter / X URL</label>
+                                            <input name="twitter_url" type="url" defaultValue={userProfile?.twitter_url} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 placeholder-gray-300" placeholder="https://x.com/..." />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end pt-8 border-t border-gray-100">
+                                    <button type="submit" disabled={saving} className="bg-institutional-blue text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:scale-105 transition-transform flex items-center gap-2">
+                                        {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                                        {saving ? 'Guardando...' : 'Guardar Perfil'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );

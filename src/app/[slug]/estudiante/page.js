@@ -6,7 +6,7 @@ import {
     CheckCircle, Clock, AlertCircle, Newspaper, GraduationCap,
     Heart, Phone, Mail, MapPin, Calendar, FileText, Shield,
     ChevronRight, BookOpen, Bell, Loader2, DollarSign, Upload, Info,
-    LayoutGrid, Star, FileCheck, Building2, Landmark, X, MessageSquare
+    LayoutGrid, Star, FileCheck, Building2, Landmark, X, MessageSquare, Download
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 const supabase = createClient();
@@ -1287,19 +1287,31 @@ export default function StudentDashboard({ params }) {
                                     {selectedActivity.file_url && (
                                         <div className="mt-6 border-t border-gray-100 pt-6">
                                             <h4 className="text-[10px] font-black uppercase tracking-widest text-institutional-blue mb-4">Material Adjunto</h4>
-                                            {selectedActivity.file_url.toLowerCase().includes('.pdf') ? (
-                                                <a href={selectedActivity.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-red-50 text-red-600 p-4 rounded-2xl hover:bg-red-100 transition-colors">
-                                                    <FileText size={24} />
-                                                    <div>
-                                                        <p className="font-bold text-sm">Ver Documento PDF</p>
-                                                        <p className="text-[10px] font-medium opacity-80 uppercase tracking-widest">Abre en nueva pestaña</p>
+                                            <div className="space-y-4">
+                                                {selectedActivity.file_url.toLowerCase().includes('.pdf') ? (
+                                                    <a href={selectedActivity.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-red-50 text-red-600 p-4 rounded-2xl hover:bg-red-100 transition-colors">
+                                                        <FileText size={24} />
+                                                        <div className="flex-1">
+                                                            <p className="font-bold text-sm">Ver Documento PDF</p>
+                                                            <p className="text-[10px] font-medium opacity-80 uppercase tracking-widest">Abre en nueva pestaña</p>
+                                                        </div>
+                                                    </a>
+                                                ) : (
+                                                    <div className="rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
+                                                        <img src={selectedActivity.file_url} alt="Material de apoyo" className="w-full h-auto object-contain max-h-[400px]" />
                                                     </div>
+                                                )}
+
+                                                <a
+                                                    href={selectedActivity.file_url}
+                                                    download={`material-${selectedActivity.title.replace(/\s+/g, '-').toLowerCase()}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center justify-center gap-3 w-full bg-institutional-blue text-white p-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-transform"
+                                                >
+                                                    <Download size={18} /> Descargar Archivo (PDF/Guía)
                                                 </a>
-                                            ) : (
-                                                <div className="rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
-                                                    <img src={selectedActivity.file_url} alt="Material de apoyo" className="w-full h-auto object-contain max-h-[400px]" />
-                                                </div>
-                                            )}
+                                            </div>
                                         </div>
                                     )}
 

@@ -1422,6 +1422,7 @@ export default function AdminDashboard({ params }) {
                                                                 <select name="rol" defaultValue={editingTeacher?.rol} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                                                                     <option value="teacher">Docente</option>
                                                                     <option value="coordinator">Coordinación</option>
+                                                                    <option value="coordinador_academico">Coordinación Académica</option>
                                                                     <option value="secretary">Secretaría</option>
                                                                     <option value="treasury">Tesorería</option>
                                                                     <option value="admin">Rectoría (Admin)</option>
@@ -1461,6 +1462,18 @@ export default function AdminDashboard({ params }) {
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* SECCIÓN FULL-WIDTH: BIOGRAFÍA PROFESIONAL */}
+                                                <div className="col-span-1 md:col-span-2 lg:col-span-3">
+                                                    <h4 className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-3 flex items-center gap-2">📝 Biografía Profesional</h4>
+                                                    <div className="bg-emerald-50/50 rounded-2xl p-5 space-y-3">
+                                                        <div className="space-y-1">
+                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Presentación Pública</label>
+                                                            <textarea name="public_bio" defaultValue={editingTeacher?.public_bio} rows={4} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none" placeholder="Escribe un resumen profesional: formación académica, experiencia, logros y pasión por la educación..." />
+                                                        </div>
+                                                        <p className="text-[10px] text-gray-400 font-medium">Esta biografía será visible en la página pública del colegio para estudiantes y padres de familia.</p>
                                                     </div>
                                                 </div>
 
@@ -2640,7 +2653,7 @@ export default function AdminDashboard({ params }) {
                                                                 }} className="text-amber-600 text-sm font-bold flex items-center gap-1 hover:text-amber-700 transition-colors">
                                                                     <ClipboardList size={14} /> Detalles
                                                                 </button>
-                                                                {['admin', 'secretary', 'coordinator'].includes(userRole) && (
+                                                                {['admin', 'secretary', 'coordinator', 'coordinador_academico', 'superadmin', 'bursar'].includes(userRole) && (
                                                                     <button onClick={() => {
                                                                         setEditingStudent(student);
                                                                         setFormModalidad(student.modalidad || '');
