@@ -276,26 +276,39 @@ export default function AdminDashboard({ params }) {
     };
 
     useEffect(() => {
-        const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data: profile } = await supabase.from('profiles').select('rol').eq('id', user.id).single();
-                if (profile) setUserRole(profile.rol);
+        const initDashboard = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data: profile, error: profError } = await supabase.from('profiles').select('rol').eq('id', user.id).single();
+                    if (profError) throw profError;
+                    if (profile) setUserRole(profile.rol);
+                }
+
+                await Promise.all([
+                    fetchTeachers(),
+                    fetchSchoolConfig(),
+                    fetchStats(),
+                    fetchPendingActivities()
+                ]);
+            } catch (err) {
+                console.error("Dashboard initial load error:", err);
+                // Si falla la obtención de stats críticos, no bloqueamos todo, pero informamos
             }
         };
-        checkUser();
-        fetchTeachers();
-        fetchSchoolConfig();
-        fetchStats();
-        fetchPendingActivities();
-        if (activeTab === "students" || activeTab === "calificaciones" || activeTab === "academic") fetchStudents();
-        if (activeTab === "gallery") fetchGallery();
-        if (activeTab === "news") fetchNews();
-        if (activeTab === "costs") fetchCosts();
-        if (activeTab === "circulares") fetchCirculares();
-        if (activeTab === "academic") fetchActivities();
-        if (activeTab === "wellbeing") fetchWellbeingReports();
-        if (activeTab === "calificaciones") fetchGrades();
+
+        if (params.slug) {
+            initDashboard();
+        }
+
+        if (activeTab === "students" || activeTab === "calificaciones" || activeTab === "academic") fetchStudents().catch(console.error);
+        if (activeTab === "gallery") fetchGallery().catch(console.error);
+        if (activeTab === "news") fetchNews().catch(console.error);
+        if (activeTab === "costs") fetchCosts().catch(console.error);
+        if (activeTab === "circulares") fetchCirculares().catch(console.error);
+        if (activeTab === "academic") fetchActivities().catch(console.error);
+        if (activeTab === "wellbeing") fetchWellbeingReports().catch(console.error);
+        if (activeTab === "calificaciones") fetchGrades().catch(console.error);
     }, [params.slug, activeTab]);
 
     const handleFormalizeStudent = (lead) => {
@@ -328,9 +341,26 @@ export default function AdminDashboard({ params }) {
         e.preventDefault();
         const { data: school } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
         if (!school) return alert('Error: ID de colegio no encontrado.');
+
         setLoading(true);
+        const formData = new FormData(e.target);
+        const photoFile = e.target.photo_file?.files[0];
+        let photoUrl = null;
+
+        if (photoFile) {
+            try {
+                photoUrl = await uploadImage(photoFile);
+            } catch (error) {
+                alert("Error al subir la imagen: " + error.message);
+                setLoading(false);
+                return;
+            }
+        }
+
         const data = collectStudentFormData(e.target);
-        const password = new FormData(e.target).get('password') || 'Estudiante2026*';
+        if (photoUrl) data.public_photo_url = photoUrl;
+
+        const password = formData.get('password') || 'Estudiante2026*';
         try {
             const response = await fetch('/api/auth/manage-user', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -352,8 +382,24 @@ export default function AdminDashboard({ params }) {
     const handleEditStudent = async (e) => {
         e.preventDefault();
         setLoading(true);
+        const formData = new FormData(e.target);
+        const photoFile = e.target.photo_file?.files[0];
+        let photoUrl = editingStudent?.public_photo_url;
+
+        if (photoFile) {
+            try {
+                photoUrl = await uploadImage(photoFile);
+            } catch (error) {
+                alert("Error al subir la imagen: " + error.message);
+                setLoading(false);
+                return;
+            }
+        }
+
         const data = collectStudentFormData(e.target);
-        const password = new FormData(e.target).get('password') || '';
+        data.public_photo_url = photoUrl;
+
+        const password = formData.get('password') || '';
         try {
             const response = await fetch('/api/auth/manage-user', {
                 method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -579,21 +625,26 @@ export default function AdminDashboard({ params }) {
         };
 
         let error;
-        if (editingNews) {
-            const { error: resError } = await supabase.from('school_news').update(newsData).eq('id', editingNews.id);
-            error = resError;
-        } else {
-            const { error: resError } = await supabase.from('school_news').insert([newsData]);
-            error = resError;
-        }
+        try {
+            if (editingNews) {
+                const { error: resError } = await supabase.from('school_news').update(newsData).eq('id', editingNews.id);
+                error = resError;
+            } else {
+                const { error: resError } = await supabase.from('school_news').insert([newsData]);
+                error = resError;
+            }
 
-        if (error) alert("Error: " + error.message);
-        else {
+            if (error) throw error;
+
             setIsNewsModalOpen(false);
             setEditingNews(null);
             fetchNews();
+            alert("Noticia guardada con éxito");
+        } catch (err) {
+            alert("Error al guardar noticia: " + err.message);
+        } finally {
+            setUploading(false);
         }
-        setUploading(false);
     };
 
     const handleSaveSettings = async (e) => {
@@ -2631,6 +2682,47 @@ export default function AdminDashboard({ params }) {
                                             <div>
                                                 <h4 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-3 flex items-center gap-2">👤 Datos Personales</h4>
                                                 <div className="bg-blue-50/50 rounded-2xl p-5 space-y-3">
+                                                    {/* Foto de Perfil */}
+                                                    <div className="flex justify-center mb-4">
+                                                        <div className="relative group">
+                                                            <div className="w-24 h-24 rounded-full bg-white border-4 border-blue-100 shadow-md overflow-hidden flex items-center justify-center">
+                                                                {editingStudent?.public_photo_url ? (
+                                                                    <img src={editingStudent.public_photo_url} className="w-full h-full object-cover" alt="Perfil" />
+                                                                ) : (
+                                                                    <User size={40} className="text-gray-300" />
+                                                                )}
+                                                            </div>
+                                                            <input
+                                                                type="file"
+                                                                name="photo_file"
+                                                                id="student_photo_input"
+                                                                accept="image/*"
+                                                                className="hidden"
+                                                                onChange={(e) => {
+                                                                    if (e.target.files[0]) {
+                                                                        const reader = new FileReader();
+                                                                        reader.onload = (event) => {
+                                                                            const img = e.target.parentElement.querySelector('img') || document.createElement('img');
+                                                                            img.src = event.target.result;
+                                                                            img.className = "w-full h-full object-cover";
+                                                                            if (!e.target.parentElement.querySelector('img')) {
+                                                                                e.target.parentElement.querySelector('.lucide-user').replaceWith(img);
+                                                                            }
+                                                                        };
+                                                                        reader.readAsDataURL(e.target.files[0]);
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => document.getElementById('student_photo_input').click()}
+                                                                className="absolute bottom-0 right-0 bg-institutional-blue text-white p-2 rounded-full shadow-lg hover:scale-110 transition-all border-2 border-white"
+                                                            >
+                                                                <Camera size={14} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
                                                     <div className="space-y-1">
                                                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nombre Completo *</label>
                                                         <input name="nombre" required defaultValue={editingStudent?.nombre || leadToFormalize?.nombre} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Nombres y Apellidos" />
@@ -2842,8 +2934,12 @@ export default function AdminDashboard({ params }) {
                                             <X size={24} className="text-gray-400" />
                                         </button>
                                         <div className="flex items-center gap-6">
-                                            <div className="w-16 h-16 bg-institutional-blue/10 rounded-3xl flex items-center justify-center text-institutional-blue font-black text-2xl">
-                                                {viewingStudentDetails.nombre?.[0] || 'E'}
+                                            <div className="w-16 h-16 bg-institutional-blue/10 rounded-3xl flex items-center justify-center text-institutional-blue font-black text-2xl overflow-hidden">
+                                                {viewingStudentDetails.public_photo_url ? (
+                                                    <img src={viewingStudentDetails.public_photo_url} className="w-full h-full object-cover" alt="Perfil" />
+                                                ) : (
+                                                    viewingStudentDetails.nombre?.[0] || 'E'
+                                                )}
                                             </div>
                                             <div>
                                                 <h3 className="text-2xl font-black text-gray-800">{viewingStudentDetails.nombre}</h3>
@@ -3483,15 +3579,22 @@ export default function AdminDashboard({ params }) {
                                         fecha: new Date().toISOString().split('T')[0]
                                     };
 
-                                    if (editingGrade) {
-                                        await supabase.from('calificaciones').update(data).eq('id', editingGrade.id);
-                                    } else {
-                                        await supabase.from('calificaciones').insert([data]);
+                                    try {
+                                        if (editingGrade) {
+                                            const { error } = await supabase.from('calificaciones').update(data).eq('id', editingGrade.id);
+                                            if (error) throw error;
+                                        } else {
+                                            const { error } = await supabase.from('calificaciones').insert([data]);
+                                            if (error) throw error;
+                                        }
+                                        setGradeActivityTitle('');
+                                        setSelectedStudentForGrades(null);
+                                        setIsGradeModalOpen(false);
+                                        fetchGrades();
+                                        alert("Calificación guardada con éxito");
+                                    } catch (err) {
+                                        alert("Error al guardar calificación: " + err.message);
                                     }
-                                    setGradeActivityTitle('');
-                                    setSelectedStudentForGrades(null);
-                                    setIsGradeModalOpen(false);
-                                    fetchGrades();
                                 }}>
                                     <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                                         <div>

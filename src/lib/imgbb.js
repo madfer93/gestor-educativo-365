@@ -17,7 +17,11 @@ export const uploadImage = async (file) => {
             throw new Error(data.error.message || 'Error al subir la imagen');
         }
     } catch (error) {
-        console.error('ImgBB Upload Error:', error);
+        console.error('ImgBB Upload Error Details:', {
+            message: error.message,
+            stack: error.stack,
+            type: error.name
+        });
         throw error;
     }
 };
