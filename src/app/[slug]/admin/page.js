@@ -1227,6 +1227,16 @@ export default function AdminDashboard({ params }) {
                                                             <input name="numero_documento" defaultValue={editingTeacher?.numero_documento} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
                                                         </div>
                                                     </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div className="space-y-2">
+                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Fecha de Nacimiento <span className="text-gray-300 normal-case">(Opcional)</span></label>
+                                                            <input type="date" name="fecha_nacimiento" defaultValue={editingTeacher?.fecha_nacimiento} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dirección <span className="text-gray-300 normal-case">(Opcional)</span></label>
+                                                            <input name="direccion" defaultValue={editingTeacher?.direccion} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ej. Calle 123 #45-67" />
+                                                        </div>
+                                                    </div>
                                                     <div className="space-y-2">
                                                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email (Acceso)</label>
                                                         <input name="email" type="email" defaultValue={editingTeacher?.email} required disabled={editingTeacher} className={`w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 ${editingTeacher ? 'opacity-50' : ''}`} />
