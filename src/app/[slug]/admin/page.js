@@ -390,7 +390,11 @@ export default function AdminDashboard({ params }) {
             grupo_sanguineo: v('grupo_sanguineo'),
             eps_salud: v('eps_salud'),
             alergias: v('alergias'),
-            condiciones_medicas: v('condiciones_medicas')
+            condiciones_medicas: v('condiciones_medicas'),
+            facebook_url: v('facebook_url'),
+            instagram_url: v('instagram_url'),
+            linkedin_url: v('linkedin_url'),
+            twitter_url: v('twitter_url')
         };
         const teacherPassword = formData.get('password');
 
@@ -1259,6 +1263,65 @@ export default function AdminDashboard({ params }) {
                                                     <div className="space-y-2">
                                                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Foto</label>
                                                         <input type="file" name="photo_file" className="w-full text-xs" accept="image/*" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-8 border-t border-gray-100 pt-8">
+                                                <h4 className="text-xs font-black text-gray-800 uppercase tracking-widest mb-6">Información Médica y Emergencias</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grupo Sanguíneo (RH)</label>
+                                                        <input name="grupo_sanguineo" defaultValue={editingTeacher?.grupo_sanguineo} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ej. O+" />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">EPS / Seguro Médico</label>
+                                                        <input name="eps_salud" defaultValue={editingTeacher?.eps_salud} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Alergias</label>
+                                                        <input name="alergias" defaultValue={editingTeacher?.alergias} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ninguna" />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Condiciones Médicas</label>
+                                                        <input name="condiciones_medicas" defaultValue={editingTeacher?.condiciones_medicas} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ninguna" />
+                                                    </div>
+                                                    <div className="space-y-2 mb-4 md:col-span-2 mt-4">
+                                                        <p className="font-bold text-sm text-gray-800 border-b border-gray-100 pb-2">Contacto de Emergencia</p>
+                                                    </div>
+                                                    <div className="space-y-2 mt-[-1rem]">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nombre del Contacto</label>
+                                                        <input name="acudiente_nombre" defaultValue={editingTeacher?.acudiente_nombre} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Nombre completo" />
+                                                    </div>
+                                                    <div className="space-y-2 mt-[-1rem]">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Parentesco o Relación</label>
+                                                        <input name="acudiente_parentesco" defaultValue={editingTeacher?.acudiente_parentesco} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ej. Esposo(a), Madre" />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Teléfono de Emergencia</label>
+                                                        <input name="acudiente_telefono" type="tel" defaultValue={editingTeacher?.acudiente_telefono} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-8 border-t border-gray-100 pt-8">
+                                                <h4 className="text-xs font-black text-gray-800 uppercase tracking-widest mb-6">Redes Sociales (Opcional)</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Facebook URL</label>
+                                                        <input name="facebook_url" type="url" defaultValue={editingTeacher?.facebook_url} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 placeholder-gray-300" placeholder="https://facebook.com/..." />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Instagram URL</label>
+                                                        <input name="instagram_url" type="url" defaultValue={editingTeacher?.instagram_url} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 placeholder-gray-300" placeholder="https://instagram.com/..." />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">LinkedIn URL</label>
+                                                        <input name="linkedin_url" type="url" defaultValue={editingTeacher?.linkedin_url} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 placeholder-gray-300" placeholder="https://linkedin.com/in/..." />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Twitter / X URL</label>
+                                                        <input name="twitter_url" type="url" defaultValue={editingTeacher?.twitter_url} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 placeholder-gray-300" placeholder="https://x.com/..." />
                                                     </div>
                                                 </div>
                                             </div>
