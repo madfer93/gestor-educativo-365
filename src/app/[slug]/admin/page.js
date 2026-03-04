@@ -1292,17 +1292,15 @@ export default function AdminDashboard({ params }) {
                                                     <td className="py-6 px-8 text-center sm:text-left">
                                                         <span className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest block sm:inline-block w-full sm:w-auto mt-2 sm:mt-0 ${teacher.rol === 'admin' ? 'bg-purple-100 text-purple-700' :
                                                             teacher.rol === 'superadmin' ? 'bg-indigo-100 text-indigo-700' :
-                                                                teacher.rol?.includes('coordinator') ? 'bg-blue-100 text-blue-700' :
+                                                                teacher.rol?.includes('coordinador') ? 'bg-blue-100 text-blue-700' :
                                                                     teacher.rol === 'secretary' ? 'bg-green-100 text-green-700' :
                                                                         teacher.rol === 'treasury' ? 'bg-amber-100 text-amber-700' :
                                                                             'bg-gray-100 text-gray-700'
                                                             }`}>
                                                             {teacher.rol === 'admin' ? 'Rectoría' :
                                                                 teacher.rol === 'superadmin' ? 'Desarrollador' :
-                                                                    teacher.rol === 'coordinator_convivencia' ? 'Coord. Convivencia' :
-                                                                        teacher.rol === 'coordinator_academic' ? 'Coord. Académico' :
-                                                                            teacher.rol === 'coordinator_primary' ? 'Coord. Primaria' :
-                                                                                teacher.rol === 'coordinator' ? 'Coordinación' :
+                                                                    teacher.rol === 'coordinador_convivencia' ? 'Coord. Convivencia' :
+                                                                        teacher.rol === 'coordinador_academico' ? 'Coord. Académico' :
                                                                                     teacher.rol === 'secretary' ? 'Secretaría' :
                                                                                         teacher.rol === 'treasury' ? 'Tesorería' :
                                                                                             'Docente'}
@@ -1349,8 +1347,8 @@ export default function AdminDashboard({ params }) {
                                                 <p className="text-sm text-gray-500 font-medium mt-1">Captura de información institucional, médica y de contacto</p>
                                             </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 flex-1">
-                                                {/* COLUMNA 1: DATOS PERSONALES Y ACCESO */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1">
+                                                {/* COLUMNA 1: DATOS PERSONALES + ACCESO AL SISTEMA */}
                                                 <div className="space-y-5">
                                                     <div>
                                                         <h4 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-3 flex items-center gap-2">👤 Datos Personales</h4>
@@ -1378,15 +1376,11 @@ export default function AdminDashboard({ params }) {
                                                                 </div>
                                                                 <div className="space-y-1">
                                                                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dirección</label>
-                                                                    <input name="direccion" defaultValue={editingTeacher?.direccion} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ej. Calle 123" />
+                                                                    <input name="direccion" defaultValue={editingTeacher?.direccion} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Calle 123" />
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
-
-                                                {/* COLUMNA 2: ACCESO AL SISTEMA */}
-                                                <div className="space-y-5">
 
                                                     <div>
                                                         <h4 className="text-xs font-black uppercase tracking-widest text-purple-600 mb-3 flex items-center gap-2">🔐 Acceso al Sistema</h4>
@@ -1408,64 +1402,63 @@ export default function AdminDashboard({ params }) {
                                                             )}
                                                         </div>
                                                     </div>
+                                                </div>
 
-                                                    {/* Rol Institucional dentro de Col 2 */}
-                                                    <div className="space-y-5">
-                                                        <div>
-                                                            <h4 className="text-xs font-black uppercase tracking-widest text-indigo-600 mb-3 flex items-center gap-2">🏫 Rol Institucional</h4>
-                                                            <div className="bg-indigo-50/50 rounded-2xl p-5 space-y-3">
-                                                                <div className="space-y-1">
-                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Permisos de Sistema</label>
-                                                                    <select name="rol" defaultValue={editingTeacher?.rol} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                                                                        <option value="teacher">Docente</option>
-                                                                        <option value="coordinador_convivencia">Coordinación Convivencia</option>
-                                                                        <option value="coordinador_academico">Coordinación Académica</option>
-                                                                        <option value="secretary">Secretaría</option>
-                                                                        <option value="treasury">Tesorería</option>
-                                                                        <option value="admin">Rectoría (Admin)</option>
-                                                                        <option value="superadmin">Desarrollador (Superadmin)</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div className="space-y-1">
-                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Cargo / Especialidad</label>
-                                                                    <input name="specialty" defaultValue={editingTeacher?.specialty} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ej. Matemáticas, Coordinador" />
-                                                                </div>
-                                                                <div className="space-y-1">
-                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Foto de Perfil</label>
-                                                                    <input type="file" name="photo_file" className="w-full text-xs bg-white border border-gray-200 rounded-xl p-2 focus:ring-2 focus:ring-indigo-500 outline-none" accept="image/*" />
-                                                                </div>
+                                                {/* COLUMNA 2: ROL INSTITUCIONAL + REDES SOCIALES */}
+                                                <div className="space-y-5">
+                                                    <div>
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-indigo-600 mb-3 flex items-center gap-2">🏫 Rol Institucional</h4>
+                                                        <div className="bg-indigo-50/50 rounded-2xl p-5 space-y-3">
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Permisos de Sistema</label>
+                                                                <select name="rol" defaultValue={editingTeacher?.rol} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                                                    <option value="teacher">Docente</option>
+                                                                    <option value="coordinador_convivencia">Coordinación Convivencia</option>
+                                                                    <option value="coordinador_academico">Coordinación Académica</option>
+                                                                    <option value="secretary">Secretaría</option>
+                                                                    <option value="treasury">Tesorería</option>
+                                                                    <option value="admin">Rectoría (Admin)</option>
+                                                                    <option value="superadmin">Desarrollador (Superadmin)</option>
+                                                                </select>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Cargo / Especialidad</label>
+                                                                <input name="specialty" defaultValue={editingTeacher?.specialty} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ej. Matemáticas" />
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Foto de Perfil</label>
+                                                                <input type="file" name="photo_file" className="w-full text-xs bg-white border border-gray-200 rounded-xl p-2 focus:ring-2 focus:ring-indigo-500 outline-none" accept="image/*" />
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    {/* COLUMNA 3: REDES SOCIALES + MÉDICOS */}
-                                                    <div className="space-y-5">
-                                                        <div>
-                                                            <h4 className="text-xs font-black uppercase tracking-widest text-teal-600 mb-3 flex items-center gap-2">🌐 Redes Sociales (Opcional)</h4>
-                                                            <div className="bg-teal-50/50 rounded-2xl p-5 space-y-3">
-                                                                <div className="grid grid-cols-2 gap-3">
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Facebook URL</label>
-                                                                        <input name="facebook_url" type="url" defaultValue={editingTeacher?.facebook_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://fb.com/..." />
-                                                                    </div>
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Instagram URL</label>
-                                                                        <input name="instagram_url" type="url" defaultValue={editingTeacher?.instagram_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://ig.com/..." />
-                                                                    </div>
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">LinkedIn URL</label>
-                                                                        <input name="linkedin_url" type="url" defaultValue={editingTeacher?.linkedin_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://linkedin.com/..." />
-                                                                    </div>
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Twitter / X URL</label>
-                                                                        <input name="twitter_url" type="url" defaultValue={editingTeacher?.twitter_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://x.com/..." />
-                                                                    </div>
+                                                    <div>
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-teal-600 mb-3 flex items-center gap-2">🌐 Redes Sociales (Opcional)</h4>
+                                                        <div className="bg-teal-50/50 rounded-2xl p-5 space-y-3">
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Facebook</label>
+                                                                    <input name="facebook_url" type="url" defaultValue={editingTeacher?.facebook_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://fb.com/..." />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Instagram</label>
+                                                                    <input name="instagram_url" type="url" defaultValue={editingTeacher?.instagram_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://ig.com/..." />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">LinkedIn</label>
+                                                                    <input name="linkedin_url" type="url" defaultValue={editingTeacher?.linkedin_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://linkedin.com/..." />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Twitter / X</label>
+                                                                    <input name="twitter_url" type="url" defaultValue={editingTeacher?.twitter_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://x.com/..." />
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </div>
 
-                                                    {/* Datos Médicos dentro de Col 3 */}
+                                                {/* COLUMNA 3: DATOS MÉDICOS + CONTACTO DE EMERGENCIA */}
+                                                <div className="space-y-5">
                                                     <div>
                                                         <h4 className="text-xs font-black uppercase tracking-widest text-rose-600 mb-3 flex items-center gap-2">⚕️ Datos Médicos</h4>
                                                         <div className="bg-rose-50/50 rounded-2xl p-5 space-y-3">
@@ -1489,10 +1482,7 @@ export default function AdminDashboard({ params }) {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
 
-                                                {/* COLUMNA 4: CONTACTO DE EMERGENCIA */}
-                                                <div className="space-y-5">
                                                     <div>
                                                         <h4 className="text-xs font-black uppercase tracking-widest text-amber-600 mb-3 flex items-center gap-2">🚨 Contacto de Emergencia</h4>
                                                         <div className="bg-amber-50/50 rounded-2xl p-5 space-y-3">
