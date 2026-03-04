@@ -1201,145 +1201,180 @@ export default function AdminDashboard({ params }) {
 
                                 {isTeacherModalOpen && (
                                     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-institutional-blue/40 backdrop-blur-md animate-in fade-in duration-200">
-                                        <form onSubmit={handleSaveTeacher} className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300 overflow-y-auto">
+                                        <form onSubmit={handleSaveTeacher} className="bg-white w-full max-w-[95vw] lg:max-w-7xl max-h-[90vh] rounded-[40px] shadow-2xl p-8 lg:p-10 relative animate-in zoom-in-95 duration-300 overflow-y-auto flex flex-col">
                                             <button type="button" onClick={() => { setIsTeacherModalOpen(false); setEditingTeacher(null); }} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-xl transition-colors">
                                                 <X size={24} className="text-gray-400" />
                                             </button>
-                                            <h3 className="text-2xl font-black text-gray-800 mb-8">{editingTeacher ? 'Editar Docente' : 'Nuevo Docente / Administrativo'}</h3>
+                                            <div className="mb-8">
+                                                <h3 className="text-2xl font-black text-gray-800 flex items-center gap-3">
+                                                    <UserPlus size={28} className="text-institutional-blue" />
+                                                    {editingTeacher ? 'Editar Personal' : 'Nuevo Docente / Administrativo'}
+                                                </h3>
+                                                <p className="text-sm text-gray-500 font-medium mt-1">Captura de información institucional, médica y de contacto</p>
+                                            </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                                <div className="space-y-6">
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nombre Completo</label>
-                                                        <input name="nombre" defaultValue={editingTeacher?.nombre} required className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ej. Juan Pérez" />
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Tipo de Documento</label>
-                                                            <select name="tipo_documento" defaultValue={editingTeacher?.tipo_documento} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700">
-                                                                <option>CC</option>
-                                                                <option>CE</option>
-                                                                <option>PA</option>
-                                                            </select>
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Número de Documento</label>
-                                                            <input name="numero_documento" defaultValue={editingTeacher?.numero_documento} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
-                                                        </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Fecha de Nacimiento <span className="text-gray-300 normal-case">(Opcional)</span></label>
-                                                            <input type="date" name="fecha_nacimiento" defaultValue={editingTeacher?.fecha_nacimiento} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dirección <span className="text-gray-300 normal-case">(Opcional)</span></label>
-                                                            <input name="direccion" defaultValue={editingTeacher?.direccion} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ej. Calle 123 #45-67" />
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email (Acceso)</label>
-                                                        <input name="email" type="email" defaultValue={editingTeacher?.email} required disabled={editingTeacher} className={`w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 ${editingTeacher ? 'opacity-50' : ''}`} />
-                                                    </div>
-                                                    {!editingTeacher && (
-                                                        <div className="space-y-2">
-                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contraseña Temporal</label>
-                                                            <div className="relative">
-                                                                <input name="password" type={showPassword ? 'text' : 'password'} required className="w-full bg-gray-50 border-none rounded-2xl p-4 pr-14 font-bold text-gray-700" />
-                                                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-                                                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                                                </button>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1">
+                                                {/* COLUMNA 1: DATOS PERSONALES Y ACCESO */}
+                                                <div className="space-y-5">
+                                                    <div>
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-3 flex items-center gap-2">👤 Datos Personales</h4>
+                                                        <div className="bg-blue-50/50 rounded-2xl p-5 space-y-3">
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nombre Completo *</label>
+                                                                <input name="nombre" defaultValue={editingTeacher?.nombre} required className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ej. Juan Pérez" />
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Tipo Doc.</label>
+                                                                    <select name="tipo_documento" defaultValue={editingTeacher?.tipo_documento} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                                                        <option>CC</option><option>CE</option><option>PA</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">N° Documento</label>
+                                                                    <input name="numero_documento" defaultValue={editingTeacher?.numero_documento} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                                                                </div>
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nacimiento</label>
+                                                                    <input type="date" name="fecha_nacimiento" defaultValue={editingTeacher?.fecha_nacimiento} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dirección</label>
+                                                                    <input name="direccion" defaultValue={editingTeacher?.direccion} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ej. Calle 123" />
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    )}
+                                                    </div>
+
+                                                    <div>
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-purple-600 mb-3 flex items-center gap-2">🔐 Acceso al Sistema</h4>
+                                                        <div className="bg-purple-50/50 rounded-2xl p-5 space-y-3">
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email Académico *</label>
+                                                                <input name="email" type="email" defaultValue={editingTeacher?.email} required disabled={editingTeacher} className={`w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-purple-500 outline-none ${editingTeacher ? 'opacity-50 cursor-not-allowed' : ''}`} placeholder="docente@colegio.edu.co" />
+                                                            </div>
+                                                            {!editingTeacher && (
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contraseña Temporal *</label>
+                                                                    <div className="relative">
+                                                                        <input name="password" type={showPassword ? 'text' : 'password'} required className="w-full bg-white border border-gray-200 rounded-xl p-3 pr-12 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-purple-500 outline-none" />
+                                                                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                                                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
 
-                                                <div className="space-y-6">
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Rol Institucional</label>
-                                                        <select name="rol" defaultValue={editingTeacher?.rol} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700">
-                                                            <option value="teacher">Docente</option>
-                                                            <option value="coordinator">Coordinación</option>
-                                                            <option value="secretary">Secretaría</option>
-                                                            <option value="treasury">Tesorería</option>
-                                                            <option value="admin">Rectoría (Admin)</option>
-                                                            <option value="superadmin">Desarrollador (Superadmin)</option>
-                                                        </select>
+                                                {/* COLUMNA 2: INSTITUCIONAL Y REDES SOCIALES */}
+                                                <div className="space-y-5">
+                                                    <div>
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-indigo-600 mb-3 flex items-center gap-2">🏫 Rol Institucional</h4>
+                                                        <div className="bg-indigo-50/50 rounded-2xl p-5 space-y-3">
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Permisos de Sistema</label>
+                                                                <select name="rol" defaultValue={editingTeacher?.rol} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                                                    <option value="teacher">Docente</option>
+                                                                    <option value="coordinator">Coordinación</option>
+                                                                    <option value="secretary">Secretaría</option>
+                                                                    <option value="treasury">Tesorería</option>
+                                                                    <option value="admin">Rectoría (Admin)</option>
+                                                                    <option value="superadmin">Desarrollador (Superadmin)</option>
+                                                                </select>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Cargo / Especialidad</label>
+                                                                <input name="specialty" defaultValue={editingTeacher?.specialty} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ej. Matemáticas, Coordinador" />
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Foto de Perfil</label>
+                                                                <input type="file" name="photo_file" className="w-full text-xs bg-white border border-gray-200 rounded-xl p-2 focus:ring-2 focus:ring-indigo-500 outline-none" accept="image/*" />
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Especialidad / Cargo</label>
-                                                        <input name="specialty" defaultValue={editingTeacher?.specialty} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ej. Matemáticas, Coordinador Académico" />
+
+                                                    <div>
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-teal-600 mb-3 flex items-center gap-2">🌐 Redes Sociales (Opcional)</h4>
+                                                        <div className="bg-teal-50/50 rounded-2xl p-5 space-y-3">
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Facebook URL</label>
+                                                                    <input name="facebook_url" type="url" defaultValue={editingTeacher?.facebook_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://fb.com/..." />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Instagram URL</label>
+                                                                    <input name="instagram_url" type="url" defaultValue={editingTeacher?.instagram_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://ig.com/..." />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">LinkedIn URL</label>
+                                                                    <input name="linkedin_url" type="url" defaultValue={editingTeacher?.linkedin_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://linkedin.com/..." />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Twitter / X URL</label>
+                                                                    <input name="twitter_url" type="url" defaultValue={editingTeacher?.twitter_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://x.com/..." />
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Foto</label>
-                                                        <input type="file" name="photo_file" className="w-full text-xs" accept="image/*" />
+                                                </div>
+
+                                                {/* COLUMNA 3: MÉDICA Y EMERGENCIAS */}
+                                                <div className="space-y-5">
+                                                    <div>
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-rose-600 mb-3 flex items-center gap-2">⚕️ Datos Médicos</h4>
+                                                        <div className="bg-rose-50/50 rounded-2xl p-5 space-y-3">
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grupo Sanguíneo</label>
+                                                                    <input name="grupo_sanguineo" defaultValue={editingTeacher?.grupo_sanguineo} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Ej. O+" />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">EPS / Seguro</label>
+                                                                    <input name="eps_salud" defaultValue={editingTeacher?.eps_salud} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Sanitas..." />
+                                                                </div>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Alergias</label>
+                                                                <textarea name="alergias" defaultValue={editingTeacher?.alergias} rows={2} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Ninguna conocida" />
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Condiciones Médicas</label>
+                                                                <textarea name="condiciones_medicas" defaultValue={editingTeacher?.condiciones_medicas} rows={2} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Ninguna" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-amber-600 mb-3 flex items-center gap-2">🚨 Contacto de Emergencia</h4>
+                                                        <div className="bg-amber-50/50 rounded-2xl p-5 space-y-3">
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nombre del Contacto</label>
+                                                                <input name="acudiente_nombre" defaultValue={editingTeacher?.acudiente_nombre} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Nombre completo" />
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Parentesco</label>
+                                                                    <input name="acudiente_parentesco" defaultValue={editingTeacher?.acudiente_parentesco} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Madre..." />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Teléfono</label>
+                                                                    <input name="acudiente_telefono" type="tel" defaultValue={editingTeacher?.acudiente_telefono} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="mt-8 border-t border-gray-100 pt-8">
-                                                <h4 className="text-xs font-black text-gray-800 uppercase tracking-widest mb-6">Información Médica y Emergencias</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grupo Sanguíneo (RH)</label>
-                                                        <input name="grupo_sanguineo" defaultValue={editingTeacher?.grupo_sanguineo} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ej. O+" />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">EPS / Seguro Médico</label>
-                                                        <input name="eps_salud" defaultValue={editingTeacher?.eps_salud} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Alergias</label>
-                                                        <input name="alergias" defaultValue={editingTeacher?.alergias} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ninguna" />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Condiciones Médicas</label>
-                                                        <input name="condiciones_medicas" defaultValue={editingTeacher?.condiciones_medicas} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ninguna" />
-                                                    </div>
-                                                    <div className="space-y-2 mb-4 md:col-span-2 mt-4">
-                                                        <p className="font-bold text-sm text-gray-800 border-b border-gray-100 pb-2">Contacto de Emergencia</p>
-                                                    </div>
-                                                    <div className="space-y-2 mt-[-1rem]">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nombre del Contacto</label>
-                                                        <input name="acudiente_nombre" defaultValue={editingTeacher?.acudiente_nombre} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Nombre completo" />
-                                                    </div>
-                                                    <div className="space-y-2 mt-[-1rem]">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Parentesco o Relación</label>
-                                                        <input name="acudiente_parentesco" defaultValue={editingTeacher?.acudiente_parentesco} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ej. Esposo(a), Madre" />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Teléfono de Emergencia</label>
-                                                        <input name="acudiente_telefono" type="tel" defaultValue={editingTeacher?.acudiente_telefono} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-8 border-t border-gray-100 pt-8">
-                                                <h4 className="text-xs font-black text-gray-800 uppercase tracking-widest mb-6">Redes Sociales (Opcional)</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Facebook URL</label>
-                                                        <input name="facebook_url" type="url" defaultValue={editingTeacher?.facebook_url} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 placeholder-gray-300" placeholder="https://facebook.com/..." />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Instagram URL</label>
-                                                        <input name="instagram_url" type="url" defaultValue={editingTeacher?.instagram_url} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 placeholder-gray-300" placeholder="https://instagram.com/..." />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">LinkedIn URL</label>
-                                                        <input name="linkedin_url" type="url" defaultValue={editingTeacher?.linkedin_url} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 placeholder-gray-300" placeholder="https://linkedin.com/in/..." />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Twitter / X URL</label>
-                                                        <input name="twitter_url" type="url" defaultValue={editingTeacher?.twitter_url} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 placeholder-gray-300" placeholder="https://x.com/..." />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-10 flex gap-4">
-                                                <button type="button" onClick={() => { setIsTeacherModalOpen(false); setEditingTeacher(null); }} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest">Cancelar</button>
-                                                <button type="submit" disabled={uploading} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all ${uploading ? 'bg-gray-400' : 'bg-institutional-blue shadow-blue-500/20'}`}>
-                                                    {uploading ? 'Guardando...' : editingTeacher ? 'Actualizar Docente' : 'Crear Docente'}
+                                            {/* Botones */}
+                                            <div className="flex gap-4 mt-6 sticky bottom-0 bg-white pt-4 border-t border-gray-100">
+                                                <button type="button" onClick={() => { setIsTeacherModalOpen(false); setEditingTeacher(null); }} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest transition-colors hover:bg-gray-200">Cancelar</button>
+                                                <button type="submit" disabled={uploading} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all ${uploading ? 'bg-gray-400' : 'bg-institutional-blue shadow-blue-500/20 hover:scale-[1.02]'}`}>
+                                                    {uploading ? 'Guardando...' : editingTeacher ? 'Actualizar Personal' : 'Crear Registro'}
                                                 </button>
                                             </div>
                                         </form>

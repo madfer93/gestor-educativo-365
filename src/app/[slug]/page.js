@@ -4,6 +4,7 @@ import ChatIA from "@/components/ChatIA";
 import SchoolNavbar from "@/components/SchoolNavbar";
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import Image from "next/image";
 
 export default async function SchoolLanding({ params, searchParams }) {
     if (searchParams?.code) {
@@ -35,11 +36,13 @@ export default async function SchoolLanding({ params, searchParams }) {
             {/* Hero / Banner Principal */}
             <div className="relative overflow-hidden bg-white">
                 {/* Imagen del Colegio como Banner */}
-                <div className="w-full">
-                    <img
+                <div className="w-full relative h-[60vh] min-h-[400px]">
+                    <Image
                         src={school.banner_url || "/latinoamericano/colegio2.jpg"}
                         alt="Banner Institucional"
-                        className="w-full h-auto object-cover shadow-inner"
+                        fill
+                        priority
+                        className="object-cover shadow-inner"
                     />
                 </div>
 
