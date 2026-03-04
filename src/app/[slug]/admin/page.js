@@ -3107,8 +3107,14 @@ export default function AdminDashboard({ params }) {
                                                             <option value="8-9">Grados 8-9</option>
                                                             <option value="10-11">Grados 10-11</option>
                                                         </optgroup>
-                                                        <optgroup label="Presencial (Grados Regulares)">
-                                                            {schoolConfig?.grados?.map(g => <option key={g} value={g}>{g}</option>)}
+                                                        <optgroup label="Preescolar (Presencial)">
+                                                            {['Pre-jardín', 'Jardín', 'Transición'].map(g => <option key={g} value={g}>{g}</option>)}
+                                                        </optgroup>
+                                                        <optgroup label="Primaria (Presencial)">
+                                                            {['1°', '2°', '3°', '4°', '5°'].map(g => <option key={g} value={g}>{g}</option>)}
+                                                        </optgroup>
+                                                        <optgroup label="Bachillerato (Presencial)">
+                                                            {['6°', '7°', '8°', '9°', '10°', '11°'].map(g => <option key={g} value={g}>{g}</option>)}
                                                         </optgroup>
                                                     </select>
                                                 </div>
