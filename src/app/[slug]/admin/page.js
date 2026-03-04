@@ -3621,8 +3621,8 @@ export default function AdminDashboard({ params }) {
                                                 <input name="materia" defaultValue={gradeActivityTitle || editingGrade?.materia} required placeholder="Ej: Matemáticas" className={`w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none ${gradeActivityTitle ? 'bg-blue-50 text-institutional-blue' : ''}`} readOnly={!!gradeActivityTitle} />
                                             </div>
                                             <div>
-                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Nota (0.0 - 5.0)</label>
-                                                <input name="nota" type="number" step="0.1" min="0" max="5" defaultValue={editingGrade?.nota} required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none" />
+                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Nota (0.0 - 10.0)</label>
+                                                <input name="nota" type="number" step="0.1" min="0" max="10" defaultValue={editingGrade?.nota} required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none" />
                                             </div>
                                         </div>
 

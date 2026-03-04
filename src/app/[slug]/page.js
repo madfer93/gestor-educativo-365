@@ -44,10 +44,6 @@ export default async function SchoolLanding({ params, searchParams }) {
                             fill
                             priority
                             className="object-cover shadow-inner transition-opacity duration-500"
-                            onError={(e) => {
-                                // Fallback si la imagen de Supabase/External falla
-                                console.error("Banner load error:", e);
-                            }}
                         />
                     )}
                     {!school.banner_url && !school.logo_url && (
