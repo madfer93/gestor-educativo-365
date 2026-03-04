@@ -2176,7 +2176,8 @@ export default function AdminDashboard({ params }) {
                                                     const { error } = await supabase.from('schools').update({
                                                         wompi_webhook_url: document.getElementById('wompi_webhook_url').value,
                                                         wompi_webhook_secret: document.getElementById('wompi_webhook_secret').value,
-                                                        wompi_url: document.getElementById('wompi_url_integration').value
+                                                        wompi_url: document.getElementById('wompi_url_integration').value,
+                                                        wompi_test_url: document.getElementById('wompi_test_url_integration').value
                                                     }).eq('slug', params.slug);
                                                     if (error) alert("Error: " + error.message);
                                                     else { setIsSaved(true); setTimeout(() => setIsSaved(false), 2000); fetchSchoolConfig(); }
@@ -2226,9 +2227,15 @@ export default function AdminDashboard({ params }) {
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2 ml-1">
-                                                    Enlace / Botón de Pago Wompi <span className="text-[8px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Público</span>
+                                                    Enlace / Botón de Pago Wompi <span className="text-[8px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Público (Producción)</span>
                                                 </label>
                                                 <input id="wompi_url_integration" type="url" defaultValue={schoolConfig.wompi_url || ''} placeholder="Ej: https://checkout.wompi.co/l/..." className="w-full bg-white border border-gray-200 rounded-xl p-4 font-mono text-xs shadow-sm focus:ring-2 ring-green-200 transition-all font-bold text-gray-800" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2 ml-1">
+                                                    Enlace / Botón de Pago Wompi de Prueba <span className="text-[8px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Test / Pruebas</span>
+                                                </label>
+                                                <input id="wompi_test_url_integration" type="url" defaultValue={schoolConfig.wompi_test_url || ''} placeholder="Ej: https://checkout.wompi.co/l/test_..." className="w-full bg-white border border-gray-200 rounded-xl p-4 font-mono text-xs shadow-sm focus:ring-2 ring-amber-200 transition-all font-bold text-gray-800" />
                                             </div>
                                         </div>
                                     </div>
