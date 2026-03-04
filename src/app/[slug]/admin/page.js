@@ -323,8 +323,10 @@ export default function AdminDashboard({ params }) {
         const docs = {};
         documentosRequeridos.forEach(d => { docs[d] = form.querySelector(`[data-doc="${d}"]`)?.checked || false; });
         const v = (key) => { const val = fd.get(key); return val === '' || val === null ? null : val; };
+        // Preserve existing email when editing (disabled fields don't send values)
+        const emailValue = fd.get('email') || (editingStudent ? editingStudent.email : null);
         return {
-            nombre: fd.get('nombre'), email: fd.get('email'), grado: v('grado'), modalidad: v('modalidad'),
+            nombre: fd.get('nombre'), email: emailValue, grado: v('grado'), modalidad: v('modalidad'),
             fecha_nacimiento: v('fecha_nacimiento'), tipo_documento: v('tipo_documento'),
             numero_documento: v('numero_documento'), direccion: v('direccion'),
             grupo_sanguineo: v('grupo_sanguineo'), alergias: v('alergias'),
@@ -435,14 +437,6 @@ export default function AdminDashboard({ params }) {
 
         let finalRol = formData.get('rol') || 'teacher';
         const rawSpecialty = formData.get('specialty') || '';
-
-        if (finalRol === 'coordinator') {
-            if (rawSpecialty.toLowerCase().includes('convivencia')) {
-                finalRol = 'coordinador_convivencia';
-            } else {
-                finalRol = 'coordinador_academico';
-            }
-        }
 
         const teacherData = {
             nombre: formData.get('nombre'),
@@ -1421,7 +1415,7 @@ export default function AdminDashboard({ params }) {
                                                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Permisos de Sistema</label>
                                                                 <select name="rol" defaultValue={editingTeacher?.rol} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                                                                     <option value="teacher">Docente</option>
-                                                                    <option value="coordinator">Coordinación</option>
+                                                                    <option value="coordinador_convivencia">Coordinación Convivencia</option>
                                                                     <option value="coordinador_academico">Coordinación Académica</option>
                                                                     <option value="secretary">Secretaría</option>
                                                                     <option value="treasury">Tesorería</option>
@@ -2776,7 +2770,7 @@ export default function AdminDashboard({ params }) {
                                                 <div className="bg-purple-50/50 rounded-2xl p-5 space-y-3">
                                                     <div className="space-y-1">
                                                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email Académico *</label>
-                                                        <input name="email" type="email" required disabled={editingStudent} defaultValue={editingStudent?.email || leadToFormalize?.email || (leadToFormalize ? leadToFormalize.nombre.toLowerCase().replace(/\s/g, '.') + '@colegio.com' : '')} className={`w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-purple-500 outline-none ${editingStudent ? 'opacity-50 cursor-not-allowed' : ''}`} placeholder="estudiante@colegio.edu.co" />
+                                                        <input name="email" type="email" required={!editingStudent} readOnly={!!editingStudent} defaultValue={editingStudent?.email || leadToFormalize?.email || (leadToFormalize ? leadToFormalize.nombre.toLowerCase().replace(/\s/g, '.') + '@colegio.com' : '')} className={`w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-purple-500 outline-none ${editingStudent ? 'bg-gray-50 text-gray-500' : ''}`} placeholder="estudiante@colegio.edu.co" />
                                                     </div>
                                                     {!editingStudent && (
                                                         <div className="space-y-1">
