@@ -420,7 +420,7 @@ export default function AdminDashboard({ params }) {
         setUploading(true);
         const formData = new FormData(e.target);
 
-        let photoUrl = formData.get('public_photo_url');
+        let photoUrl = formData.get('public_photo_url') || (editingTeacher ? editingTeacher.public_photo_url : null);
         const photoFile = e.target.photo_file?.files[0];
 
         if (photoFile) {
@@ -1349,7 +1349,7 @@ export default function AdminDashboard({ params }) {
                                                 <p className="text-sm text-gray-500 font-medium mt-1">Captura de información institucional, médica y de contacto</p>
                                             </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 flex-1">
                                                 {/* COLUMNA 1: DATOS PERSONALES Y ACCESO */}
                                                 <div className="space-y-5">
                                                     <div>
@@ -1383,6 +1383,10 @@ export default function AdminDashboard({ params }) {
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </div>
+
+                                                {/* COLUMNA 2: ACCESO AL SISTEMA */}
+                                                <div className="space-y-5">
 
                                                     <div>
                                                         <h4 className="text-xs font-black uppercase tracking-widest text-purple-600 mb-3 flex items-center gap-2">🔐 Acceso al Sistema</h4>
@@ -1404,75 +1408,64 @@ export default function AdminDashboard({ params }) {
                                                             )}
                                                         </div>
                                                     </div>
-                                                </div>
 
-                                                {/* COLUMNA 2: INSTITUCIONAL Y REDES SOCIALES */}
-                                                <div className="space-y-5">
-                                                    <div>
-                                                        <h4 className="text-xs font-black uppercase tracking-widest text-indigo-600 mb-3 flex items-center gap-2">🏫 Rol Institucional</h4>
-                                                        <div className="bg-indigo-50/50 rounded-2xl p-5 space-y-3">
-                                                            <div className="space-y-1">
-                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Permisos de Sistema</label>
-                                                                <select name="rol" defaultValue={editingTeacher?.rol} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                                                                    <option value="teacher">Docente</option>
-                                                                    <option value="coordinador_convivencia">Coordinación Convivencia</option>
-                                                                    <option value="coordinador_academico">Coordinación Académica</option>
-                                                                    <option value="secretary">Secretaría</option>
-                                                                    <option value="treasury">Tesorería</option>
-                                                                    <option value="admin">Rectoría (Admin)</option>
-                                                                    <option value="superadmin">Desarrollador (Superadmin)</option>
-                                                                </select>
-                                                            </div>
-                                                            <div className="space-y-1">
-                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Cargo / Especialidad</label>
-                                                                <input name="specialty" defaultValue={editingTeacher?.specialty} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ej. Matemáticas, Coordinador" />
-                                                            </div>
-                                                            <div className="space-y-1">
-                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Foto de Perfil</label>
-                                                                <input type="file" name="photo_file" className="w-full text-xs bg-white border border-gray-200 rounded-xl p-2 focus:ring-2 focus:ring-indigo-500 outline-none" accept="image/*" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div>
-                                                        <h4 className="text-xs font-black uppercase tracking-widest text-teal-600 mb-3 flex items-center gap-2">🌐 Redes Sociales (Opcional)</h4>
-                                                        <div className="bg-teal-50/50 rounded-2xl p-5 space-y-3">
-                                                            <div className="grid grid-cols-2 gap-3">
+                                                    {/* Rol Institucional dentro de Col 2 */}
+                                                    <div className="space-y-5">
+                                                        <div>
+                                                            <h4 className="text-xs font-black uppercase tracking-widest text-indigo-600 mb-3 flex items-center gap-2">🏫 Rol Institucional</h4>
+                                                            <div className="bg-indigo-50/50 rounded-2xl p-5 space-y-3">
                                                                 <div className="space-y-1">
-                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Facebook URL</label>
-                                                                    <input name="facebook_url" type="url" defaultValue={editingTeacher?.facebook_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://fb.com/..." />
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Permisos de Sistema</label>
+                                                                    <select name="rol" defaultValue={editingTeacher?.rol} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                                                        <option value="teacher">Docente</option>
+                                                                        <option value="coordinador_convivencia">Coordinación Convivencia</option>
+                                                                        <option value="coordinador_academico">Coordinación Académica</option>
+                                                                        <option value="secretary">Secretaría</option>
+                                                                        <option value="treasury">Tesorería</option>
+                                                                        <option value="admin">Rectoría (Admin)</option>
+                                                                        <option value="superadmin">Desarrollador (Superadmin)</option>
+                                                                    </select>
                                                                 </div>
                                                                 <div className="space-y-1">
-                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Instagram URL</label>
-                                                                    <input name="instagram_url" type="url" defaultValue={editingTeacher?.instagram_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://ig.com/..." />
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Cargo / Especialidad</label>
+                                                                    <input name="specialty" defaultValue={editingTeacher?.specialty} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ej. Matemáticas, Coordinador" />
                                                                 </div>
                                                                 <div className="space-y-1">
-                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">LinkedIn URL</label>
-                                                                    <input name="linkedin_url" type="url" defaultValue={editingTeacher?.linkedin_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://linkedin.com/..." />
-                                                                </div>
-                                                                <div className="space-y-1">
-                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Twitter / X URL</label>
-                                                                    <input name="twitter_url" type="url" defaultValue={editingTeacher?.twitter_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://x.com/..." />
+                                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Foto de Perfil</label>
+                                                                    <input type="file" name="photo_file" className="w-full text-xs bg-white border border-gray-200 rounded-xl p-2 focus:ring-2 focus:ring-indigo-500 outline-none" accept="image/*" />
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
 
-                                                {/* SECCIÓN FULL-WIDTH: BIOGRAFÍA PROFESIONAL */}
-                                                <div className="col-span-1 md:col-span-2 lg:col-span-3">
-                                                    <h4 className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-3 flex items-center gap-2">📝 Biografía Profesional</h4>
-                                                    <div className="bg-emerald-50/50 rounded-2xl p-5 space-y-3">
-                                                        <div className="space-y-1">
-                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Presentación Pública</label>
-                                                            <textarea name="public_bio" defaultValue={editingTeacher?.public_bio} rows={4} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none" placeholder="Escribe un resumen profesional: formación académica, experiencia, logros y pasión por la educación..." />
+                                                    {/* COLUMNA 3: REDES SOCIALES + MÉDICOS */}
+                                                    <div className="space-y-5">
+                                                        <div>
+                                                            <h4 className="text-xs font-black uppercase tracking-widest text-teal-600 mb-3 flex items-center gap-2">🌐 Redes Sociales (Opcional)</h4>
+                                                            <div className="bg-teal-50/50 rounded-2xl p-5 space-y-3">
+                                                                <div className="grid grid-cols-2 gap-3">
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Facebook URL</label>
+                                                                        <input name="facebook_url" type="url" defaultValue={editingTeacher?.facebook_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://fb.com/..." />
+                                                                    </div>
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Instagram URL</label>
+                                                                        <input name="instagram_url" type="url" defaultValue={editingTeacher?.instagram_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://ig.com/..." />
+                                                                    </div>
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">LinkedIn URL</label>
+                                                                        <input name="linkedin_url" type="url" defaultValue={editingTeacher?.linkedin_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://linkedin.com/..." />
+                                                                    </div>
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Twitter / X URL</label>
+                                                                        <input name="twitter_url" type="url" defaultValue={editingTeacher?.twitter_url} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-xs placeholder-gray-300 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="https://x.com/..." />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <p className="text-[10px] text-gray-400 font-medium">Esta biografía será visible en la página pública del colegio para estudiantes y padres de familia.</p>
                                                     </div>
-                                                </div>
 
-                                                {/* COLUMNA 3: MÉDICA Y EMERGENCIAS */}
-                                                <div className="space-y-5">
+                                                    {/* Datos Médicos dentro de Col 3 */}
                                                     <div>
                                                         <h4 className="text-xs font-black uppercase tracking-widest text-rose-600 mb-3 flex items-center gap-2">⚕️ Datos Médicos</h4>
                                                         <div className="bg-rose-50/50 rounded-2xl p-5 space-y-3">
@@ -1496,7 +1489,10 @@ export default function AdminDashboard({ params }) {
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </div>
 
+                                                {/* COLUMNA 4: CONTACTO DE EMERGENCIA */}
+                                                <div className="space-y-5">
                                                     <div>
                                                         <h4 className="text-xs font-black uppercase tracking-widest text-amber-600 mb-3 flex items-center gap-2">🚨 Contacto de Emergencia</h4>
                                                         <div className="bg-amber-50/50 rounded-2xl p-5 space-y-3">
@@ -1516,6 +1512,18 @@ export default function AdminDashboard({ params }) {
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </div>
+                                            </div>
+
+                                            {/* SECCIÓN FULL-WIDTH ABAJO: BIOGRAFÍA PROFESIONAL */}
+                                            <div className="mt-6">
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-3 flex items-center gap-2">📝 Biografía Profesional</h4>
+                                                <div className="bg-emerald-50/50 rounded-2xl p-5 space-y-3">
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Presentación Pública</label>
+                                                        <textarea name="public_bio" defaultValue={editingTeacher?.public_bio} rows={3} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none" placeholder="Escribe un resumen profesional: formación académica, experiencia, logros y pasión por la educación..." />
+                                                    </div>
+                                                    <p className="text-[10px] text-gray-400 font-medium">Esta biografía será visible en la página pública del colegio para estudiantes y padres de familia.</p>
                                                 </div>
                                             </div>
 
