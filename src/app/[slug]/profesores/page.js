@@ -2,10 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Calendar, CheckSquare, PlusCircle, Users, Clock, FileText, BarChart2, Heart, UserCircle, Save, Loader2, Camera } from 'lucide-react';
 import WellbeingModule from "@/components/WellbeingModule";
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default function ProfesoresDashboard({ params }) {
-    const supabase = createClientComponentClient();
     const [activeTab, setActiveTab] = useState('dashboard');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
