@@ -95,7 +95,8 @@ export async function GET(request) {
                 case "bursar":
                     return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/tesoreria`);
                 case "coordinator":
-                    return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/coordinacion`);
+                case "coordinador_academico":
+                    return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/admin`);
                 case "teacher":
                     return NextResponse.redirect(`${requestUrl.origin}${dashboardPath}/profesores`);
                 case "student":
