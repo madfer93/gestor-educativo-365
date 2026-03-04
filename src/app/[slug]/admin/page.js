@@ -361,17 +361,28 @@ export default function AdminDashboard({ params }) {
 
         const v = (key) => { const val = formData.get(key); return val === '' || val === null ? null : val; };
 
+        let finalRol = formData.get('rol') || 'teacher';
+        const rawSpecialty = formData.get('specialty') || '';
+
+        if (finalRol === 'coordinator') {
+            if (rawSpecialty.toLowerCase().includes('convivencia')) {
+                finalRol = 'coordinador_convivencia';
+            } else {
+                finalRol = 'coordinador_academico';
+            }
+        }
+
         const teacherData = {
             nombre: formData.get('nombre'),
             tipo_documento: v('tipo_documento'),
             numero_documento: v('numero_documento'),
             fecha_nacimiento: v('fecha_nacimiento'),
             direccion: v('direccion'),
-            specialty: formData.get('specialty'),
+            specialty: rawSpecialty,
             public_bio: v('public_bio'),
             public_photo_url: photoUrl,
             email: formData.get('email'),
-            rol: formData.get('rol') || 'teacher',
+            rol: finalRol,
             acudiente_nombre: v('acudiente_nombre'),
             acudiente_parentesco: v('acudiente_parentesco'),
             acudiente_telefono: v('acudiente_telefono'),
