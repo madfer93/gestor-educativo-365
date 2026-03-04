@@ -3095,14 +3095,19 @@ export default function AdminDashboard({ params }) {
                                             <div className="grid grid-cols-3 gap-3">
                                                 <div className="space-y-1">
                                                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grado</label>
-                                                    <select name="grado" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 text-xs">
-                                                        <option value="">Todos</option>
-                                                        <optgroup label="Ciclos">
-                                                            <option value="Ciclo III">Ciclo III</option>
-                                                            <option value="Ciclo IV">Ciclo IV</option>
-                                                            <option value="Ciclo V">Ciclo V</option>
+                                                    <select name="grado" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 text-xs text-ellipsis pr-8 focus:ring-2 focus:ring-amber-200 outline-none">
+                                                        <option value="">Todos (Toda la institución)</option>
+                                                        <optgroup label="Sabatina y A Distancia (Ciclos)">
+                                                            <option value="Ciclo III">Ciclo III (6º - 7º)</option>
+                                                            <option value="Ciclo IV">Ciclo IV (8º - 9º)</option>
+                                                            <option value="Ciclo V">Ciclo V (10º - 11º)</option>
                                                         </optgroup>
-                                                        <optgroup label="Grados">
+                                                        <optgroup label="A Distancia (6º a 11º)">
+                                                            <option value="6-7">Grados 6-7</option>
+                                                            <option value="8-9">Grados 8-9</option>
+                                                            <option value="10-11">Grados 10-11</option>
+                                                        </optgroup>
+                                                        <optgroup label="Presencial (Grados Regulares)">
                                                             {schoolConfig?.grados?.map(g => <option key={g} value={g}>{g}</option>)}
                                                         </optgroup>
                                                     </select>
