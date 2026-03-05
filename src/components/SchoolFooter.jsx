@@ -39,11 +39,8 @@ export default function SchoolFooter({ school, slug }) {
                                 "{school.slogan}"
                             </p>
                         )}
-                        <p className="text-white/40 text-xs font-medium leading-relaxed mb-5">
-                            {school.direccion || 'Villavicencio, Meta, Colombia'}
-                        </p>
                         <a
-                            href="https://wa.me/573212808022?text=Hola, necesito información"
+                            href="https://wa.me/573134111666?text=Hola, necesito información"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 shadow-lg shadow-green-600/20"

@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Clock, GraduationCap, Calendar, CheckCircle, Target, Flag, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Clock, GraduationCap, Calendar, CheckCircle, Target, Flag, Image as ImageIcon, Download } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
 export default function Institucion({ params }) {
     const supabase = createClient();
     const [school, setSchool] = useState(null);
     const [gallery, setGallery] = useState([]);
+    const [scheduleData, setScheduleData] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -17,6 +18,8 @@ export default function Institucion({ params }) {
                 setSchool(sData);
                 const { data: gData } = await supabase.from('school_gallery').select('*').eq('school_id', sData.id).order('created_at', { ascending: false });
                 if (gData) setGallery(gData);
+                const { data: schedData } = await supabase.from('school_schedules').select('*').eq('school_id', sData.id).order('hora_num', { ascending: true });
+                if (schedData) setScheduleData(schedData);
             }
             setLoading(false);
         }
@@ -146,6 +149,78 @@ export default function Institucion({ params }) {
                         </button>
                     </div>
                 </div>
+
+                {/* Horario General de Clases */}
+                {scheduleData.length > 0 && (
+                    <div className="mb-32">
+                        <div className="text-center mb-12">
+                            <span className="bg-purple-50 text-purple-600 text-[10px] font-black uppercase tracking-[0.3em] px-4 py-2 rounded-full mb-6 inline-block">
+                                Distribución Académica
+                            </span>
+                            <h2 className="text-4xl md:text-5xl font-black text-institutional-blue tracking-tighter mb-4">Horario General de Clases</h2>
+                        </div>
+
+                        <div className="overflow-x-auto bg-white rounded-[30px] shadow-xl border border-gray-100 p-6">
+                            <table className="w-full border-collapse text-xs">
+                                <thead>
+                                    <tr className="bg-institutional-blue text-white">
+                                        <th className="p-3 text-left font-black uppercase tracking-widest border border-blue-800">Día</th>
+                                        <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">H</th>
+                                        <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">Hora</th>
+                                        <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">6°</th>
+                                        <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">7°</th>
+                                        <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">8°</th>
+                                        <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">9°</th>
+                                        <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">10°</th>
+                                        <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">11°</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {['LUNES', 'MARTES', 'MI\u00c9RCOLES', 'JUEVES', 'VIERNES'].map((dia, dIdx) => {
+                                        const horasConfig = [
+                                            { num: 1, inicio: '6:30', fin: '7:30' },
+                                            { num: 2, inicio: '7:30', fin: '8:30' },
+                                            { num: 3, inicio: '8:30', fin: '9:30' },
+                                            { num: 0, inicio: '9:30', fin: '10:00', isBreak: true, label: 'DESCANSO' },
+                                            { num: 4, inicio: '10:00', fin: '10:55' },
+                                            { num: 0, inicio: '10:55', fin: '11:05', isBreak: true, label: 'PAUSA ACTIVA' },
+                                            { num: 5, inicio: '11:05', fin: '12:00' }
+                                        ];
+                                        const dayColor = ['bg-yellow-50', 'bg-green-50', 'bg-purple-50', 'bg-orange-50', 'bg-pink-50'][dIdx];
+                                        return horasConfig.map((hora, hIdx) => {
+                                            if (hora.isBreak) {
+                                                return (
+                                                    <tr key={dia + '-break-' + hIdx} className="bg-gray-100">
+                                                        {hIdx === 3 && <td className={"p-2 font-black text-[10px] text-gray-700 border border-gray-200 " + dayColor}></td>}
+                                                        <td className="p-2 text-center border border-gray-200"></td>
+                                                        <td className="p-2 text-center text-[10px] font-bold text-gray-400 border border-gray-200">{hora.inicio} - {hora.fin}</td>
+                                                        <td colSpan={6} className="p-2 text-center font-black text-gray-400 uppercase tracking-[0.3em] text-[10px] border border-gray-200 italic">{hora.label}</td>
+                                                    </tr>
+                                                );
+                                            }
+                                            const row = scheduleData.find(s => s.dia === dia && s.hora_num === hora.num);
+                                            const grados = ['grado_6', 'grado_7', 'grado_8', 'grado_9', 'grado_10', 'grado_11'];
+                                            return (
+                                                <tr key={dia + '-' + hora.num} className="hover:bg-blue-50/30 transition-colors">
+                                                    {hora.num === 1 && <td rowSpan={7} className={"p-3 font-black text-[10px] uppercase tracking-widest text-gray-700 border border-gray-200 text-center align-middle " + dayColor} style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{dia}</td>}
+                                                    <td className="p-2 text-center font-black text-gray-500 border border-gray-200">{hora.num}</td>
+                                                    <td className="p-2 text-center text-[10px] font-bold text-gray-400 border border-gray-200 whitespace-nowrap">{hora.inicio} - {hora.fin}</td>
+                                                    {grados.map(grado => (
+                                                        <td key={grado} className="p-1.5 border border-gray-200 text-center">
+                                                            <span className={"text-[10px] font-bold uppercase " + (row?.[grado] ? 'text-gray-700' : 'text-gray-200')}>
+                                                                {row?.[grado] || '\u2014'}
+                                                            </span>
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            );
+                                        });
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
 
                 {/* Galería Fotográfica */}
                 {gallery && gallery.length > 0 && (

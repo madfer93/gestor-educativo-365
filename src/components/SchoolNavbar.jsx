@@ -8,40 +8,18 @@ const TikTokIcon = ({ size = 12 }) => (
     </svg>
 );
 
-const MENU_ITEMS = [
-    {
-        title: "PREESCOLAR-PRIMARIA",
-        items: ["Prejardín", "Transición", "Primero", "Segundo", "Tercero", "Cuarto", "Quinto"]
-    },
-    {
-        title: "SEXTO",
-        items: ["Biología", "Empresarial", "Química", "Inglés", "Ética y Religión", "Comportamiento", "Sociales", "Contabilidad", "Español", "Matemáticas", "Sistemas"]
-    },
-    {
-        title: "SÉPTIMO",
-        items: ["Biología", "Empresarial", "Química", "Inglés", "Ética y Religión", "Comportamiento", "Sociales", "Contabilidad", "Español", "Matemáticas", "Sistemas"]
-    },
-    {
-        title: "OCTAVO",
-        items: ["Biología", "Empresarial", "Química", "Inglés", "Sociales", "Español", "Matemáticas", "Sistemas"]
-    },
-    {
-        title: "NOVENO",
-        items: ["Biología", "Química", "Física", "Español", "Matemáticas", "Sistemas"]
-    },
-    {
-        title: "DÉCIMO",
-        items: ["Física", "Química", "Filosofía", "Matemáticas", "Sistemas"]
-    },
-    {
-        title: "ONCE",
-        items: ["Física", "Química", "Filosofía", "Matemáticas", "Sistemas"]
-    }
+const NAV_LINKS = [
+    { href: 'institucion', label: '🏛️ Institución' },
+    { href: 'docentes', label: '👨‍🏫 Docentes' },
+    { href: 'galeria', label: '📸 Galería' },
+    { href: 'noticias', label: '📰 Noticias' },
+    { href: 'costos', label: '📊 Costos' },
+    { href: 'pagos', label: '💳 Pagos' },
+    { href: 'contacto', label: '📞 Contacto' },
 ];
 
 export default function SchoolNavbar({ schoolName, logoUrl, brandingColors, slug, socialLinks }) {
     const [isOpen, setIsOpen] = useState(false);
-    const [activeDropdown, setActiveDropdown] = useState(null);
 
     // Default colors if not provided
     const primary = brandingColors?.primary || '#0f172a'; // Default slate-900
@@ -73,52 +51,36 @@ export default function SchoolNavbar({ schoolName, logoUrl, brandingColors, slug
             </div>
 
             {/* Main Header */}
-            <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div className="container mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
                 {/* Logo Area */}
-                <a href={`/${slug}`} className="flex items-center gap-4 group">
-                    <div className="w-20 h-20 bg-white rounded-full p-1.5 shadow-2xl flex items-center justify-center overflow-hidden border-2 border-white/20">
+                <a href={`/${slug}`} className="flex items-center gap-3 md:gap-4 group shrink-0">
+                    <div className="w-14 h-14 md:w-20 md:h-20 bg-white rounded-full p-1 md:p-1.5 shadow-2xl flex items-center justify-center overflow-hidden border-2 border-white/20">
                         {logoUrl ? (
                             <img src={logoUrl} alt="Logo" className="w-full h-full object-contain transition-transform group-hover:scale-110" />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center font-black text-blue-900 text-3xl">L</div>
+                            <div className="w-full h-full flex items-center justify-center font-black text-blue-900 text-2xl md:text-3xl">L</div>
                         )}
                     </div>
                     <div className="leading-tight">
-                        <h1 className="text-white font-black text-xl md:text-3xl uppercase tracking-tighter transition-opacity opacity-90 group-hover:opacity-100 drop-shadow-md">
+                        <h1 className="text-white font-black text-base md:text-xl lg:text-3xl uppercase tracking-tighter transition-opacity opacity-90 group-hover:opacity-100 drop-shadow-md">
                             {schoolName || "Colegio Latinoamericano"}
                         </h1>
                     </div>
                 </a>
 
-                {/* Desktop Quick Nav (Centered) - MOVED HERE */}
-                <div className="hidden xl:flex items-center gap-6">
-                    <a href={`/${slug}/institucion`} className="text-white/80 hover:text-white font-bold text-xs uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
-                        🏛️ Institución
-                    </a>
-                    <a href={`/${slug}/docentes`} className="text-white/80 hover:text-white font-bold text-xs uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
-                        👨‍🏫 Docentes
-                    </a>
-                    <a href={`/${slug}/galeria`} className="text-white/80 hover:text-white font-bold text-xs uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
-                        📸 Galería
-                    </a>
-                    <a href={`/${slug}/noticias`} className="text-white/80 hover:text-white font-bold text-xs uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
-                        📰 Noticias
-                    </a>
-                    <a href={`/${slug}/costos`} className="text-white/80 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
-                        📊 Costos
-                    </a>
-                    <a href={`/${slug}/pagos`} className="text-white/80 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
-                        💳 Pagos
-                    </a>
-                    <a href={`/${slug}/contacto`} className="text-white/80 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center gap-2 hover:underline decoration-2 underline-offset-4">
-                        📞 Contacto
-                    </a>
+                {/* Desktop Quick Nav */}
+                <div className="hidden lg:flex items-center gap-4 xl:gap-6">
+                    {NAV_LINKS.map((link) => (
+                        <a key={link.href} href={`/${slug}/${link.href}`} className="text-white/80 hover:text-white font-bold text-[10px] xl:text-xs uppercase tracking-widest transition-colors flex items-center gap-1.5 hover:underline decoration-2 underline-offset-4 whitespace-nowrap">
+                            {link.label}
+                        </a>
+                    ))}
                 </div>
 
-                {/* Desktop Login Button (Acceso Principal) */}
-                <div className="hidden lg:block">
+                {/* Desktop Login Button */}
+                <div className="hidden lg:block shrink-0 ml-4">
                     <a href={`/${slug}/login`}
-                        className="text-white px-6 py-2.5 rounded-full font-black text-xs uppercase tracking-widest shadow-lg flex items-center gap-2 transition-all hover:scale-105 hover:brightness-110"
+                        className="text-white px-5 py-2.5 rounded-full font-black text-xs uppercase tracking-widest shadow-lg flex items-center gap-2 transition-all hover:scale-105 hover:brightness-110"
                         style={{ backgroundColor: secondary }}
                     >
                         <Lock size={14} /> Portal Académico
@@ -131,60 +93,61 @@ export default function SchoolNavbar({ schoolName, logoUrl, brandingColors, slug
                 </button>
             </div>
 
-            {/* Navigation Menus */}
-            <div className={`lg:block ${isOpen ? 'block' : 'hidden'} border-t border-white/10`} style={{ backgroundColor: primary }}>
+            {/* Desktop Grade Bar with Dropdowns - Estilo blog original */}
+            <div className="hidden lg:block border-t border-white/10" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
+                <div className="container mx-auto px-6 flex items-center justify-center gap-0">
+                    {[
+                        { label: 'PREESCOLAR-PRIMARIA', items: ['Prejardín', 'Transición', 'Primero', 'Segundo', 'Tercero', 'Cuarto', 'Quinto'] },
+                        { label: 'SEXTO', items: ['Horario', 'Docentes', 'Guías'] },
+                        { label: 'SÉPTIMO', items: ['Horario', 'Docentes', 'Guías'] },
+                        { label: 'OCTAVO', items: ['Horario', 'Docentes', 'Guías'] },
+                        { label: 'NOVENO', items: ['Horario', 'Docentes', 'Guías'] },
+                        { label: 'DÉCIMO', items: ['Horario', 'Docentes', 'Guías'] },
+                        { label: 'ONCE', items: ['Horario', 'Docentes', 'Guías'] },
+                    ].map((g) => (
+                        <div key={g.label} className="relative group">
+                            <button className="flex items-center gap-1 text-white/80 hover:text-white hover:bg-white/10 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors">
+                                {g.label} <ChevronDown size={10} className="opacity-60" />
+                            </button>
+                            <div className="absolute top-full left-0 min-w-[180px] bg-white rounded-b-xl shadow-2xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60]">
+                                {g.items.map((item) => (
+                                    <a key={item} href="#" className="block px-5 py-2.5 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors first:rounded-t-xl last:rounded-b-xl uppercase tracking-wider">
+                                        {item}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
 
-
-
-                <div className="container mx-auto">
-                    <ul className="flex flex-col lg:flex-row lg:items-center lg:justify-center text-sm font-bold text-white/80">
-                        <li className="border-b lg:border-none border-white/10">
-                            <a href={`/${slug}`} className="block px-6 py-4 hover:bg-white/10 hover:text-white transition-colors">HOME</a>
+            {/* Mobile Navigation Menu */}
+            <div className={`lg:hidden overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[600px] border-t border-white/10' : 'max-h-0'}`} style={{ backgroundColor: primary }}>
+                <div className="container mx-auto px-4 py-4">
+                    <ul className="space-y-1">
+                        <li>
+                            <a href={`/${slug}`} className="block px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors font-bold text-sm uppercase tracking-wider">
+                                🏠 Home
+                            </a>
                         </li>
-
-                        {MENU_ITEMS.map((item, idx) => (
-                            <li
-                                key={idx}
-                                className="relative group border-b lg:border-none border-white/10"
-                                onMouseEnter={() => setActiveDropdown(idx)}
-                                onMouseLeave={() => setActiveDropdown(null)}
-                            >
-                                <button
-                                    className={`w-full text-left flex items-center justify-between px-6 py-4 hover:bg-white/10 hover:text-white transition-colors uppercase gap-1
-                                        ${activeDropdown === idx ? 'bg-white/10 text-white' : ''}
-                                    `}
-                                    onClick={() => setActiveDropdown(activeDropdown === idx ? null : idx)}
-                                >
-                                    {item.title}
-                                    <ChevronDown size={14} className={`transform transition-transform ${activeDropdown === idx ? 'rotate-180' : ''}`} />
-                                </button>
-
-                                {/* Dropdown */}
-                                <div className={`
-                                    lg:absolute lg:left-0 lg:top-full lg:w-56 shadow-2xl lg:rounded-b-2xl overflow-hidden transition-all duration-300 z-50
-                                    ${activeDropdown === idx ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0 lg:hidden'}
-                                `}
-                                    style={{ backgroundColor: primary }}
-                                >
-                                    <ul className="py-3">
-                                        {item.items.map((subItem, sIdx) => (
-                                            <li key={sIdx}>
-                                                <a href="#" className="block px-6 py-2.5 text-xs uppercase text-white/70 hover:text-white hover:bg-white/10 transition-colors border-l-2 border-transparent"
-                                                    style={{ borderColor: 'transparent' }}
-                                                    onMouseEnter={(e) => e.target.style.borderColor = secondary}
-                                                    onMouseLeave={(e) => e.target.style.borderColor = 'transparent'}
-                                                >
-                                                    {subItem}
-                                                </a>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
+                        {NAV_LINKS.map((link) => (
+                            <li key={link.href}>
+                                <a href={`/${slug}/${link.href}`} className="block px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors font-bold text-sm uppercase tracking-wider">
+                                    {link.label}
+                                </a>
                             </li>
                         ))}
+                        <li className="pt-3 border-t border-white/10 mt-3">
+                            <a href={`/${slug}/login`}
+                                className="flex items-center justify-center gap-2 text-white px-5 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all"
+                                style={{ backgroundColor: secondary }}
+                            >
+                                <Lock size={14} /> Portal Académico
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
-        </nav >
+        </nav>
     );
 }

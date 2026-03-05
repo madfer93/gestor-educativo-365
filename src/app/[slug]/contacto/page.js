@@ -139,7 +139,7 @@ export default async function ContactoPage({ params }) {
                                 </a>
 
                                 <a
-                                    href="https://wa.me/573212808022?text=Hola, necesito información del Colegio Latinoamericano"
+                                    href="https://wa.me/573134111666?text=Hola, necesito información del Colegio Latinoamericano"
                                     target="_blank"
                                     className="flex items-center gap-4 bg-[#25D366] text-white p-5 rounded-2xl font-bold hover:scale-[1.02] transition-all shadow-lg shadow-green-500/20"
                                 >

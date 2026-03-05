@@ -53,6 +53,10 @@ export default function AdminDashboard({ params }) {
     const [selectedStudentForGrades, setSelectedStudentForGrades] = useState(null);
     const [gradeActivityTitle, setGradeActivityTitle] = useState('');
     const [pendingActivities, setPendingActivities] = useState([]);
+    const [scheduleData, setScheduleData] = useState([]);
+    const [editingScheduleCell, setEditingScheduleCell] = useState(null);
+    const [teacherAbsences, setTeacherAbsences] = useState([]);
+    const [isAbsenceModalOpen, setIsAbsenceModalOpen] = useState(false);
     const [isPendingDropdownOpen, setIsPendingDropdownOpen] = useState(false);
 
     // Estados para Estudiantes y Modalidad
@@ -279,6 +283,77 @@ export default function AdminDashboard({ params }) {
         }
     };
 
+    const fetchSchedule = async () => {
+        const { data: school } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
+        if (school) {
+            const { data } = await supabase.from('school_schedules')
+                .select('*')
+                .eq('school_id', school.id)
+                .order('hora_num', { ascending: true });
+            setScheduleData(data || []);
+        }
+    };
+
+    const handleSaveScheduleCell = async (dia, hora_num, grado, materia, hora_inicio, hora_fin) => {
+        const { data: school } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
+        if (!school) return;
+        
+        const existing = scheduleData.find(s => s.dia === dia && s.hora_num === hora_num);
+        if (existing) {
+            const { error } = await supabase.from('school_schedules')
+                .update({ [grado]: materia })
+                .eq('id', existing.id);
+            if (error) alert('Error: ' + error.message);
+        } else {
+            const { error } = await supabase.from('school_schedules')
+                .insert([{ school_id: school.id, dia, hora_num, hora_inicio, hora_fin, [grado]: materia }]);
+            if (error) alert('Error: ' + error.message);
+        }
+        setEditingScheduleCell(null);
+        fetchSchedule();
+        fetchTeacherAbsences();
+    };
+
+    const fetchTeacherAbsences = async () => {
+        const { data: school } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
+        if (school) {
+            const { data } = await supabase.from('attendance_alerts')
+                .select('*, profiles:reporter_id(nombre, rol), student:student_id(nombre)')
+                .eq('school_id', school.id)
+                .order('created_at', { ascending: false })
+                .limit(50);
+            setTeacherAbsences(data || []);
+        }
+    };
+
+    const handleCreateAbsenceAlert = async (formData) => {
+        const { data: school } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
+        if (!school) return;
+        
+        const { error } = await supabase.from('attendance_alerts').insert([{
+            school_id: school.id,
+            reporter_id: formData.reporter_id || null,
+            student_id: formData.student_id || null,
+            motivo: formData.motivo,
+            accion_tomada: formData.accion_tomada || null,
+            estado: 'pendiente'
+        }]);
+        if (error) alert('Error: ' + error.message);
+        else {
+            setIsAbsenceModalOpen(false);
+            fetchTeacherAbsences();
+            alert('✅ Alerta registrada correctamente');
+        }
+    };
+
+    const handleUpdateAbsenceStatus = async (id, estado, accion) => {
+        const { error } = await supabase.from('attendance_alerts')
+            .update({ estado, accion_tomada: accion })
+            .eq('id', id);
+        if (error) alert('Error: ' + error.message);
+        else fetchTeacherAbsences();
+    };
+
     const handleBannerChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -301,7 +376,9 @@ export default function AdminDashboard({ params }) {
                     fetchTeachers(),
                     fetchSchoolConfig(),
                     fetchStats(),
-                    fetchPendingActivities()
+                    fetchPendingActivities(),
+                    fetchSchedule(),
+                    fetchTeacherAbsences()
                 ]);
             } catch (err) {
                 console.error("Dashboard initial load error:", err);
@@ -387,7 +464,7 @@ export default function AdminDashboard({ params }) {
                 await supabase.from('leads').update({ estado: 'Matriculado' }).eq('id', leadToFormalize.id);
             }
 
-            alert(`¡Estudiante creado!\nEmail: ${data.email}\nClave: ${password}`);
+            alert(`🎓 ¡Bienvenido al Sistema!\n\nEstudiante: ${data.nombre}\nEmail: ${data.email}\nClave: ${password}\n\n📲 Se le ha creado acceso al Portal Académico.\nComparta estas credenciales con el acudiente.`);
             setIsStudentModalOpen(false); setEditingStudent(null); setLeadToFormalize(null); fetchStudents(); fetchStats();
         } catch (err) { alert('Error: ' + err.message); }
         finally { setLoading(false); }
@@ -556,6 +633,9 @@ export default function AdminDashboard({ params }) {
 
         if (error) alert("Error: " + (error.message || error));
         else {
+            if (!editingTeacher) {
+                alert(`🧑‍🏫 ¡Bienvenido al Equipo!\n\nDocente: ${teacherData.nombre}\nEmail: ${teacherData.email}\n\n📲 Se le ha creado acceso al Portal Académico.\nComparta las credenciales con el nuevo miembro del equipo.`);
+            }
             setIsTeacherModalOpen(false);
             setEditingTeacher(null);
             fetchTeachers();
@@ -578,7 +658,16 @@ export default function AdminDashboard({ params }) {
         let imageUrl = '';
         if (photoFile) {
             try {
-                imageUrl = await uploadImage(photoFile);
+                if (photoFile.type.startsWith('video/')) {
+                    // Video: upload to Supabase Storage
+                    const fileName = 'gallery_' + Date.now() + '_' + photoFile.name.replace(/[^a-zA-Z0-9.]/g, '_');
+                    const { data: uploadData, error: uploadError } = await supabase.storage.from('gallery').upload(fileName, photoFile);
+                    if (uploadError) throw uploadError;
+                    const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(fileName);
+                    imageUrl = urlData.publicUrl;
+                } else {
+                    imageUrl = await uploadImage(photoFile);
+                }
             } catch (error) {
                 alert("Error al subir la imagen: " + error.message);
                 setUploading(false);
@@ -590,7 +679,9 @@ export default function AdminDashboard({ params }) {
         const { error } = await supabase.from('school_gallery').insert([{
             school_id: school.id,
             image_url: imageUrl,
-            title: formData.get('title') || 'Foto de Galería'
+            title: formData.get('title') || 'Foto de Galería',
+            description: formData.get('description') || null,
+            media_type: photoFile?.type?.startsWith('video/') ? 'video' : 'image'
         }]);
 
         if (error) alert("Error: " + error.message);
@@ -957,6 +1048,8 @@ export default function AdminDashboard({ params }) {
         { id: "news", label: "Noticias", icon: FileText },
         { id: "costs", label: "Costos", icon: DollarSign },
         { id: "calificaciones", label: "Calificaciones", icon: ClipboardList },
+        { id: "horarios", label: "Horarios", icon: Clock },
+        { id: "avisos", label: "Avisos", icon: AlertTriangle },
         { id: "settings", label: "Identidad", icon: Settings },
     ];
 
@@ -2022,6 +2115,221 @@ export default function AdminDashboard({ params }) {
                             </div>
                         )
                     }
+
+                    
+                    {/* TAB: Horarios de Clases */}
+                    {activeTab === "horarios" && (
+                        <div className="space-y-8">
+                            <div className="bg-white rounded-[40px] shadow-xl shadow-blue-500/5 border border-blue-50 p-10">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div>
+                                        <h2 className="text-2xl font-black text-gray-800 flex items-center gap-3">
+                                            <Clock size={28} className="text-institutional-blue" />
+                                            Horario General de Clases
+                                        </h2>
+                                        <p className="text-sm text-gray-400 font-medium mt-1">Haz clic en cualquier celda para editar la materia</p>
+                                    </div>
+                                </div>
+
+                                <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse text-xs">
+                                        <thead>
+                                            <tr className="bg-institutional-blue text-white">
+                                                <th className="p-3 text-left font-black uppercase tracking-widest border border-blue-800">Día</th>
+                                                <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">H</th>
+                                                <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">Hora</th>
+                                                <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">6°</th>
+                                                <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">7°</th>
+                                                <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">8°</th>
+                                                <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">9°</th>
+                                                <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">10°</th>
+                                                <th className="p-3 text-center font-black uppercase tracking-widest border border-blue-800">11°</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {['LUNES', 'MARTES', 'MI\u00c9RCOLES', 'JUEVES', 'VIERNES'].map((dia, dIdx) => {
+                                                const horasConfig = [
+                                                    { num: 1, inicio: '6:30', fin: '7:30' },
+                                                    { num: 2, inicio: '7:30', fin: '8:30' },
+                                                    { num: 3, inicio: '8:30', fin: '9:30' },
+                                                    { num: 0, inicio: '9:30', fin: '10:00', isBreak: true, label: 'DESCANSO' },
+                                                    { num: 4, inicio: '10:00', fin: '10:55' },
+                                                    { num: 0, inicio: '10:55', fin: '11:05', isBreak: true, label: 'PAUSA ACTIVA' },
+                                                    { num: 5, inicio: '11:05', fin: '12:00' }
+                                                ];
+                                                const dayColor = ['bg-yellow-50', 'bg-green-50', 'bg-purple-50', 'bg-orange-50', 'bg-pink-50'][dIdx];
+                                                return horasConfig.map((hora, hIdx) => {
+                                                    if (hora.isBreak) {
+                                                        return (
+                                                            <tr key={dia + '-break-' + hIdx} className="bg-gray-100">
+                                                                {hIdx === 3 && <td rowSpan={1} className={"p-2 font-black text-[10px] uppercase tracking-widest text-gray-700 border border-gray-200 " + dayColor}></td>}
+                                                                <td className="p-2 text-center border border-gray-200"></td>
+                                                                <td className="p-2 text-center text-[10px] font-bold text-gray-400 border border-gray-200">{hora.inicio} - {hora.fin}</td>
+                                                                <td colSpan={6} className="p-2 text-center font-black text-gray-400 uppercase tracking-[0.3em] text-[10px] border border-gray-200 italic">{hora.label}</td>
+                                                            </tr>
+                                                        );
+                                                    }
+                                                    const row = scheduleData.find(s => s.dia === dia && s.hora_num === hora.num);
+                                                    const grados = ['grado_6', 'grado_7', 'grado_8', 'grado_9', 'grado_10', 'grado_11'];
+                                                    return (
+                                                        <tr key={dia + '-' + hora.num} className="hover:bg-blue-50/50 transition-colors">
+                                                            {hora.num === 1 && <td rowSpan={7} className={"p-3 font-black text-[10px] uppercase tracking-widest text-gray-700 border border-gray-200 text-center align-middle " + dayColor} style={{writingMode: 'vertical-rl', transform: 'rotate(180deg)'}}>{dia}</td>}
+                                                            <td className="p-2 text-center font-black text-gray-500 border border-gray-200">{hora.num}</td>
+                                                            <td className="p-2 text-center text-[10px] font-bold text-gray-400 border border-gray-200 whitespace-nowrap">{hora.inicio} - {hora.fin}</td>
+                                                            {grados.map(grado => {
+                                                                const cellKey = dia + '-' + hora.num + '-' + grado;
+                                                                const value = row?.[grado] || '';
+                                                                const isEditing = editingScheduleCell === cellKey;
+                                                                return (
+                                                                    <td key={grado} className="p-1 border border-gray-200 min-w-[100px]">
+                                                                        {isEditing ? (
+                                                                            <input
+                                                                                autoFocus
+                                                                                defaultValue={value}
+                                                                                className="w-full p-1.5 text-[10px] font-bold text-center bg-blue-50 border border-blue-300 rounded-lg outline-none uppercase"
+                                                                                onBlur={(ev) => handleSaveScheduleCell(dia, hora.num, grado, ev.target.value, hora.inicio, hora.fin)}
+                                                                                onKeyDown={(ev) => { if(ev.key === 'Enter') ev.target.blur(); if(ev.key === 'Escape') setEditingScheduleCell(null); }}
+                                                                            />
+                                                                        ) : (
+                                                                            <div
+                                                                                onClick={() => setEditingScheduleCell(cellKey)}
+                                                                                className={"w-full p-1.5 text-[10px] font-bold text-center rounded-lg cursor-pointer min-h-[28px] transition-colors " + (value ? 'bg-blue-50 text-gray-700 hover:bg-blue-100' : 'hover:bg-gray-100 text-gray-300')}
+                                                                            >
+                                                                                {value || '—'}
+                                                                            </div>
+                                                                        )}
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                        </tr>
+                                                    );
+                                                });
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    
+                    {/* TAB: Avisos y Alertas */}
+                    {activeTab === "avisos" && (
+                        <div className="space-y-8">
+                            <div className="bg-white rounded-[40px] shadow-xl shadow-blue-500/5 border border-blue-50 p-10">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div>
+                                        <h2 className="text-2xl font-black text-gray-800 flex items-center gap-3">
+                                            <AlertTriangle size={28} className="text-orange-500" />
+                                            Sistema de Avisos y Alertas
+                                        </h2>
+                                        <p className="text-sm text-gray-400 font-medium mt-1">Gestione novedades de docentes, inasistencia de estudiantes y comunicados</p>
+                                    </div>
+                                    <button onClick={() => setIsAbsenceModalOpen(true)} className="px-6 py-3 bg-orange-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20">
+                                        + Nuevo Aviso
+                                    </button>
+                                </div>
+
+                                {/* Lista de alertas */}
+                                {teacherAbsences.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {teacherAbsences.map((alert, idx) => (
+                                            <div key={alert.id || idx} className={"p-6 rounded-2xl border transition-all " + (alert.estado === 'pendiente' ? 'bg-orange-50 border-orange-200' : alert.estado === 'contactado' ? 'bg-blue-50 border-blue-200' : 'bg-green-50 border-green-200')}>
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-3 mb-2">
+                                                            <span className={"text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full " + (alert.estado === 'pendiente' ? 'bg-orange-200 text-orange-700' : alert.estado === 'contactado' ? 'bg-blue-200 text-blue-700' : 'bg-green-200 text-green-700')}>
+                                                                {alert.estado}
+                                                            </span>
+                                                            <span className="text-[10px] text-gray-400 font-bold">{new Date(alert.created_at).toLocaleString('es-CO')}</span>
+                                                        </div>
+                                                        <p className="font-bold text-gray-800 mb-1">{alert.motivo}</p>
+                                                        {alert.profiles && <p className="text-xs text-gray-500">Reportado por: <span className="font-bold">{alert.profiles.nombre}</span></p>}
+                                                        {alert.student && <p className="text-xs text-gray-500">Estudiante: <span className="font-bold">{alert.student.nombre}</span></p>}
+                                                        {alert.accion_tomada && <p className="text-xs text-green-600 font-bold mt-2">✅ {alert.accion_tomada}</p>}
+                                                    </div>
+                                                    <div className="flex gap-2 shrink-0">
+                                                        {alert.estado === 'pendiente' && (
+                                                            <>
+                                                                <button onClick={() => { const accion = prompt('¿Qué acción tomó? (ej: Llamé al acudiente, Envié mensaje...)'); if(accion) handleUpdateAbsenceStatus(alert.id, 'contactado', accion); }} className="px-4 py-2 bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase hover:bg-blue-600">Contactado</button>
+                                                                <button onClick={() => handleUpdateAbsenceStatus(alert.id, 'resuelto', alert.accion_tomada || 'Resuelto')} className="px-4 py-2 bg-green-500 text-white rounded-xl text-[10px] font-black uppercase hover:bg-green-600">Resuelto</button>
+                                                            </>
+                                                        )}
+                                                        {alert.estado === 'contactado' && (
+                                                            <button onClick={() => handleUpdateAbsenceStatus(alert.id, 'resuelto', alert.accion_tomada)} className="px-4 py-2 bg-green-500 text-white rounded-xl text-[10px] font-black uppercase hover:bg-green-600">Marcar Resuelto</button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-16 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+                                        <AlertTriangle size={48} className="mx-auto mb-4 text-gray-200" />
+                                        <p className="text-gray-400 font-bold">No hay avisos registrados</p>
+                                        <p className="text-xs text-gray-300 mt-1">Los avisos de novedades aparecerán aquí</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal Nuevo Aviso */}
+                    {isAbsenceModalOpen && (
+                        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/40 backdrop-blur-md animate-in fade-in duration-200">
+                            <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
+                                <button type="button" onClick={() => setIsAbsenceModalOpen(false)} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                                    <X size={24} className="text-gray-400" />
+                                </button>
+                                <h3 className="text-2xl font-black text-gray-800 mb-2">Registrar Aviso / Novedad</h3>
+                                <p className="text-sm text-gray-400 mb-8">Inasistencia de docente, novedad de estudiante, emergencia, etc.</p>
+                                <form onSubmit={(ev) => {
+                                    ev.preventDefault();
+                                    const fd = new FormData(ev.target);
+                                    handleCreateAbsenceAlert({
+                                        reporter_id: user?.id || null,
+                                        student_id: fd.get('student_id') || null,
+                                        motivo: fd.get('motivo'),
+                                        accion_tomada: fd.get('accion_tomada') || null
+                                    });
+                                }} className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Tipo de Novedad *</label>
+                                        <select name="tipo" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" onChange={(ev) => {
+                                            const motivo = document.querySelector('textarea[name=motivo]');
+                                            if (ev.target.value === 'docente_ausencia') motivo.placeholder = 'Ej: El profesor Juan no podrá asistir hoy por motivos de salud...';
+                                            else if (ev.target.value === 'estudiante_ausencia') motivo.placeholder = 'Ej: El estudiante no se presentó a clase hoy...';
+                                            else motivo.placeholder = 'Describa la novedad...';
+                                        }}>
+                                            <option value="docente_ausencia">🧑‍🏫 Ausencia de Docente</option>
+                                            <option value="estudiante_ausencia">👨‍🎓 Inasistencia de Estudiante</option>
+                                            <option value="emergencia">🚨 Emergencia</option>
+                                            <option value="comunicado">📢 Comunicado General</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Estudiante Relacionado (Opcional)</label>
+                                        <select name="student_id" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700">
+                                            <option value="">— Ninguno —</option>
+                                            {students.map(st => <option key={st.id} value={st.id}>{st.nombre} ({st.grado || 'Sin grado'})</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Descripción del Aviso *</label>
+                                        <textarea name="motivo" required rows={4} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 resize-none" placeholder="Describa la novedad..." />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Acción Tomada (Opcional)</label>
+                                        <input name="accion_tomada" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ej: Se contactó al acudiente, Se asignó suplente..." />
+                                    </div>
+                                    <div className="flex gap-4 mt-8">
+                                        <button type="button" onClick={() => setIsAbsenceModalOpen(false)} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest">Cancelar</button>
+                                        <button type="submit" className="flex-1 py-4 bg-orange-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-orange-500/20 hover:bg-orange-600 transition-colors">Registrar Aviso</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
 
                     {
                         activeTab === "settings" && schoolConfig && (
@@ -3094,7 +3402,7 @@ export default function AdminDashboard({ params }) {
                                     <button type="button" onClick={() => setIsGalleryModalOpen(false)} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-xl transition-colors">
                                         <X size={24} className="text-gray-400" />
                                     </button>
-                                    <h3 className="text-2xl font-black text-gray-800 mb-8">Subir Foto a Galería</h3>
+                                    <h3 className="text-2xl font-black text-gray-800 mb-8">Subir a Galería</h3>
                                     <div className="space-y-6">
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Título de la Foto</label>
@@ -3103,16 +3411,21 @@ export default function AdminDashboard({ params }) {
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Archivo de Imagen</label>
                                             <div className="flex gap-4">
-                                                <input type="file" name="photo_file" id="gallery_photo" className="hidden" accept="image/*" required />
+                                                <input type="file" name="photo_file" id="gallery_photo" className="hidden" accept="image/*,video/*" required onChange={(ev) => { const f = ev.target.files[0]; if (f && f.type.startsWith('video/') && f.size > 5 * 1024 * 1024) { alert('El video debe ser menor a 5MB'); ev.target.value = ''; }}} />
                                                 <button
                                                     type="button"
                                                     onClick={() => document.getElementById('gallery_photo').click()}
                                                     className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-8 flex flex-col items-center gap-2 hover:bg-blue-50 hover:border-blue-200 transition-all group"
                                                 >
                                                     <Camera size={32} className="text-gray-300 group-hover:text-blue-400 transition-colors" />
-                                                    <p className="text-xs font-bold text-gray-400 group-hover:text-blue-500 uppercase tracking-widest">Seleccionar Imagen</p>
+                                                    <p className="text-xs font-bold text-gray-400 group-hover:text-blue-500 uppercase tracking-widest">Seleccionar Imagen o Video</p>
+                                                    <p className="text-[10px] text-gray-300">Videos máx. 5MB</p>
                                                 </button>
                                             </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Descripción (Opcional)</label>
+                                            <textarea name="description" rows={3} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700 resize-none" placeholder="Escribe una descripción para esta publicación..." />
+                                        </div>
                                         </div>
                                     </div>
                                     <div className="mt-10 flex gap-4">

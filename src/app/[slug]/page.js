@@ -36,22 +36,21 @@ export default async function SchoolLanding({ params, searchParams }) {
             {/* Hero / Banner Principal */}
             <div className="relative overflow-hidden bg-white">
                 {/* Imagen del Colegio como Banner */}
-                <div className="w-full relative h-[60vh] min-h-[400px] bg-slate-100">
+                <div className="w-full relative bg-[#1a4d8f]">
                     {(school.banner_url || "/latinoamericano/colegio2.jpg") && (
-                        <Image
+                        <img
                             src={school.banner_url || "/latinoamericano/colegio2.jpg"}
                             alt="Banner Institucional"
-                            fill
-                            priority
-                            className="object-cover shadow-inner transition-opacity duration-500"
+                            className="w-full h-auto object-contain"
                         />
                     )}
                     {!school.banner_url && !school.logo_url && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-900 to-institutional-blue">
+                        <div className="w-full h-[40vh] md:h-[60vh] flex items-center justify-center bg-gradient-to-br from-blue-900 to-institutional-blue">
                             <h1 className="text-4xl font-black text-white/20 uppercase tracking-[0.5em]">{school.nombre}</h1>
                         </div>
                     )}
                 </div>
+
 
                 <div className="container mx-auto px-6 py-12 relative z-10 text-center">
                     <div className="flex flex-col sm:flex-row justify-center gap-6">
