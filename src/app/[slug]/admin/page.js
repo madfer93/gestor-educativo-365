@@ -390,7 +390,7 @@ export default function AdminDashboard({ params }) {
             initDashboard();
         }
 
-        if (activeTab === "students" || activeTab === "calificaciones" || activeTab === "academic") fetchStudents().catch(console.error);
+        if (activeTab === "students" || activeTab === "calificaciones" || activeTab === "academic" || activeTab === "avisos") fetchStudents().catch(console.error);
         if (activeTab === "gallery") fetchGallery().catch(console.error);
         if (activeTab === "news") fetchNews().catch(console.error);
         if (activeTab === "costs") fetchCosts().catch(console.error);
