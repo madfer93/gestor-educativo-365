@@ -9,7 +9,7 @@ import {
     Settings, LogOut, Bell, PlusCircle, Save, X, Clock, Book, GraduationCap,
     Link, Image as ImageIcon, Key, FileCode, Edit, Trash2, Camera, Loader2, Heart, Megaphone,
     Eye, EyeOff, ClipboardList, Award, Star, FolderCheck, User
-} from "lucide-react";
+, AlertTriangle} from "lucide-react";
 import { uploadImage } from "@/lib/imgbb";
 
 export default function AdminDashboard({ params }) {
