@@ -653,41 +653,72 @@ export default function AdminDashboard({ params }) {
         e.preventDefault();
         setUploading(true);
         const formData = new FormData(e.target);
-        const photoFile = e.target.photo_file?.files[0];
+        const files = e.target.photo_files?.files;
 
-        let imageUrl = '';
-        if (photoFile) {
-            try {
-                if (photoFile.type.startsWith('video/')) {
-                    // Video: upload to Supabase Storage
-                    const fileName = 'gallery_' + Date.now() + '_' + photoFile.name.replace(/[^a-zA-Z0-9.]/g, '_');
-                    const { data: uploadData, error: uploadError } = await supabase.storage.from('gallery').upload(fileName, photoFile);
+        if (!files || files.length === 0) {
+            alert('Selecciona al menos una imagen o video.');
+            setUploading(false);
+            return;
+        }
+
+        try {
+            // Upload all files
+            const uploadedUrls = [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                let url;
+                if (file.type.startsWith('video/')) {
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('El video "' + file.name + '" supera 5MB, se omitirá.');
+                        continue;
+                    }
+                    const fileName = 'gallery_' + Date.now() + '_' + i + '_' + file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+                    const { data: uploadData, error: uploadError } = await supabase.storage.from('gallery').upload(fileName, file);
                     if (uploadError) throw uploadError;
                     const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(fileName);
-                    imageUrl = urlData.publicUrl;
+                    url = urlData.publicUrl;
+                    uploadedUrls.push({ url, type: 'video' });
                 } else {
-                    imageUrl = await uploadImage(photoFile);
+                    url = await uploadImage(file);
+                    uploadedUrls.push({ url, type: 'image' });
                 }
-            } catch (error) {
-                alert("Error al subir la imagen: " + error.message);
+            }
+
+            if (uploadedUrls.length === 0) {
+                alert('No se pudo subir ningún archivo.');
                 setUploading(false);
                 return;
             }
-        }
 
-        const { data: school } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
-        const { error } = await supabase.from('school_gallery').insert([{
-            school_id: school.id,
-            image_url: imageUrl,
-            title: formData.get('title') || 'Foto de Galería',
-            description: formData.get('description') || null,
-            media_type: photoFile?.type?.startsWith('video/') ? 'video' : 'image'
-        }]);
+            const { data: school } = await supabase.from('schools').select('id').eq('slug', params.slug).single();
 
-        if (error) alert("Error: " + error.message);
-        else {
+            // Create the gallery album (portada = first image)
+            const { data: albumData, error: albumError } = await supabase.from('school_gallery').insert([{
+                school_id: school.id,
+                image_url: uploadedUrls[0].url,
+                title: formData.get('title') || 'Álbum de Galería',
+                description: formData.get('description') || null,
+                media_type: uploadedUrls[0].type
+            }]).select('id').single();
+
+            if (albumError) throw albumError;
+
+            // Insert all images into gallery_images
+            const imageRecords = uploadedUrls.map((item, idx) => ({
+                gallery_id: albumData.id,
+                image_url: item.url,
+                media_type: item.type,
+                sort_order: idx
+            }));
+
+            const { error: imagesError } = await supabase.from('gallery_images').insert(imageRecords);
+            if (imagesError) console.error('Error inserting gallery images:', imagesError);
+
             setIsGalleryModalOpen(false);
             fetchGallery();
+            alert('✅ Álbum publicado con ' + uploadedUrls.length + ' archivo(s)');
+        } catch (error) {
+            alert('Error al subir: ' + error.message);
         }
         setUploading(false);
     };
@@ -3405,20 +3436,21 @@ export default function AdminDashboard({ params }) {
                                     <h3 className="text-2xl font-black text-gray-800 mb-8">Subir a Galería</h3>
                                     <div className="space-y-6">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Título de la Foto</label>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Título del Álbum</label>
                                             <input name="title" required className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-gray-700" placeholder="Ej. Bazar de Verano 2025" />
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Archivo de Imagen</label>
                                             <div className="flex gap-4">
-                                                <input type="file" name="photo_file" id="gallery_photo" className="hidden" accept="image/*,video/*" required onChange={(ev) => { const f = ev.target.files[0]; if (f && f.type.startsWith('video/') && f.size > 5 * 1024 * 1024) { alert('El video debe ser menor a 5MB'); ev.target.value = ''; }}} />
+                                                <input type="file" name="photo_files" id="gallery_photo" className="hidden" accept="image/*,video/*" required multiple onChange={(ev) => { const files = ev.target.files; let count = files.length; document.getElementById('gallery_photo_count').textContent = count + ' archivo(s) seleccionado(s)'; for (let i = 0; i < files.length; i++) { if (files[i].type.startsWith('video/') && files[i].size > 5 * 1024 * 1024) { alert('El video "' + files[i].name + '" supera 5MB'); } } }} />
                                                 <button
                                                     type="button"
                                                     onClick={() => document.getElementById('gallery_photo').click()}
                                                     className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-8 flex flex-col items-center gap-2 hover:bg-blue-50 hover:border-blue-200 transition-all group"
                                                 >
                                                     <Camera size={32} className="text-gray-300 group-hover:text-blue-400 transition-colors" />
-                                                    <p className="text-xs font-bold text-gray-400 group-hover:text-blue-500 uppercase tracking-widest">Seleccionar Imagen o Video</p>
+                                                    <p className="text-xs font-bold text-gray-400 group-hover:text-blue-500 uppercase tracking-widest">Seleccionar Imágenes o Videos</p>
+                                                    <p id="gallery_photo_count" className="text-[10px] text-blue-500 font-bold mt-1"></p>
                                                     <p className="text-[10px] text-gray-300">Videos máx. 5MB</p>
                                                 </button>
                                             </div>
