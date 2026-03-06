@@ -1,7 +1,7 @@
 "use client";
 import { createClient } from '@/utils/supabase/client';
 import { useState, useEffect } from 'react';
-import { X, Play, ChevronLeft, ChevronRight, Image as ImageIcon, Images } from 'lucide-react';
+import { X, Play, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 
 export default function GalleryPage({ params }) {
     const supabase = createClient();
@@ -117,7 +117,7 @@ export default function GalleryPage({ params }) {
                                 )}
                                 {/* Album badge */}
                                 <div className="absolute top-3 right-3 bg-black/50 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Images size={14} />
+                                    <ImageIcon size={14} />
                                 </div>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
                                     <div>
