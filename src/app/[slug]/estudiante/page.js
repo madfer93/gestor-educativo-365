@@ -39,6 +39,7 @@ export default function StudentDashboard({ params }) {
     const [uploadingActivity, setUploadingActivity] = useState(null);
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [observations, setObservations] = useState([]);
+    const [schedules, setSchedules] = useState([]);
 
     const documentosRequeridos = [
         'Carpeta amarilla colgante oficio', 'Certificados años anteriores', 'Tres fotos 3×4 fondo azul',
@@ -148,6 +149,16 @@ export default function StudentDashboard({ params }) {
                         .eq('student_id', user.id)
                         .order('created_at', { ascending: false });
                     setPaymentHistory(payHistory || []);
+
+                    // Fetch Schedules for student grade
+                    if (prof?.grado) {
+                        const { data: scheduleData } = await supabase.from('school_schedules')
+                            .select('*')
+                            .eq('school_id', school.id)
+                            .eq('grado', prof.grado)
+                            .order('start_time', { ascending: true });
+                        setSchedules(scheduleData || []);
+                    }
 
                     // Set default payment values
                     if (costsData?.length > 0) {
@@ -475,33 +486,28 @@ export default function StudentDashboard({ params }) {
                                                 </tr>
                                             </thead>
                                             <tbody className="text-sm">
-                                                <tr className="border-b border-gray-50">
-                                                    <td className="p-4 font-black text-gray-900 border-r border-gray-50">07:00 — 08:30</td>
-                                                    <td className="p-4 text-gray-600 font-medium bg-blue-50/30">Matemáticas</td>
-                                                    <td className="p-4 text-gray-600 font-medium">Lenguaje</td>
-                                                    <td className="p-4 text-gray-600 font-medium bg-blue-50/30">Ciencias</td>
-                                                    <td className="p-4 text-gray-600 font-medium">Inglés</td>
-                                                    <td className="p-4 text-gray-600 font-medium bg-blue-50/30">Matemáticas</td>
-                                                </tr>
-                                                <tr className="border-b border-gray-50">
-                                                    <td className="p-4 font-black text-gray-900 border-r border-gray-50">08:30 — 10:00</td>
-                                                    <td className="p-4 text-gray-600 font-medium">Sociales</td>
-                                                    <td className="p-4 text-gray-600 font-medium bg-blue-50/30">Inglés</td>
-                                                    <td className="p-4 text-gray-600 font-medium">Matemáticas</td>
-                                                    <td className="p-4 text-gray-600 font-medium bg-blue-50/30">Tecnología</td>
-                                                    <td className="p-4 text-gray-600 font-medium">Religión</td>
-                                                </tr>
-                                                <tr className="border-b border-gray-50">
-                                                    <td colSpan="6" className="p-2 bg-gray-50 text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Receso Académico</td>
-                                                </tr>
-                                                <tr className="border-b border-gray-50">
-                                                    <td className="p-4 font-black text-gray-900 border-r border-gray-50">10:30 — 12:00</td>
-                                                    <td className="p-4 text-gray-600 font-medium bg-blue-50/30">Arte</td>
-                                                    <td className="p-4 text-gray-600 font-medium">Biología</td>
-                                                    <td className="p-4 text-gray-600 font-medium bg-blue-50/30">Física</td>
-                                                    <td className="p-4 text-gray-600 font-medium">Ética</td>
-                                                    <td className="p-4 text-gray-600 font-medium bg-blue-50/30">Educ. Física</td>
-                                                </tr>
+                                                {schedules.length > 0 ? (
+                                                    // Agrupar por hora de inicio
+                                                    Array.from(new Set(schedules.map(s => `${s.start_time} — ${s.end_time}`))).map((timeRange, index) => {
+                                                        const rowSchedules = schedules.filter(s => `${s.start_time} — ${s.end_time}` === timeRange);
+                                                        const getDaySubject = (day) => rowSchedules.find(s => s.day_of_week === day)?.subject || '—';
+
+                                                        return (
+                                                            <tr key={index} className="border-b border-gray-50">
+                                                                <td className="p-4 font-black text-gray-900 border-r border-gray-50">{timeRange}</td>
+                                                                <td className="p-4 text-gray-600 font-medium bg-blue-50/30">{getDaySubject('Lunes')}</td>
+                                                                <td className="p-4 text-gray-600 font-medium">{getDaySubject('Martes')}</td>
+                                                                <td className="p-4 text-gray-600 font-medium bg-blue-50/30">{getDaySubject('Miércoles')}</td>
+                                                                <td className="p-4 text-gray-600 font-medium">{getDaySubject('Jueves')}</td>
+                                                                <td className="p-4 text-gray-600 font-medium bg-blue-50/30">{getDaySubject('Viernes')}</td>
+                                                            </tr>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <tr className="border-b border-gray-50">
+                                                        <td colSpan="6" className="p-8 text-center text-gray-400 italic font-medium">No hay horario registrado para tu grado.</td>
+                                                    </tr>
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>
@@ -1383,6 +1389,16 @@ export default function StudentDashboard({ params }) {
                                                                     comentario: file.name
                                                                 }]);
                                                             }
+
+                                                            // 3. Notificar al docente/admin (Insertar en wellbeing_alerts)
+                                                            await supabase.from('wellbeing_alerts').insert([{
+                                                                school_id: schoolConfig.id,
+                                                                student_id: user.id,
+                                                                title: 'Nueva Entrega de Actividad',
+                                                                description: `El estudiante ha subido su evidencia para: ${selectedActivity.title}`,
+                                                                severity: 'Info',
+                                                                status: 'Abierto'
+                                                            }]);
 
                                                             // Actulizamos el estado local principal
                                                             setSubmissions(prev => ({

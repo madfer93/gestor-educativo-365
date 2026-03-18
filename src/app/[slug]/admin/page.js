@@ -534,6 +534,9 @@ export default function AdminDashboard({ params }) {
             fecha_nacimiento: v('fecha_nacimiento'),
             direccion: v('direccion'),
             specialty: rawSpecialty,
+            specialty_2: v('specialty_2'),
+            specialty_3: v('specialty_3'),
+            specialty_4: v('specialty_4'),
             public_bio: v('public_bio'),
             public_photo_url: photoUrl,
             email: formData.get('email'),
@@ -571,6 +574,9 @@ export default function AdminDashboard({ params }) {
                         fecha_nacimiento: teacherData.fecha_nacimiento,
                         direccion: teacherData.direccion,
                         specialty: teacherData.specialty,
+                        specialty_2: teacherData.specialty_2,
+                        specialty_3: teacherData.specialty_3,
+                        specialty_4: teacherData.specialty_4,
                         public_bio: teacherData.public_bio,
                         public_photo_url: teacherData.public_photo_url,
                         rol: teacherData.rol,
@@ -608,6 +614,9 @@ export default function AdminDashboard({ params }) {
                             fecha_nacimiento: teacherData.fecha_nacimiento,
                             direccion: teacherData.direccion,
                             specialty: teacherData.specialty,
+                            specialty_2: teacherData.specialty_2,
+                            specialty_3: teacherData.specialty_3,
+                            specialty_4: teacherData.specialty_4,
                             public_bio: teacherData.public_bio,
                             public_photo_url: teacherData.public_photo_url,
                             acudiente_nombre: teacherData.acudiente_nombre,
@@ -1032,7 +1041,21 @@ export default function AdminDashboard({ params }) {
         let fileUrl = null;
         if (activityFile) {
             try {
-                fileUrl = await uploadImage(activityFile);
+                const uploadFormData = new FormData();
+                uploadFormData.append('file', activityFile);
+                const fileExt = activityFile.name.split('.').pop();
+                const filePath = `actividades/actividad_${Date.now()}.${fileExt}`;
+                uploadFormData.append('filePath', filePath);
+
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: uploadFormData
+                });
+
+                if (!uploadRes.ok) throw new Error('Error al subir archivo');
+                const uploadData = await uploadRes.json();
+                fileUrl = uploadData.url;
+
             } catch (uploadErr) {
                 alert('Error al subir la imagen: ' + uploadErr.message);
                 setLoading(false);
@@ -1558,7 +1581,21 @@ export default function AdminDashboard({ params }) {
                                                                 </select>
                                                             </div>
                                                             <div className="space-y-1">
-                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Cargo / Especialidad</label>
+                                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Cargo / Especialidad Principal</label>
+                                                            </div>
+                                                            <div className="grid grid-cols-3 gap-2">
+                                                                <div className="grid space-y-1">
+                                                                    <label className="text-[8px] font-black uppercase tracking-widest text-gray-400">Área 2</label>
+                                                                    <input name="specialty_2" defaultValue={editingTeacher?.specialty_2} className="w-full bg-white border border-gray-200 rounded-xl p-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                                                </div>
+                                                                <div className="grid space-y-1">
+                                                                    <label className="text-[8px] font-black uppercase tracking-widest text-gray-400">Área 3</label>
+                                                                    <input name="specialty_3" defaultValue={editingTeacher?.specialty_3} className="w-full bg-white border border-gray-200 rounded-xl p-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                                                </div>
+                                                                <div className="grid space-y-1">
+                                                                    <label className="text-[8px] font-black uppercase tracking-widest text-gray-400">Área 4</label>
+                                                                    <input name="specialty_4" defaultValue={editingTeacher?.specialty_4} className="w-full bg-white border border-gray-200 rounded-xl p-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                                                </div>
                                                                 <input name="specialty" defaultValue={editingTeacher?.specialty} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ej. Matemáticas" />
                                                             </div>
                                                             <div className="space-y-1">
@@ -2956,6 +2993,7 @@ export default function AdminDashboard({ params }) {
                                                 <th className="pb-6 px-4">Email</th>
                                                 <th className="pb-6 px-4">Modalidad</th>
                                                 <th className="pb-6 px-4">Grado</th>
+                                                <th className="pb-6 px-4">Acceso</th>
                                                 <th className="pb-6 px-4">Acciones</th>
                                             </tr>
                                         </thead>
@@ -2980,6 +3018,18 @@ export default function AdminDashboard({ params }) {
                                                         </td>
                                                         <td className="py-4 px-4 text-sm font-bold text-gray-600">{student.grado}</td>
                                                         <td className="py-4 px-4">
+                                                            {student.acceso_password ? (
+                                                                <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 group/pass relative">
+                                                                    <Key size={12} className="text-blue-500" />
+                                                                    <span className="text-[10px] font-mono font-bold blur-[3px] group-hover/pass:blur-none transition-all duration-300 select-all cursor-pointer" title="Haga clic para ver y copiar">
+                                                                        {student.acceso_password}
+                                                                    </span>
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-[10px] text-gray-300 italic">No asignada</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="py-4 px-4">
                                                             <div className="flex gap-3">
                                                                 <button onClick={() => {
                                                                     setViewingStudentDetails(student);
@@ -2988,7 +3038,7 @@ export default function AdminDashboard({ params }) {
                                                                     (async () => {
                                                                         const { data } = await supabase
                                                                             .from('student_observations')
-                                                                            .select('*, profiles:created_by(nombre, rol)')
+                                                                            .select('*, profiles!created_by(nombre, rol)')
                                                                             .eq('student_id', student.id)
                                                                             .order('created_at', { ascending: false });
                                                                         setStudentObservaciones(data || []);
@@ -3121,7 +3171,7 @@ export default function AdminDashboard({ params }) {
                                                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email Académico *</label>
                                                         <input name="email" type="email" defaultValue={editingStudent?.email || leadToFormalize?.email || (leadToFormalize ? leadToFormalize.nombre.toLowerCase().replace(/\s/g, '.') + '@colegio.com' : '')} className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-700 text-sm focus:ring-2 focus:ring-purple-500 outline-none" placeholder="estudiante@colegio.edu.co" />
                                                     </div>
-                                                    {!editingStudent && (
+                                                    {(editingStudent || !editingStudent) && (
                                                         <div className="space-y-1">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contraseña *</label>
                                                             <div className="relative">
@@ -3369,7 +3419,7 @@ export default function AdminDashboard({ params }) {
                                                             // Recargar observaciones
                                                             const { data } = await supabase
                                                                 .from('student_observations')
-                                                                .select('*, profiles:created_by(nombre, rol)')
+                                                                .select('*, profiles!created_by(nombre, rol)')
                                                                 .eq('student_id', viewingStudentDetails.id)
                                                                 .order('created_at', { ascending: false });
                                                             setStudentObservaciones(data || []);

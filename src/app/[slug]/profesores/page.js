@@ -100,31 +100,27 @@ export default function ProfesoresDashboard({ params }) {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            <div className="bg-white p-6 rounded-[30px] border border-gray-100 hover:shadow-xl transition-shadow group cursor-pointer">
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="bg-orange-50 text-orange-500 p-3 rounded-2xl"><BarChart2 size={24} /></div>
-                                    <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-[10px] font-black uppercase">Grado 11°</span>
+                            {[userProfile?.specialty, userProfile?.specialty_2, userProfile?.specialty_3, userProfile?.specialty_4].filter(Boolean).map((spec, index) => (
+                                <div key={index} className="bg-white p-6 rounded-[30px] border border-gray-100 hover:shadow-xl transition-shadow group cursor-pointer">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className={`p-3 rounded-2xl ${index % 2 === 0 ? 'bg-orange-50 text-orange-500' : 'bg-green-50 text-green-500'}`}>
+                                            {index % 2 === 0 ? <BarChart2 size={24} /> : <FileText size={24} />}
+                                        </div>
+                                        <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-[10px] font-black uppercase">Académico</span>
+                                    </div>
+                                    <h3 className="text-2xl font-black text-gray-800 mb-2 group-hover:text-institutional-blue transition-colors">{spec}</h3>
+                                    <p className="text-gray-400 text-sm mb-6">Aula del Docente</p>
+                                    <div className="flex items-center justify-between pt-6 border-t border-gray-50">
+                                        <div className="flex items-center gap-2 text-gray-500 text-xs font-bold"><Users size={16} /> Ver Estudiantes</div>
+                                        <div className="flex items-center gap-2 text-institutional-magenta text-xs font-black uppercase">Ver Aula <PlusCircle size={16} /></div>
+                                    </div>
                                 </div>
-                                <h3 className="text-2xl font-black text-gray-800 mb-2 group-hover:text-institutional-blue transition-colors">Matemáticas</h3>
-                                <p className="text-gray-400 text-sm mb-6">Álgebra Lineal y Estadística</p>
-                                <div className="flex items-center justify-between pt-6 border-t border-gray-50">
-                                    <div className="flex items-center gap-2 text-gray-500 text-xs font-bold"><Users size={16} /> 24 Estudiantes</div>
-                                    <div className="flex items-center gap-2 text-institutional-magenta text-xs font-black uppercase">Ver Aula <PlusCircle size={16} /></div>
+                            ))}
+                            {[userProfile?.specialty, userProfile?.specialty_2, userProfile?.specialty_3, userProfile?.specialty_4].filter(Boolean).length === 0 && (
+                                <div className="col-span-full py-10 text-center bg-white rounded-[30px] border border-dashed border-gray-200">
+                                    <p className="text-gray-400 font-bold italic">No tienes materias asignadas aún.</p>
                                 </div>
-                            </div>
-
-                            <div className="bg-white p-6 rounded-[30px] border border-gray-100 hover:shadow-xl transition-shadow group cursor-pointer">
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="bg-green-50 text-green-500 p-3 rounded-2xl"><FileText size={24} /></div>
-                                    <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-[10px] font-black uppercase">Grado 10°</span>
-                                </div>
-                                <h3 className="text-2xl font-black text-gray-800 mb-2 group-hover:text-institutional-blue transition-colors">Física</h3>
-                                <p className="text-gray-400 text-sm mb-6">Mecánica Clásica</p>
-                                <div className="flex items-center justify-between pt-6 border-t border-gray-50">
-                                    <div className="flex items-center gap-2 text-gray-500 text-xs font-bold"><Users size={16} /> 28 Estudiantes</div>
-                                    <div className="flex items-center gap-2 text-institutional-magenta text-xs font-black uppercase">Ver Aula <PlusCircle size={16} /></div>
-                                </div>
-                            </div>
+                            )}
                         </div>
 
                         <div className="mt-12">

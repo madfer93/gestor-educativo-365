@@ -48,13 +48,18 @@ export async function POST(req) {
 
         // 2. Crear/Actualizar Perfil en public.profiles
         // Solo permitir campos válidos de la tabla profiles en metadata
-        const allowedProfileFields = ['grado', 'modalidad', 'public_bio', 'public_photo_url', 'specialty', 'is_public', 'fecha_nacimiento', 'tipo_documento', 'numero_documento', 'direccion', 'acudiente_nombre', 'acudiente_telefono', 'acudiente_email', 'acudiente_parentesco', 'es_menor_edad', 'documentos_entregados', 'grupo_sanguineo', 'alergias', 'condiciones_medicas', 'eps_salud', 'observaciones', 'facebook_url', 'instagram_url', 'linkedin_url', 'twitter_url'];
+        const allowedProfileFields = ['acceso_password', 'grado', 'modalidad', 'public_bio', 'public_photo_url', 'specialty', 'specialty_2', 'specialty_3', 'specialty_4', 'is_public', 'fecha_nacimiento', 'tipo_documento', 'numero_documento', 'direccion', 'acudiente_nombre', 'acudiente_telefono', 'acudiente_email', 'acudiente_parentesco', 'es_menor_edad', 'documentos_entregados', 'grupo_sanguineo', 'alergias', 'condiciones_medicas', 'eps_salud', 'observaciones', 'facebook_url', 'instagram_url', 'linkedin_url', 'twitter_url'];
         const dateFields = ['fecha_nacimiento'];
         const safeMetadata = {};
         for (const key of allowedProfileFields) {
             if (metadata[key] !== undefined) {
                 safeMetadata[key] = (metadata[key] === '' && dateFields.includes(key)) ? null : metadata[key];
             }
+        }
+
+        // Si se proporcionó contraseña explícitamente, guardarla para visibilidad admin
+        if (!safeMetadata.acceso_password && password) {
+            safeMetadata.acceso_password = password;
         }
 
         const { error: profileError } = await supabaseAdmin
@@ -118,7 +123,7 @@ export async function PUT(req) {
         }
 
         // Solo permitir campos válidos de la tabla profiles
-        const allowedFields = ['nombre', 'email', 'rol', 'modalidad', 'specialty', 'public_bio', 'public_photo_url', 'grado', 'is_public', 'school_id', 'fecha_nacimiento', 'tipo_documento', 'numero_documento', 'direccion', 'acudiente_nombre', 'acudiente_telefono', 'acudiente_email', 'acudiente_parentesco', 'es_menor_edad', 'documentos_entregados', 'grupo_sanguineo', 'alergias', 'condiciones_medicas', 'eps_salud', 'observaciones', 'facebook_url', 'instagram_url', 'linkedin_url', 'twitter_url'];
+        const allowedFields = ['acceso_password', 'nombre', 'email', 'rol', 'modalidad', 'specialty', 'specialty_2', 'specialty_3', 'specialty_4', 'public_bio', 'public_photo_url', 'grado', 'is_public', 'school_id', 'fecha_nacimiento', 'tipo_documento', 'numero_documento', 'direccion', 'acudiente_nombre', 'acudiente_telefono', 'acudiente_email', 'acudiente_parentesco', 'es_menor_edad', 'documentos_entregados', 'grupo_sanguineo', 'alergias', 'condiciones_medicas', 'eps_salud', 'observaciones', 'facebook_url', 'instagram_url', 'linkedin_url', 'twitter_url'];
         const dateFields = ['fecha_nacimiento'];
         const safeData = {};
         for (const key of allowedFields) {
@@ -126,6 +131,11 @@ export async function PUT(req) {
                 // Sanitize: empty strings -> null for date columns
                 safeData[key] = (updateData[key] === '' && dateFields.includes(key)) ? null : updateData[key];
             }
+        }
+
+        // Si se actualiza la contraseña, guardarla para visibilidad admin
+        if (password) {
+            safeData.acceso_password = password;
         }
 
         const { error } = await supabaseAdmin
