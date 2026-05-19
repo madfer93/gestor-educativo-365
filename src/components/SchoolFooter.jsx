@@ -201,8 +201,8 @@ export default function SchoolFooter({ school, slug }) {
                     <p className="text-white/30 text-[10px] font-bold uppercase tracking-[0.15em]">
                         © {new Date().getFullYear()} {school.nombre} — Todos los derechos reservados
                     </p>
-                    <p className="text-[10px] text-white/15 font-black uppercase tracking-[0.3em]">
-                        Powered by Variedades JyM SaaS
+                    <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.15em]">
+                        Tecnología por <a href="https://jymtechsolutions.online" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 underline transition-all">J&M Tech Solutions</a>
                     </p>
                 </div>
             </div>
